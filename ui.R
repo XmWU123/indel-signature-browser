@@ -231,19 +231,218 @@ ui <- navbarPage(
         color: white;
         border-radius: 16px 16px 0 0;
       }
-      .search-page-container {
-        display: flex;
-        justify-content: center;   /* 水平居中 */
-        align-items: center;       /* 垂直居中 */
-        min-height: 80vh;          /* 占满视窗高度，更容易居中 */
-      }
+          /* 搜索页面样式 - 全面美化 */
+    .search-page-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80vh;
+      padding: 50px 20px;
+      position: relative;
+      overflow: hidden;
+    }
 
-     .search-box-large {
-       text-align: center;        /* 子元素文字居中 */
-       max-width: 600px;          /* 限制宽度，不会太宽 */
-       width: 100%;
-       margin: 0 auto;
+    .search-page-container::before {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(52, 152, 219, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      top: -200px;
+      left: -200px;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .search-page-container::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(46, 204, 113, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      bottom: -150px;
+      right: -150px;
+      animation: float 15s ease-in-out infinite reverse;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(30px, -30px) rotate(120deg); }
+      66% { transform: translate(-20px, 20px) rotate(240deg); }
+    }
+
+    .search-box-large {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 30px;
+      padding: 60px 50px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      max-width: 750px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .search-box-large:hover {
+      box-shadow: 0 25px 80px rgba(52, 152, 219, 0.2);
+      transform: translateY(-5px);
+    }
+
+    .search-icon-decoration {
+      font-size: 60px;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    .search-title {
+      font-size: 42px;
+      font-weight: 800;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 0px;
+      text-shadow: 0 2px 10px rgba(52, 152, 219, 0.1);
+    }
+
+    .search-subtitle {
+      font-size: 18px;
+      color: #7f8c8d;
+      margin-bottom: 45px;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    .search-input-container {
+      display: flex;
+      align-items: center;
+      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+      border-radius: 60px;
+      padding: 10px 15px;
+      margin-bottom: 30px;
+      border: 3px solid transparent;
+      background-clip: padding-box;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .search-input-container::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
+      border-radius: 60px;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: -1;
+    }
+
+    .search-input-container:focus-within::before {
+      opacity: 1;
+    }
+
+    .search-input-container:focus-within {
+      transform: scale(1.03);
+      box-shadow: 0 15px 40px rgba(52, 152, 219, 0.25);
+    }
+
+    .search-input-large {
+      flex: 1;
+      background: transparent !important;
+      border: none !important;
+      padding: 18px 25px !important;
+      font-size: 18px !important;
+      color: #2c3e50 !important;
+      font-weight: 500;
+    }
+
+    .search-input-large::placeholder {
+      color: #95a5a6;
+      font-weight: 400;
+    }
+
+    .search-btn-large {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
+      border: none !important;
+      color: white !important;
+      padding: 18px 40px !important;
+      border-radius: 50px !important;
+      font-size: 16px !important;
+      font-weight: 700 !important;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(52, 152, 219, 0.35);
+      margin-left: 10px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .search-examples {
+      margin-top: 35px;
+      padding-top: 30px;
+      border-top: 2px dashed rgba(52, 152, 219, 0.2);
+    }
+
+    .example-tag {
+      display: inline-block;
+      background: linear-gradient(135deg, #ecf0f1 0%, #ffffff 100%);
+      padding: 12px 24px;
+      border-radius: 25px;
+      margin: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2c3e50;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 2px solid #ecf0f1;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .search-hint {
+      margin-top: 25px;
+      font-size: 13px;
+      color: #95a5a6;
+      font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+      .search-box-large {
+        padding: 40px 30px;
       }
+      .search-title {
+        font-size: 32px;
+      }
+      .search-input-container {
+        flex-direction: column;
+        gap: 15px;
+      }
+      .search-btn-large {
+        width: 100%;
+        margin-left: 0;
+      }
+    }
+      
+      
+
     "))
   ),
   
