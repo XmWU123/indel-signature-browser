@@ -231,6 +231,19 @@ ui <- navbarPage(
         color: white;
         border-radius: 16px 16px 0 0;
       }
+      .search-page-container {
+        display: flex;
+        justify-content: center;   /* 水平居中 */
+        align-items: center;       /* 垂直居中 */
+        min-height: 80vh;          /* 占满视窗高度，更容易居中 */
+      }
+
+     .search-box-large {
+       text-align: center;        /* 子元素文字居中 */
+       max-width: 600px;          /* 限制宽度，不会太宽 */
+       width: 100%;
+       margin: 0 auto;
+      }
     "))
   ),
   
@@ -274,6 +287,47 @@ ui <- navbarPage(
     icon = icon("layer-group"),
     uiOutput("id83_display")
   ),
+  
+  # ========== Search Page（独立搜索页）==========
+  tabPanel(
+    "Search",
+    icon = icon("search"),
+    div(class = "search-page-container",
+        div(class = "search-box-large",
+            # 标题
+            h1(class = "search-title", "Search Signatures"),
+            p(class = "search-subtitle", 
+              "Enter a signature name to quickly find and view its details"),
+            
+            # 搜索框
+            div(class = "search-input-container",
+                tags$input(
+                  id = "search_input",
+                  type = "text",
+                  class = "search-input-large",
+                  placeholder = "Type signature name (e.g., InsDel1a, InsDel2b)..."
+                ),
+                actionButton("search_btn",
+                             "Search",
+                             icon = icon("search"),
+                             class = "search-btn-large")
+            ),
+            
+            # 搜索示例
+            div(class = "search-examples",
+                p(class = "search-examples-title", "Try searching:"),
+                div(
+                  tags$span(class = "example-tag", onclick = "Shiny.setInputValue('example_click', 'InsDel1a', {priority: 'event'})", "InsDel1a"),
+                  tags$span(class = "example-tag", onclick = "Shiny.setInputValue('example_click', 'InsDel2b', {priority: 'event'})", "InsDel2b"),
+                  tags$span(class = "example-tag", onclick = "Shiny.setInputValue('example_click', 'InsDel3', {priority: 'event'})", "InsDel3"),
+                  tags$span(class = "example-tag", onclick = "Shiny.setInputValue('example_click', 'InsDel10', {priority: 'event'})", "InsDel10"),
+                  tags$span(class = "example-tag", onclick = "Shiny.setInputValue('example_click', 'InsDel39', {priority: 'event'})", "InsDel39")
+                )
+            )
+        )
+    )
+  ),
+    
   
   # ========== About ==========
   tabPanel(

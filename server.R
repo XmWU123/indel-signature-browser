@@ -76,6 +76,106 @@ server <- function(input, output, session){
   current_group <- reactiveVal(NULL)
   current_id83 <- reactiveVal(NULL)
   
+  # ---------------- Search 页面 ----------------
+  search_signature <- function(search_term) {
+    search_term <- trimws(search_term)
+    
+    if (search_term == "") {
+      showModal(modalDialog(
+        title = "Search Error",
+        "Please enter a signature name to search.",
+        easyClose = TRUE,
+        footer = modalButton("Close")
+      ))
+      return()
+    }
+    
+    # ---- 在 ID89 Browser 中匹配 ----
+    matched89 <- grep(search_term, names(signature_groups),
+                      ignore.case = TRUE, value = TRUE)
+    
+    # ---- 在 ID83 Browser 中匹配（查成员 ID89 名）----
+    matched83 <- c()
+    for (g in names(id83_groups)) {
+      members <- id83_groups[[g]]$members
+      if (any(grepl(search_term, members, ignore.case = TRUE))) {
+        matched83 <- c(matched83, g)
+      }
+    }
+    
+    # ---- 完全没找到 ----
+    if (length(matched89) == 0 && length(matched83) == 0) {
+      showModal(modalDialog(
+        title = "Signature Not Found",
+        paste0("'", search_term, "' not found in ID89 or ID83."),
+        easyClose = TRUE,
+        footer = modalButton("Close")
+      ))
+      return()
+    }
+    
+    # ---- 同时匹配 ID89 + ID83 → 弹框让用户选 ----
+    if (length(matched89) > 0 && length(matched83) > 0) {
+      choices <- c(
+        paste0(matched89, "  →  Koh ID89 Browser"),
+        paste0(matched83, "  →  COSMIC ID83 Browser")
+      )
+      
+      showModal(modalDialog(
+        title = "Multiple Matches Found",
+        tags$p(paste0("The signature '", search_term, "' appears in both browsers.")),
+        radioButtons("select_search", label = NULL, choices = choices),
+        easyClose = TRUE,
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton("confirm_search", "Go", class = "btn-primary")
+        )
+      ))
+      return()
+    }
+    
+    # ---- 只在 ID89 里匹配 ----
+    if (length(matched89) > 0) {
+      updateNavbarPage(session, "navbar", selected = "Koh ID89 Browser")
+      current_group(matched89[1])
+      updateTextInput(session, "search_input", value = "")
+      return()
+    }
+    
+    # ---- 只在 ID83 里匹配 ----
+    if (length(matched83) > 0) {
+      updateNavbarPage(session, "navbar", selected = "COSMIC ID83 Browser")
+      current_id83(matched83[1])
+      updateTextInput(session, "search_input", value = "")
+      return()
+    }
+  }
+  
+  observeEvent(input$confirm_search, {
+    choice <- input$select_search
+    if (is.null(choice)) return()
+    
+    # 用户选择跳到 ID89 Browser
+    if (grepl("Koh ID89 Browser$", choice)) {
+      sig89 <- sub("  →  Koh ID89 Browser$", "", choice)
+      updateNavbarPage(session, "navbar", selected = "Koh ID89 Browser")
+      current_group(sig89)
+    }
+    
+    # 用户选择跳到 ID83 Browser
+    if (grepl("COSMIC ID83 Browser$", choice)) {
+      sig83 <- sub("  →  COSMIC ID83 Browser$", "", choice)
+      updateNavbarPage(session, "navbar", selected = "COSMIC ID83 Browser")
+      current_id83(sig83)
+    }
+    
+    updateTextInput(session, "search_input", value = "")
+    removeModal()
+  })
+  observeEvent(input$search_btn, {
+    search_signature(input$search_input)
+  })
+
   # ---------------- Signature Browser 页面 ----------------
   output$signature_display <- renderUI({
     if (is.null(current_group())) {
