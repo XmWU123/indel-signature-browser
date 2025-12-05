@@ -75,7 +75,16 @@ server <- function(input, output, session){
   })
   current_group <- reactiveVal(NULL)
   current_id83 <- reactiveVal(NULL)
-  
+
+  # ---------------- Home page navigation links ----------------
+  observeEvent(input$home_goto_koh89, {
+    updateNavbarPage(session, "navbar", selected = "Koh89 Classification")
+  })
+
+  observeEvent(input$home_goto_cosmic83, {
+    updateNavbarPage(session, "navbar", selected = "COSMIC83 Classification")
+  })
+
   # ---------------- Search 页面 ----------------
   search_signature <- function(search_term) {
     search_term <- trimws(search_term)
@@ -117,8 +126,8 @@ server <- function(input, output, session){
     # ---- 同时匹配 ID89 + ID83 → 弹框让用户选 ----
     if (length(matched89) > 0 && length(matched83) > 0) {
       choices <- c(
-        paste0(matched89, "  →  Koh ID89 Browser"),
-        paste0(matched83, "  →  COSMIC ID83 Browser")
+        paste0(matched89, "  →  Koh89 Classification"),
+        paste0(matched83, "  →  COSMIC83 Classification")
       )
       
       showModal(modalDialog(
@@ -136,7 +145,7 @@ server <- function(input, output, session){
     
     # ---- 只在 ID89 里匹配 ----
     if (length(matched89) > 0) {
-      updateNavbarPage(session, "navbar", selected = "Koh ID89 Browser")
+      updateNavbarPage(session, "navbar", selected = "Koh89 Classification")
       current_group(matched89[1])
       updateTextInput(session, "search_input", value = "")
       return()
@@ -144,7 +153,7 @@ server <- function(input, output, session){
     
     # ---- 只在 ID83 里匹配 ----
     if (length(matched83) > 0) {
-      updateNavbarPage(session, "navbar", selected = "COSMIC ID83 Browser")
+      updateNavbarPage(session, "navbar", selected = "COSMIC83 Classification")
       current_id83(matched83[1])
       updateTextInput(session, "search_input", value = "")
       return()
@@ -156,16 +165,16 @@ server <- function(input, output, session){
     if (is.null(choice)) return()
     
     # 用户选择跳到 ID89 Browser
-    if (grepl("Koh ID89 Browser$", choice)) {
-      sig89 <- sub("  →  Koh ID89 Browser$", "", choice)
-      updateNavbarPage(session, "navbar", selected = "Koh ID89 Browser")
+    if (grepl("Koh89 Classification$", choice)) {
+      sig89 <- sub("  →  Koh89 Classification$", "", choice)
+      updateNavbarPage(session, "navbar", selected = "Koh89 Classification")
       current_group(sig89)
     }
     
     # 用户选择跳到 ID83 Browser
-    if (grepl("COSMIC ID83 Browser$", choice)) {
-      sig83 <- sub("  →  COSMIC ID83 Browser$", "", choice)
-      updateNavbarPage(session, "navbar", selected = "COSMIC ID83 Browser")
+    if (grepl("COSMIC83 Classification$", choice)) {
+      sig83 <- sub("  →  COSMIC83 Classification$", "", choice)
+      updateNavbarPage(session, "navbar", selected = "COSMIC83 Classification")
       current_id83(sig83)
     }
     
