@@ -660,11 +660,6 @@ ui <- navbarPage(
                             icon("dna", style = "margin-right: 5px;"), "H_ID30")
                 ),
                 
-                # 快捷键提示
-                p(class = "search-hint",
-                  icon("keyboard"), " Pro tip: Press ", 
-                  tags$kbd("Enter"), " to search quickly"
-                )
             )
         )
     )
