@@ -64,10 +64,6 @@ create_home_tab <- function() {
                ">4,000 whole-genome from Hartwig Medical Foundation."
             ),
             style = h3_style
-         ),
-         h3(
-            "Please select a group from the navigation bar above.",
-            style = "color:#3498db; font-size:20px; margin-top:25px; font-weight:600;"
          )
       )
    )
