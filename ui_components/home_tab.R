@@ -58,7 +58,7 @@ create_home_tab <- function() {
          ),
          h3(
             paste(
-               "With a few exceptions, the reference signatures on this web site were extracted using both",
+               "TEMP TEST With a few exceptions, the reference signatures on this web site were extracted using both",
                "SigProfiler (as described in Alexandrov et al., 2020) and mSigHdp (Liu et al., 2023) from the",
                "2,780 whole-genome from ICGC/TCGA Pan Cancer Analysis of Whole Genomes (PCAWG) Network and",
                ">4,000 whole-genome from Hartwig Medical Foundation."
