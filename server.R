@@ -78,11 +78,11 @@ server <- function(input, output, session){
   
   # ---------------- Home page navigation links ----------------
   observeEvent(input$home_goto_koh89, {
-    updateNavbarPage(session, "navbar", selected = "Koh ID89 Explorer")
+    updateNavbarPage(session, "navbar", selected = "Koh89 Classification")
   })
-  
+
   observeEvent(input$home_goto_cosmic83, {
-    updateNavbarPage(session, "navbar", selected = "COSMIC ID83 Explorer")
+    updateNavbarPage(session, "navbar", selected = "COSMIC83 Classification")
   })
   
   # ---------------- Search 页面 ----------------
