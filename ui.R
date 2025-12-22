@@ -16,13 +16,13 @@ ui <- navbarPage(
   title = "Indel Signature Explorer",
   theme = NULL, # 使用自定义样式
   id = "navbar",
-
+  
   # Header: CSS and JavaScript dependencies
   header = tags$head(
     useShinyjs(),
     tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
   ),
-
+  
   # Tab panels
   create_home_tab(),
   create_koh_tab(),
@@ -30,3 +30,4 @@ ui <- navbarPage(
   create_search_tab(),
   create_about_tab()
 )
+

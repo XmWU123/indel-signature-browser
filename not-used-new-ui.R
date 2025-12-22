@@ -7,7 +7,7 @@ ui <- navbarPage(
   title = "Indel Signature Explorer",
   theme = NULL, # 使用自定义样式
   id = "navbar",
-
+  
   # 添加自定义 CSS
   header = tags$head(
     useShinyjs(),
@@ -237,9 +237,9 @@ ui <- navbarPage(
     "
     ))
   ),
-
+  
   # ========== Home Page ==========
-
+  
   tabPanel(
     "Home",
     icon = icon("house"),
@@ -292,7 +292,7 @@ ui <- navbarPage(
       )
     )
   ),
-
+  
   # ========== Koh ID89 Explorer ==========
   tabPanel(
     "Koh ID89 Explorer",
@@ -311,14 +311,14 @@ ui <- navbarPage(
     # 主内容
     uiOutput("signature_display")
   ),
-
+  
   # ========== COSMIC ID83 Explorer ==========
   tabPanel(
     "COSMIC ID83 Explorer",
     icon = icon("layer-group"),
     uiOutput("id83_display")
   ),
-
+  
   # ========== About ==========
   tabPanel(
     "About",
@@ -333,7 +333,7 @@ ui <- navbarPage(
             "About",
             style = "color:#2c3e50; font-weight:700; margin-bottom:35px; text-align:center; font-size:32px;"
           ),
-
+          
           h3(
             "Contact Us",
             style = "color:#3498db; font-weight:700; margin-top:25px; margin-bottom:15px; font-size:24px;"
@@ -342,11 +342,11 @@ ui <- navbarPage(
             style = "font-size:17px; line-height:1.9; color:#555;",
             "If you experience any issues or have suggestions while visiting this website, don't hesitate to reach out to us."
           ),
-
+          
           hr(
             style = "margin: 35px 0; border-top: 2px solid #3498db; opacity: 0.3;"
           ),
-
+          
           h3(
             "Main Contributors",
             style = "color:#2ecc71; font-weight:700; margin-top:25px; margin-bottom:15px; font-size:24px;"
@@ -359,11 +359,11 @@ ui <- navbarPage(
             tags$br(),
             "• Steve G. Rozen"
           ),
-
+          
           hr(
             style = "margin: 35px 0; border-top: 2px solid #2ecc71; opacity: 0.3;"
           ),
-
+          
           h3(
             "Email",
             style = "color:#e74c3c; font-weight:700; margin-top:25px; margin-bottom:15px; font-size:24px;"
@@ -382,9 +382,9 @@ ui <- navbarPage(
               style = "color:#3498db; text-decoration:none; font-weight:600;"
             )
           ),
-
+          
           hr(style = "margin: 45px 0; border-top: 1px solid #bdc3c7;"),
-
+          
           tags$p(
             style = "text-align:center; color:#7f8c8d; margin-top:40px; font-size:15px; font-weight:500;",
             "© 2025 Indel Signature Explorer. All rights reserved."
@@ -394,3 +394,4 @@ ui <- navbarPage(
     )
   )
 )
+
