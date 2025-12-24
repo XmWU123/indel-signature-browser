@@ -15,13 +15,13 @@ raw_data <- read_excel("/home/wuxueming/shinyapp/table_1_2025_12_14.xlsx", sheet
 
 # 清洗数据
 id89_df <- raw_data %>%
-  select(
+  dplyr::select(
     InDel83 = `83-type signature`,
     InDel89 = `89-type signature`,
     Aetiology = `Proposed Etiology`
   ) %>%
   fill(InDel83, .direction = "down") %>%
-  filter(!is.na(InDel89)) %>%
+  dplyr::filter(!is.na(InDel89)) %>%
   mutate(
     InDel83 = as.character(InDel83),
     InDel89 = as.character(InDel89),
