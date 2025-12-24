@@ -11,13 +11,14 @@ library(data.table)
 # ==============================================================================
 
 # 读取 Excel 文件 (请确保路径正确)
-raw_data <- read_excel("table_1_2025_12_14.xlsx", sheet = 1)
+# raw_data <- read_excel("table_1_2025_12_14.xlsx", sheet = 1)
+raw_data = read_excel("table_1_2025_12_22.xlsx", sheet = 1, skip = 1)
 
 # 清洗数据
 id89_df <- raw_data %>%
   dplyr::select(
-    InDel83 = `83-type signature`,
-    InDel89 = `89-type signature`,
+    InDel83 = `83-type signature ID`,
+    InDel89 = `89-type signature ID (this study)`,
     Aetiology = `Proposed Etiology`
   ) %>%
   fill(InDel83, .direction = "down") %>%
