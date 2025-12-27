@@ -70,6 +70,14 @@ create_home_tab <- function() {
                   "Koh et al., 2025 also present an even more granular classifiction of 476 types of indel."
                )
             )
+         ), # tags$ul
+         h3(
+            "Algorithmic translation between signatures in the 83-type and 89-type 
+               classification schemes is not possible. 
+               However, this web site leverages tumor mutational spectra dominated by 
+               individual signatures to exhaustively elucidate the correspondences between 
+               signatures in the two classification schemes plus the 476-type classification scheme.",
+            style = h3_style
          )
       )
    )
