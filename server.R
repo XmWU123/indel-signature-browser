@@ -249,7 +249,7 @@ server <- function(input, output, session) {
         choices <- c(choices, paste0(matched89, " [Type: Koh89]"))
       }
       if (length(matched83) > 0) {
-        choices <- c(choices, paste0(matched83, " [Type: COSMIC83]"))
+        choices <- c(choices, paste0(matched83, " [Type: 83-Type]"))
       }
 
       showModal(modalDialog(
@@ -291,8 +291,8 @@ server <- function(input, output, session) {
       current_group(sig89)
     }
 
-    if (grepl("\\[Type: COSMIC83\\]$", choice)) {
-      sig83 <- sub(" \\[Type: COSMIC83\\]$", "", choice)
+    if (grepl("\\[Type: 83-Type\\]$", choice)) {
+      sig83 <- sub(" \\[Type: 83-Type\\]$", "", choice)
       updateNavbarPage(session, "navbar", selected = "83-type classification")
       current_id83(sig83)
     }
@@ -380,8 +380,8 @@ server <- function(input, output, session) {
             "Select signature types to display:",
             choices = c(
               "Koh89" = "ID89",
-              "COSMIC83" = "ID83",
-              "Koh476" = "ID476"
+              "83-Type" = "ID83",
+              "476-type" = "ID476"
             ),
             selected = current_selection,
             inline = TRUE
@@ -413,14 +413,14 @@ server <- function(input, output, session) {
           )
         },
 
-        # Koh89 Spectrum
+        # 89-Type Signature
         if (
           length(id89_imgs) >= 1 && file.exists(file.path("www", id89_imgs[1]))
         ) {
           div(
             class = "img-container",
-            div(class = "img-section-title", "Koh89 Signature"),
-            div(class = "img-label", "Signature Spectrum"),
+            div(class = "img-section-title", "89-Type Signature"),
+            div(class = "img-label", "Signature"),
             tags$img(
               src = id89_imgs[1],
               class = "signature-img",
@@ -437,7 +437,10 @@ server <- function(input, output, session) {
         if (length(id89_imgs) > 1) {
           div(
             class = "img-container",
-            div(class = "img-section-title", "Koh89 Sample Spectrums"),
+            div(
+              class = "img-section-title",
+              "Example tumor spectrum with this signature"
+            ),
             p(
               class = "text-muted",
               style = "margin-top: -8px; margin-bottom: 12px; color:#6c757d; font-size: 12px;",
@@ -465,11 +468,11 @@ server <- function(input, output, session) {
           )
         },
 
-        # COSMIC83
+        # 83-Type
         if (length(id83_imgs) > 0) {
           div(
             class = "img-container",
-            div(class = "img-section-title", "COSMIC83 Signature"),
+            div(class = "img-section-title", "83-Type Signature"),
             if (
               length(id83_imgs) >= 1 &&
                 file.exists(file.path("www", id83_imgs[1]))
@@ -492,7 +495,7 @@ server <- function(input, output, session) {
                 file.exists(file.path("www", id83_imgs[2]))
             ) {
               tagList(
-                div(class = "img-label", "Sample A in COSMIC83 representation"),
+                div(class = "img-label", "Sample A in 83-Type representation"),
                 tags$img(
                   src = id83_imgs[2],
                   class = "signature-img",
@@ -507,14 +510,14 @@ server <- function(input, output, session) {
           )
         },
 
-        # Koh476
+        # 476-type
         if (
           length(id476_imgs) >= 1 &&
             file.exists(file.path("www", id476_imgs[1]))
         ) {
           div(
             class = "img-container",
-            div(class = "img-section-title", "Koh476 Signature"),
+            div(class = "img-section-title", "476-type Signature"),
             div(class = "img-label", "Extended Signature Set"),
             p(
               style = "font-size: 13px; color: #7f8c8d; margin-top: -5px; margin-bottom: 10px;",
@@ -654,7 +657,7 @@ server <- function(input, output, session) {
         # ID83 Signature 图片
         div(
           class = "id83-section",
-          div(class = "id83-label", icon("layer-group"), " Signature Spectrum"),
+          div(class = "id83-label", icon("layer-group"), " Signature"),
           if (
             !is.null(id83_all_img) &&
               length(id83_all_img) > 0 &&
@@ -682,7 +685,11 @@ server <- function(input, output, session) {
         # 成员详细信息
         div(
           class = "id83-section",
-          div(class = "id83-label", icon("dna"), " Member Signatures"),
+          div(
+            class = "id83-label",
+            icon("dna"),
+            " Corresponding 89-Type Signatures"
+          ),
           lapply(members, function(member_name) {
             sig <- signature_groups[[member_name]]
             if (is.null(sig)) {
@@ -734,7 +741,7 @@ server <- function(input, output, session) {
                 ) {
                   column(
                     4,
-                    div(class = "img-label", "Koh89 Spectrum"),
+                    div(class = "img-label", "89-Type Signature"),
                     tags$img(
                       src = koh89_spectrum,
                       class = "signature-img",
@@ -770,7 +777,7 @@ server <- function(input, output, session) {
                 ) {
                   column(
                     4,
-                    div(class = "img-label", "Sample A (COSMIC83)"),
+                    div(class = "img-label", "Sample A (83-Type)"),
                     tags$img(
                       src = cosmic83_filtered,
                       class = "signature-img",
@@ -838,7 +845,7 @@ server <- function(input, output, session) {
         display_title <- "Signature View"
 
         if (grepl("signature\\.89spectrum", img)) {
-          display_title <- "Koh89 Signature Spectrum"
+          display_title <- "89-Type Signature"
         } else if (grepl("_89spectrumA", img)) {
           display_title <- "Koh89 Sample A (Original Spectrum)"
         } else if (grepl("_89spectrumB", img)) {
@@ -846,11 +853,11 @@ server <- function(input, output, session) {
         } else if (grepl("_89spectrumC", img)) {
           display_title <- "Koh89 Sample A-B (Residual)"
         } else if (grepl("_83all", img)) {
-          display_title <- "COSMIC83 Signature Spectrum"
+          display_title <- "83-Type Signature"
         } else if (grepl("_83filtered", img)) {
-          display_title <- "Sample A in COSMIC83 Representation"
+          display_title <- "Sample A in 83-Type Representation"
         } else if (grepl("_476all", img)) {
-          display_title <- "Koh476 Extended Signature"
+          display_title <- "476-Type Signature"
         } else if (grepl("Thumbnail", img)) {
           display_title <- "Group Thumbnail"
         }
