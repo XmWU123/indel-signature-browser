@@ -24,7 +24,7 @@ CONFIG <- list(
 
   # Display labels
 
-labels = list(
+  labels = list(
     TYPE_89 = "89-Type",
     TYPE_83 = "83-Type",
     TYPE_476 = "476-Type",
@@ -69,7 +69,7 @@ labels = list(
   # Search settings
   search = list(
     type_labels = list(
-      koh89 = "[Type: Koh89]",
+      koh89 = "[Type: 89-Type]",
       cosmic83 = "[Type: 83-Type]"
     )
   ),
