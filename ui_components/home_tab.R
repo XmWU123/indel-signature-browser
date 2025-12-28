@@ -18,9 +18,7 @@ create_home_tab <- function() {
             paste(
                "Small insertions and deletions, \"indels\" for short, are mutations that ",
                "add or delete small sequences of DNA (conventionally < ~50 base pairs long).",
-               "There is no single intuitive and naturally",
-               "constrained classification of indel mutation types (as there arguably is for single base mutations)",
-               "but two classifications are useful and widely used."
+               "There is no single intuitive and naturally"
             ),
             style = h3_style
          ),
