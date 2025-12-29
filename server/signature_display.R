@@ -90,7 +90,7 @@ render_signature_display <- function(input, output, current_group) {
           div(
             class = "img-container",
             render_section_title(paste(
-              "Example tumor spectrum with",
+              "Example tumor spectrum with signature",
               current_group()
             )),
             p(
