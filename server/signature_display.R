@@ -3,6 +3,8 @@
 # This module handles the 89-type signature display rendering
 # ==============================================================================
 
+library(shiny)
+
 # Render the 89-type signature display
 render_signature_display <- function(input, output, current_group) {
   output$signature_display <- renderUI({
