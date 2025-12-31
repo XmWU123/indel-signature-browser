@@ -1,0 +1,169 @@
+================================================================================
+Indel Signature Browser - Architecture Overview
+================================================================================
+
+PROJECT STRUCTURE
+================================================================================
+
+indel-signature-browser/
+├── app.R                      # Entry point: sources ui.R and server.R
+├── ui.R                       # Main UI definition, sources ui_components/
+├── server.R                   # Main server definition, sources server/
+├── config.R                   # Central configuration (paths, colors, labels)
+│
+├── R/                         # Shared R utilities
+│   ├── dependencies.R         # Central dependency loading
+│   └── initialize_476_pngs.R  # Script to generate 476-type PNG images
+│
+├── ui_components/             # Modular UI tab definitions
+│   ├── home_tab.R             # Home page with navigation links
+│   ├── koh_tab.R              # Koh ID89 classification tab
+│   ├── cosmic_tab.R           # COSMIC ID83 classification tab
+│   ├── search_tab.R           # Search functionality tab
+│   └── about_tab.R            # About/documentation tab
+│
+├── server/                    # Modular server logic
+│   ├── logging.R              # Logging utilities (init_logging, log_info, etc.)
+│   ├── validation.R           # Data validation functions
+│   ├── helpers.R              # UI helper functions (render_*, image_exists, etc.)
+│   ├── data_loading.R         # Data loading and processing
+│   ├── search_handlers.R      # Search functionality handlers
+│   ├── signature_display.R    # 89-type signature display rendering
+│   ├── id83_display.R         # 83-type signature display rendering
+│   └── event_handlers.R       # User interaction event handlers
+│
+├── data/                      # Data files
+│   ├── table_1_2025_12_22.xlsx    # Main signature metadata
+│   └── type476_liu_et_al_sigs.tsv # 476-type signature definitions
+│
+├── www/                       # Static assets (served at runtime)
+│   ├── custom.css             # Custom styles
+│   └── *.png                  # Signature images (thumbnails, spectra)
+│
+└── tests/                     # Unit tests
+    └── testthat/
+
+
+STARTUP FLOW
+================================================================================
+
+1. app.R
+   └── sources ui.R and server.R
+   
+2. ui.R
+   ├── sources R/dependencies.R → load_dependencies()
+   └── sources ui_components/*.R
+       └── constructs navbarPage with all tabs
+   
+3. server.R
+   ├── sources R/dependencies.R → load_dependencies()
+   ├── sources config.R
+   ├── sources server/logging.R → init_logging()
+   ├── sources server/validation.R
+   ├── sources server/helpers.R
+   ├── sources server/data_loading.R
+   │   └── creates: signature_groups, id83_groups, raw_data
+   ├── sources server/search_handlers.R
+   ├── sources server/signature_display.R
+   ├── sources server/id83_display.R
+   └── sources server/event_handlers.R
+
+
+DATA FLOW
+================================================================================
+
+Excel Data (table_1_2025_12_22.xlsx)
+    │
+    ▼
+data_loading.R
+    │
+    ├──► signature_groups (list)
+    │    Key: signature name (e.g., "InsDel2a")
+    │    Value: list with fields:
+    │      - thumbnail: path to thumbnail PNG
+    │      - imgs: vector of 89-type image paths
+    │      - id83: vector of 83-type image paths
+    │      - id476: vector of 476-type image paths
+    │      - aetiology: signature aetiology text
+    │      - example_tumor: example tumor identifier
+    │      - desc: optional description
+    │
+    └──► id83_groups (list)
+         Key: ID83 signature name
+         Value: similar structure for 83-type signatures
+
+
+UI RENDERING FLOW
+================================================================================
+
+Home Tab (home_tab.R)
+    │
+    ├── actionLink("home_goto_koh89") ──► server: updateNavbarPage → "Koh ID89"
+    └── actionLink("home_goto_cosmic83") ──► server: updateNavbarPage → "COSMIC ID83"
+
+Koh ID89 Tab (koh_tab.R)
+    │
+    └── signature_display.R::render_signature_display()
+        │
+        ├── Grid View (current_group() is NULL)
+        │   └── Renders thumbnail cards for all signatures
+        │
+        └── Detail View (current_group() has value)
+            ├── Back button
+            ├── Signature title
+            ├── Checkbox: show_types (ID89, ID83, ID476)
+            ├── Aetiology
+            ├── 89-Type signature image
+            ├── Example tumor spectra (Sample A, B, A-B)
+            ├── 83-Type signature image
+            └── 476-Type signature image
+
+COSMIC ID83 Tab (cosmic_tab.R)
+    │
+    └── id83_display.R::render_id83_display()
+        └── Similar structure to Koh ID89
+
+
+KEY REACTIVE VALUES
+================================================================================
+
+input$navbar          - Current tab selection
+input$show_types      - Selected signature type checkboxes
+input$show_<signame>  - Thumbnail click events
+input$back_to_list    - Back button click
+input$home_goto_*     - Home page navigation links
+
+current_group()       - Currently selected signature (NULL = grid view)
+current_id83()        - Currently selected ID83 signature
+
+
+HELPER FUNCTIONS (server/helpers.R)
+================================================================================
+
+render_thumbnail_card()  - Signature grid thumbnail
+render_back_button()     - Back navigation button
+render_section_title()   - Section headers
+render_label()           - Image labels
+render_image()           - Image display with styling
+render_aetiology()       - Aetiology display box
+image_exists()           - Check if image file exists
+
+
+CONFIGURATION (config.R)
+================================================================================
+
+CONFIG$paths
+  - data_file: Excel file path
+  - type_476_signatures: TSV file path
+  - images_dir: www/ directory
+
+CONFIG$colors
+  - primary, secondary, accent, muted, border, etc.
+
+CONFIG$labels
+  - TYPE_89, TYPE_83, TYPE_476, SIGNATURE, etc.
+
+CONFIG$ui
+  - image_max_width, thumbnail dimensions, etc.
+
+get_config(key)       - Retrieve nested config values
