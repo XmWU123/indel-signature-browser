@@ -10,15 +10,19 @@ library(data.table)
 # 1. 数据加载与预处理 (在 Server 函数外部执行)
 # ==============================================================================
 
-# 读取 Excel 文件 (请确保路径正确)
-raw_data <- read_excel("/home/wuxueming/shinyapp/table_1_2025_12_14.xlsx", sheet = 1)
+# 读取文件 (请确保路径正确)
+raw_data <- data.table::fread(
+  "data_and_code_for_vignette/ID89_ID83_connection_example.txt", 
+  data.table = FALSE, 
+  fill = TRUE
+)
 
 # 清洗数据
 id89_df <- raw_data %>%
   dplyr::select(
-    InDel83 = `83-type signature`,
-    InDel89 = `89-type signature`,
-    Aetiology = `Proposed Etiology`
+    InDel83 = InDel83,
+    InDel89 = InDel89,
+    Aetiology = `Proposed.Etiology`
   ) %>%
   fill(InDel83, .direction = "down") %>%
   dplyr::filter(!is.na(InDel89)) %>%
@@ -28,14 +32,12 @@ id89_df <- raw_data %>%
     Aetiology = as.character(Aetiology)
   )
 
-# 读取 476 列表
-id476_df <- read.csv(
-  "./mSigHdp.indel476.final.signatures.csv",
+# 读取 476 列表(12.31新路径)
+id476_df <- data.table::fread(
+  "./Manuscript_data/Liu_et_al_final_476_type_signatures.txt",
   header = TRUE,
-  check.names = FALSE,
-  stringsAsFactors = FALSE,
-  row.names = NULL
-)
+  data.table = FALSE
+  )
 ID476_list <- colnames(id476_df)
 
 # 获取所有图片列表
@@ -52,8 +54,20 @@ for (i in seq_len(nrow(id89_df))) {
   aetiology <- id89_df$Aetiology[i]
   if (is.na(aetiology)) aetiology <- "Unknown"
   
-  imgs <- paste0(ID89, c("_signature.89spectrum.png", "_89spectrumA.png", "_89spectrumB.png", "_89spectrumC.png"))
-  id83_imgs <- paste0(ID89, "_", ID83, c("_83all.png", "_83filtered.png"))
+  #更新： 先构建所有可能的后缀
+  potential_suffixes <- c("_signature.89spectrum.png", "_89spectrumA.png", "_89spectrumB.png", "_89spectrumC.png")
+  potential_imgs <- paste0(ID89, potential_suffixes)
+  
+  # 只保留那些在 www 文件夹里实际存在的文件
+  # 对于 InsDel15/16，这里会自动过滤掉 B 和 C，只保留 Signature 和 A
+  imgs <- potential_imgs[potential_imgs %in% all_pngs]
+  
+  #修改： 处理 ID83 图片
+  id83_suffixes <- c("_83all.png", "_83filtered.png")
+  potential_id83 <- paste0(ID89, "_", ID83, id83_suffixes)
+  id83_imgs <- potential_id83[potential_id83 %in% all_pngs]
+  
+  # 处理 Koh476 图片
   id476_imgs <- grep(paste0("^", ID89, "_476all.*\\.png$"), all_pngs, value = TRUE, ignore.case = TRUE)
   
   signature_groups[[ID89]] <- list(

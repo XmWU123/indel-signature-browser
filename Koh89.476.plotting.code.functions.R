@@ -682,7 +682,7 @@ x_plot476_single <- function (muts_basis, text_size=10, plot_title="test"){
 library(ggplot2)
 
 # 1️⃣ 读取 CSV 文件
-df <- read.csv("/home/wuxueming/shinyapp/mSigHdp.indel476.final.signatures.csv",
+df <- read.csv("mSigHdp.indel476.final.signatures.csv",
                check.names = FALSE,
                stringsAsFactors = FALSE,
                row.names = NULL)
