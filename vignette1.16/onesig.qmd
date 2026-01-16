@@ -1,0 +1,334 @@
+```{r}
+#| echo: false
+#| output: asis
+
+# This child template expects the following variables in the environment:
+# - sig_data: List from compute_signature_data()
+# - plot_paths: List of paths to pre-generated plot files
+
+cat(
+  '\n\n# ',
+  format_signature_name(sig_data$type89_sig_id),
+  ' {.signature-section}\n\n',
+  sep = ''
+)
+
+note0 <- find_sig_txt(sig_data$type89_sig_id)
+if (!is.null(note0)) {
+  style0 <- ifelse(
+    grepl("^Important", note0),
+    ".callout-important",
+    ".callout-note"
+  )
+  catfdiv(note0, style = style0)
+}
+
+if (!is.null(sig_data$ID83signature) && sig_data$ID83signature != "") {
+  cat("(corresponds to 83-type signature ", sig_data$ID83signature, ')\n\n')
+}
+
+```
+
+```{r}
+#| echo: false
+
+displayplot = function(mypath, wid = getp('hw')) {
+  cat(paste0("\n\n![](", mypath, "){width=", wid, "}\n\n"))
+}
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+# ID89 plots: signature, mapped signature, and catalog (stacked vertically)
+
+displayplot(plot_paths$id89_sig, getp("hw89"))
+
+# Mapped signature from 476-type (if available)
+if (!is.null(plot_paths$id89_mapped)) {
+  displayplot(plot_paths$id89_mapped, getp("hw89"))
+}
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+# Koh matching signatures section (89-type)
+if (!is.null(plot_paths$koh_plots) && length(plot_paths$koh_plots) > 0) {
+  for (koh_name in names(plot_paths$koh_plots)) {
+    koh_info <- plot_paths$koh_plots[[koh_name]]
+
+    # Get cosine from sig_data if available, otherwise from plot_paths
+    cosine_val <- NA
+    if (!is.null(sig_data$koh_matches)) {
+      match_row <- which(sig_data$koh_matches$koh_sig == koh_name)
+      if (length(match_row) > 0) {
+        cosine_val <- sig_data$koh_matches$cosine[match_row]
+      }
+    }
+    if (is.na(cosine_val) && !is.null(koh_info$cosine)) {
+      cosine_val <- koh_info$cosine
+    }
+
+    # Display the plot (89-type width)
+    displayplot(koh_info$path, getp("hw89"))
+  }
+}
+```
+
+
+```{r}
+#| echo: false
+#| output: asis
+
+displayplot(plot_paths$id89_catalog, getp("hw89"))
+
+```
+
+
+```{r}
+#| echo: false
+#| output: asis
+
+# Decomposition plots (only for non-InsDel15/16)
+if (
+  !is.null(plot_paths$id89_residual) &&
+    !is.null(plot_paths$id89_target_sig_partial_spectrum)
+) {
+  displayplot(plot_paths$id89_target_sig_partial_spectrum, getp("hw89"))
+  displayplot(plot_paths$id89_residual, getp("hw89"))
+}
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+# 476-type section header
+if (knitr::is_latex_output()) {
+  cat("\\newpage\n\n")
+}
+if (sig_data$has_476_signature) {
+  cat(
+    "## 476-type representations corresponding to ",
+    sig_data$type89_sig_id,
+    "\n\n"
+  )
+} else {
+  catfdiv(
+    paste0(
+      '476-Type ',
+      sig_data$type89_sig_id,
+      ' was not found by de novo extraction. ',
+      'This is the 476-Type spectrum of ',
+      sig_data$exemplar_id
+    ),
+    style = ".callout-note"
+  )
+}
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+# ID476 signature plot
+if (!is.null(plot_paths$id476_sig)) {
+  displayplot(plot_paths$id476_sig)
+}
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+# ID476 catalog plot (only if signature exists)
+if (!is.null(plot_paths$id476_catalog)) {
+  cat(
+    '\n\n476-type spectrum of the supporting tumor ',
+    sig_data$exemplar_id,
+    "; cosine similarity to the extracted 476-type signature is ",
+    format(sig_data$cosine476, digits = getp("cosine_digits")),
+    '\n\n',
+    sep = ""
+  )
+
+  displayplot(plot_paths$id476_catalog)
+}
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+if (knitr::is_latex_output()) {
+  cat("\\newpage\n\n")
+}
+if (sig_data$has_83_signature) {
+  cat(
+    "##",
+    "83-type signature corresponding to",
+    sig_data$type89_sig_id,
+    " (",
+    sig_data$ID83signature,
+    ")\n\n"
+  )
+} else {
+  catfdiv(
+    paste0(
+      'No 83-type signature corresponding to ',
+      sig_data$type89_sig_id,
+      " was extracted"
+    ),
+    style = ".callout-note"
+  )
+}
+cat('\n\n<details>\n<summary>Show 83-type plots</summary>\n\n')
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+# ID83 signature plot (only if signature exists)
+if (!is.null(plot_paths$id83_sig)) {
+  note83 = find_sig_txt(sig_data$ID83signature)
+  if (!is.null(note83)) {
+    catfdiv(note83, style = ".callout-note")
+  }
+
+  displayplot(plot_paths$id83_sig, getp("hw89"))
+}
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+# ID83 mapped signature from 476-type (if available)
+if (!is.null(plot_paths$id83_mapped)) {
+  # Caption for the mapped signature
+  cosine_text <- if (
+    !is.null(sig_data$cosine83_mapped) && !is.na(sig_data$cosine83_mapped)
+  ) {
+    paste0(
+      " | cosine similarity to ",
+      sig_data$ID83signature,
+      ": ",
+      format(sig_data$cosine83_mapped, digits = getp("cosine_digits"))
+    )
+  } else {
+    ""
+  }
+  cat(
+    "\n\n",
+    "83-type signature converted from 476-type signature corresponding to ",
+    sig_data$type89_sig_id,
+    cosine_text,
+    "\n\n",
+    sep = ""
+  )
+  displayplot(plot_paths$id83_mapped, getp("hw83"))
+}
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+# Header for exemplar 83-type spectrum
+cat(paste0(
+  '\n\n83-type spectrum of the supporting tumor ',
+  sig_data$exemplar_id,
+  " | cosine similarly to ",
+  sig_data$ID83signature,
+  ": ",
+  format(sig_data$cosine83, digits = getp("cosine_digits")),
+
+  '\n\n'
+))
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+# ID83 exemplar spectrum (always shown)
+displayplot(plot_paths$id83_catalog, getp("hw83"))
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+# COSMIC matching signatures section
+if (!is.null(plot_paths$cosmic_plots) && length(plot_paths$cosmic_plots) > 0) {
+  cat("\n\n### Similar COSMIC signatures\n\n")
+
+  for (cosmic_name in names(plot_paths$cosmic_plots)) {
+    cosmic_info <- plot_paths$cosmic_plots[[cosmic_name]]
+
+    # Get cosine from sig_data if available, otherwise from plot_paths
+    cosine_val <- NA
+    if (!is.null(sig_data$cosmic_matches)) {
+      match_row <- which(sig_data$cosmic_matches$cosmic_sig == cosmic_name)
+      if (length(match_row) > 0) {
+        cosine_val <- sig_data$cosmic_matches$cosine[match_row]
+      }
+    }
+    if (is.na(cosine_val) && !is.null(cosmic_info$cosine)) {
+      cosine_val <- cosmic_info$cosine
+    }
+
+    # Display the plot
+    displayplot(cosmic_info$path, getp("hw83"))
+  }
+}
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+# Jin matching signatures section
+if (!is.null(plot_paths$jin_plots) && length(plot_paths$jin_plots) > 0) {
+  cat("\n\n### Similar signatures from Jin et al. 2024\n\n")
+
+  for (jin_name in names(plot_paths$jin_plots)) {
+    jin_info <- plot_paths$jin_plots[[jin_name]]
+
+    # Get cosine from sig_data if available, otherwise from plot_paths
+    cosine_val <- NA
+    if (!is.null(sig_data$jin_matches)) {
+      match_row <- which(sig_data$jin_matches$jin_sig == jin_name)
+      if (length(match_row) > 0) {
+        cosine_val <- sig_data$jin_matches$cosine[match_row]
+      }
+    }
+    if (is.na(cosine_val) && !is.null(jin_info$cosine)) {
+      cosine_val <- jin_info$cosine
+    }
+
+    # Display the plot
+    displayplot(jin_info$path, getp("hw83"))
+  }
+}
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+# Close the details element for 83-type section
+cat("\n\n</details>\n\n")
+
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+cat(generate_section_footer(sig_data))
+```

@@ -1,0 +1,49 @@
+InDel89	Example	InDel83	type476	tmp	Proposed.Etiology
+InsDel1a	Biliary::DRUP01010095T	C_ID1	InsDel1a_476	HS	Slippage during DNA replication of the replicated DNA strand
+InsDel1b	Colon::SP21400	C_ID1	InsDel1b_476	HS	Loss of POLE (Koh et al. 2025)
+InsDel1c	Liver::SP49229	C_ID1	InsDel1c_476	HS	Slippage during DNA replication of the replicated DNA strand
+InsDel1d	Bone.SoftTissue::CPCT02020428T	C_ID1	InsDel1d_476	H	≥8bp homopolymers defective DNA mismatch repair
+InsDel2a	Esophagus::CPCT02010569T	C_ID2	InsDel2a_476	HS	Slippage during DNA replication of the replicated DNA strand
+InsDel2b	Colon::SP96118	C_ID2	InsDel2b_476	HS	5-7bp homopolymers slippage during DNA replication of the replicated DNA strand
+InsDel2c	Lymphoid::CPCT02120032T	C_ID2	InsDel2c_476	HS	≥8bp homopolymers defective DNA mismatch repair
+InsDel3a	Lung::SP58101	C_ID3	InsDel3a_476	HS	Tobacco smoking
+InsDel3b	Other::CPCT02020815T	C_ID3	InsDel3b_476	HS	Tobacco smoking
+InsDel4a	CNS::CPCT02100089T	C_ID4	InsDel4a_476	HS	Unknown
+InsDel4b	Breast::SP8564	C_ID4	InsDel4b_476	HS	Unknown
+InsDel5a	Kidney::SP39298	C_ID5	InsDel5a_476	HS	Clock-like mutational process
+InsDel5b	Liver::SP112290	C_ID5	InsDel5b_476	HS	Clock-like mutational process
+InsDel6	Ovary::SP62616	C_ID6	InsDel6_476	HS	Defective homologous recombination-based DNA damage repair
+InsDel7	Uterus::SP94741	C_ID7	InsDel7_476	HS	Defective DNA mismatch repair
+InsDel8	Breast::SP116365	C_ID8	InsDel8_476	HS	Repair of DNA double strand breaks by NHEJ
+InsDel9	Pancreas::SP102617	C_ID9	InsDel9_476	HS	Unknown
+InsDel10	Other::SP109957	C_ID10	InsDel10_476	H	Unknown
+InsDel11	Pancreas::SP77956	C_ID11	InsDel11_476	HS	Unknown
+InsDel12	Prostate::SP112985	C_ID12	InsDel12_476	H	Unknown
+InsDel13	Skin::SP124439	C_ID13	InsDel13_476	HS	Ultraviolet light exposure
+InsDel14	Colon::CPCT02040258T	C_ID14	InsDel14_476	HS	Unknown
+InsDel15	WES::TCGA-EW-A2FV-01A-11D-A17D-09	C_ID15	-	From WES	Unknown
+InsDel16	WES::TCGA-13-0889-01A-01W-0420-08	C_ID16	-	From WES	Unknown
+InsDel17	Other::CPCT02250003T	C_ID17	InsDel17_476	H	TOP2A K743N associated mutagenesis
+InsDel18	Head::CPCT02070053T	C_ID18	InsDel18_476	HS	Exposure to E.coli carrying pks island (Colibactin)
+InsDel19a	Bone.SoftTissue::CPCT02010408T	C_ID19	InsDel19a_476	HS	Unknown
+InsDel19b	Skin::CPCT02340081T	C_ID19	InsDel19b_476	HS	Unknown
+InsDel19c	Skin::CPCT02060041T	C_ID19	InsDel19c_476	HS	Unknown
+InsDel23	Kidney::SP102957	C_ID23	InsDel23_476	H	Aristolochic acid exposure
+InsDel_A_alpha	Other::CPCT02330041T	ID_A	InsDel_A_alpha_476	HS	APOBEC associated mutagenesis
+InsDel_A_beta	Breast::SP2293	ID_A	InsDel_A_beta_476	HS	Unknown
+InsDel_B	Liver::CPCT02020413T	ID_B	InsDel_B_476	HS	Unknown
+InsDel_C	Breast::CPCT02010772T	ID_C	InsDel_C_476	H	Unknown
+InsDel_D	Colon::CPCT02340014T	ID_D	InsDel_D_476	HS	Unknown
+InsDel_E	Uterus::DRUP01340014T	ID_E	InsDel_E_476	H	Unknown
+InsDel_F	Head::DRUP01030028T	ID_F	InsDel_F_476	HS	TOP1 transcription associated mutagenesis
+InsDel_G	Other::DRUP01030015T	ID_G	InsDel_G_476	H	Unknown
+InsDel_H	Bone.SoftTissue::CPCT02010648T	ID_H	InsDel_H_476	H	Unknown
+InsDel_I	CNS::SP107439	ID_I	InsDel_I_476	H	Unknown
+InsDel_J	Colon::DRUP01230004T	ID_J	InsDel_J_476	HS	Defective DNA mismatch repair
+InsDel_K_alpha	Prostate::SP112817	ID_K	InsDel_K_alpha_476	H	Defective DNA mismatch repair
+InsDel_K_beta	Colon::SP17905	ID_K	InsDel_K_beta_476	H	Unknown
+InsDel_L	Pancreas::SP70106	ID_L	-	-	Defective DNA mismatch repair
+InsDel_M	Prostate::SP112777	ID_M	InsDel_M_476	H	Unknown
+InsDel_N	Stomach::CPCT02030347T	ID_N	InsDel_N_476	HS	Unknown
+InsDel_O	CNS::CPCT02100101T	ID_O	InsDel_O_476	HS	Defective DNA mismatch repair
+InsDel_P	Lymphoid::SP59448	-	InsDel_P_476	H	Loss of POLE and defective DNA mismatch repair

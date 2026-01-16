@@ -9,10 +9,12 @@ library(data.table)
 # ==============================================================================
 # 1. 数据加载与预处理 (在 Server 函数外部执行)
 # ==============================================================================
+data_path_prefix <- "Manuscript_data 1.16"
+img_subdir <- "parallel_plots1.16/"
 
 # 读取文件 (请确保路径正确)
 raw_data <- data.table::fread(
-  "data_and_code_for_vignette/ID89_ID83_connection_example.txt", 
+  file.path(data_path_prefix, "89type_to_83type_connection1.tsv"), 
   data.table = FALSE, 
   fill = TRUE
 )
@@ -32,16 +34,21 @@ id89_df <- raw_data %>%
     Aetiology = as.character(Aetiology)
   )
 
-# 读取 476 列表(12.31新路径)
+id89_df$InDel89[id89_df$InDel89 == "InsDel_Aα"] <- "InsDel_A_alpha"
+id89_df$InDel89[id89_df$InDel89 == "InsDel_Aβ"] <- "InsDel_A_beta"
+id89_df$InDel89[id89_df$InDel89 == "InsDel_Kα"] <- "InsDel_K_alpha"
+id89_df$InDel89[id89_df$InDel89 == "InsDel_Kβ"] <- "InsDel_K_beta"
+
+# 读取 476 列表
 id476_df <- data.table::fread(
-  "./Manuscript_data/Liu_et_al_final_476_type_signatures.txt",
+  "./Manuscript_data 1.16/Liu_et_al_final_476_type_signatures.tsv",
   header = TRUE,
   data.table = FALSE
   )
 ID476_list <- colnames(id476_df)
 
 # 获取所有图片列表
-all_pngs <- list.files("./www", pattern = "\\.png$", full.names = FALSE)
+all_pngs <- list.files(file.path("www", img_subdir), pattern = "\\.png$", full.names = FALSE)
 
 # --- 构建 signature_groups (以 ID89 为核心) ---
 signature_groups <- list()
@@ -54,40 +61,75 @@ for (i in seq_len(nrow(id89_df))) {
   aetiology <- id89_df$Aetiology[i]
   if (is.na(aetiology)) aetiology <- "Unknown"
   
-  #更新： 先构建所有可能的后缀
-  potential_suffixes <- c("_signature.89spectrum.png", "_89spectrumA.png", "_89spectrumB.png", "_89spectrumC.png")
-  potential_imgs <- paste0(ID89, potential_suffixes)
+  # --- [新增] 读取对应的 .md 文件内容 ---
+  # 路径示例：Manuscript_data 1.16/per_sig_txt/InsDel1a.md
+  md_file_path <- file.path(data_path_prefix, "per_sig_txt", paste0(ID89, ".md"))
   
-  # 只保留那些在 www 文件夹里实际存在的文件
-  # 对于 InsDel15/16，这里会自动过滤掉 B 和 C，只保留 Signature 和 A
-  imgs <- potential_imgs[potential_imgs %in% all_pngs]
+  note_content <- NULL
+  if (file.exists(md_file_path)) {
+    # 读取所有行并用换行符连接
+    note_lines <- readLines(md_file_path, warn = FALSE)
+    if (length(note_lines) > 0) {
+      note_content <- paste(note_lines, collapse = "\n")
+    }
+  }
   
-  #修改： 处理 ID83 图片
-  id83_suffixes <- c("_83all.png", "_83filtered.png")
-  potential_id83 <- paste0(ID89, "_", ID83, id83_suffixes)
-  id83_imgs <- potential_id83[potential_id83 %in% all_pngs]
+  # 安全文件名处理
+  safe_name <- gsub("[^a-zA-Z0-9_]", "_", ID89)
   
-  # 处理 Koh476 图片
-  id476_imgs <- grep(paste0("^", ID89, "_476all.*\\.png$"), all_pngs, value = TRUE, ignore.case = TRUE)
+  # --- 1. ID89 图片 ---
+  f_sig      <- paste0(safe_name, "_id89_sig.png")
+  f_catalog  <- paste0(safe_name, "_id89_catalog.png")
+  f_residual <- paste0(safe_name, "_id89_residual.png")
+  f_target   <- paste0(safe_name, "_id89_target_sig_partial_spectrum.png")
+  
+  #  如果文件存在，存储时加上 "parallel_plots/" 前缀
+  imgs <- c()
+  if (f_sig %in% all_pngs)      imgs <- c(imgs, paste0(img_subdir, f_sig))
+  if (f_catalog %in% all_pngs)  imgs <- c(imgs, paste0(img_subdir, f_catalog))
+  if (f_residual %in% all_pngs) imgs <- c(imgs, paste0(img_subdir, f_residual))
+  if (f_target %in% all_pngs)   imgs <- c(imgs, paste0(img_subdir, f_target))
+  
+  # --- 2. ID83 图片 ---
+  f_id83_sig     <- paste0(safe_name, "_id83_sig.png")
+  f_id83_catalog <- paste0(safe_name, "_id83_catalog.png")
+  
+  id83_imgs <- c()
+  if (f_id83_sig %in% all_pngs)     id83_imgs <- c(id83_imgs, paste0(img_subdir, f_id83_sig))
+  if (f_id83_catalog %in% all_pngs) id83_imgs <- c(id83_imgs, paste0(img_subdir, f_id83_catalog))
+  
+  # --- 3. Koh476 图片 ---
+  f_id476_sig     <- paste0(safe_name, "_id476_sig.png")
+  f_id476_catalog <- paste0(safe_name, "_id476_catalog.png")
+  
+  id476_imgs <- c()
+  if (f_id476_sig %in% all_pngs)     id476_imgs <- c(id476_imgs, paste0(img_subdir, f_id476_sig))
+  if (f_id476_catalog %in% all_pngs) id476_imgs <- c(id476_imgs, paste0(img_subdir, f_id476_catalog))
+  
+  # --- 4. 缩略图 ---
+  thumb_name <- paste0(safe_name, "_Thumbnail.png")
+  final_thumb <- if (thumb_name %in% all_pngs) paste0(img_subdir, thumb_name) else NULL
   
   signature_groups[[ID89]] <- list(
     imgs = imgs,
     id83 = id83_imgs,
     id83_name = ID83,
-    id476 = if (length(id476_imgs) > 0) id476_imgs else character(0),
-    thumbnail = paste0(ID89, "89Thumbnail.png"),
-    aetiology = aetiology
+    id476 = id476_imgs,
+    thumbnail = final_thumb,
+    aetiology = aetiology,
+    note = note_content
   )
 }
 
 # --- 构建 id83_groups  ---
 id83_groups <- list()
-existing_thumbnails <- list.files("www", pattern = "_Thumbnail\\.png$", full.names = FALSE)
+existing_thumbnails <- list.files(file.path("www", img_subdir), pattern = "_Thumbnail\\.png$", full.names = FALSE)
 
 for (i in seq_len(nrow(id89_df))) {
   
   raw_id83 <- id89_df$InDel83[i]
   raw_id89 <- id89_df$InDel89[i]
+  safe_name_89 <- gsub("[^a-zA-Z0-9_]", "_", raw_id89)
   
   if (is.na(raw_id83) || raw_id83 == "Unknown") next
   
@@ -95,10 +137,17 @@ for (i in seq_len(nrow(id89_df))) {
   
   # 初始化
   if (is.null(id83_groups[[id83_key]])) {
+    # === [新增] 读取 ID83 对应的 .md 文件内容 ===
+    md_file_path_83 <- file.path(data_path_prefix, "per_sig_txt", paste0(id83_key, ".md"))
+    note_content_83 <- NULL
+    if (file.exists(md_file_path_83)) {
+      note_content_83 <- paste(readLines(md_file_path_83, warn = FALSE), collapse = "\n")
+    }
     id83_groups[[id83_key]] <- list(
       members = character(),
       id83_all = character(),
-      thumbnail = character()
+      thumbnail = character(),
+      note = note_content_83
     )
   }
   
@@ -108,36 +157,18 @@ for (i in seq_len(nrow(id89_df))) {
   }
   
   # 设置大图路径
-  expected_83all <- paste0(raw_id89, "_", raw_id83, "_83all.png")
+  expected_83all <- paste0(safe_name_89, "_id83_sig.png")
   if (length(id83_groups[[id83_key]]$id83_all) == 0) {
-    if (file.exists(file.path("www", expected_83all))) {
-      id83_groups[[id83_key]]$id83_all <- expected_83all
+    if (expected_83all %in% all_pngs) {
+      id83_groups[[id83_key]]$id83_all <- paste0(img_subdir, expected_83all)
     }
   }
   
-  # 设置缩略图 (全能匹配)
+  # ID83 缩略图
+  expected_thumb <- paste0(id83_key, "_Thumbnail.png")
   if (length(id83_groups[[id83_key]]$thumbnail) == 0) {
-    possible_names <- c(
-      paste0("ID_", id83_key, "_Thumbnail.png"),
-      paste0("C_ID", id83_key, "_Thumbnail.png"),
-      paste0(id83_key, "_Thumbnail.png"),
-      paste0("C_", id83_key, "_Thumbnail.png"),
-      paste0(gsub("ID", "ID_", id83_key), "_Thumbnail.png"),
-      paste0(gsub("ID_", "ID", id83_key), "_Thumbnail.png")
-    )
-    
-    match <- intersect(possible_names, existing_thumbnails)
-    
-    if (length(match) > 0) {
-      id83_groups[[id83_key]]$thumbnail <- match[1]
-    } else {
-      # 模糊兜底
-      clean_key <- gsub("[^A-Za-z0-9]", "", id83_key) 
-      search_pattern <- paste0(".*", clean_key, ".*_Thumbnail\\.png$")
-      fuzzy_match <- grep(search_pattern, existing_thumbnails, value = TRUE, ignore.case = TRUE)
-      if (length(fuzzy_match) > 0) {
-        id83_groups[[id83_key]]$thumbnail <- fuzzy_match[1]
-      }
+    if (expected_thumb %in% existing_thumbnails) {
+      id83_groups[[id83_key]]$thumbnail <- paste0(img_subdir, expected_thumb)
     }
   }
 }
@@ -320,6 +351,22 @@ server <- function(input, output, session) {
           )
         },
         
+        # 2. [新增] 显示来自 .md 文件的 Note (放在 Aetiology 下面)
+        if (!is.null(sig$note)) {
+          is_important <- grepl("^Important", sig$note, ignore.case = TRUE)
+          
+          div(style = paste0(
+            "padding: 15px; border-radius: 12px; margin-bottom: 25px; border-left: 5px solid ", 
+            if(is_important) "#e74c3c;" else "#3498db;", 
+            " background: ", if(is_important) "#fdf2f2;" else "#f0f7fb;",
+            " box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
+          ),
+          # 使用 shiny 自带的 markdown 渲染器（如果你的 shiny 版本较新）
+          # 如果渲染不出来，请确保安装了 markdown 包
+          shiny::markdown(sig$note)
+          )
+        },
+        
         # Koh89 Spectrum
         if (length(id89_imgs) >= 1 && file.exists(file.path("www", id89_imgs[1]))) {
           div(class = "img-container",
@@ -368,16 +415,34 @@ server <- function(input, output, session) {
         },
         
         # Koh476
-        if (length(id476_imgs) >= 1 && file.exists(file.path("www", id476_imgs[1]))) {
+        if (length(id476_imgs) >= 1) {
+          
+          # 创建外层容器
           div(class = "img-container",
               div(class = "img-section-title", "Koh476 Signature"),
-              div(class = "img-label", "Extended Signature Set"),
               p(style = "font-size: 13px; color: #7f8c8d; margin-top: -5px; margin-bottom: 10px;",
                 icon("mouse-pointer"), " Right-click and open in new tab for full view"
               ),
-              tags$img(src = id476_imgs[1], class = "signature-img", style = "max-width:100%; width:100%;",
-                       onclick = sprintf("Shiny.setInputValue('%s', new Date().getTime());", paste0("img_", id476_imgs[1])))
-          )
+              
+              # --- 显示第 1 张图片 ---
+              if (file.exists(file.path("www", id476_imgs[1]))) {
+                tagList(
+                  div(class = "img-label", "Extended Signature Set (Image 1)"),
+                  tags$img(src = id476_imgs[1], class = "signature-img", style = "max-width:100%; width:100%; margin-bottom: 20px;",
+                           onclick = sprintf("Shiny.setInputValue('%s', new Date().getTime());", paste0("img_", id476_imgs[1])))
+                )
+              },
+              
+              # --- 显示第 2 张图片 (如果存在) ---
+              if (length(id476_imgs) >= 2 && file.exists(file.path("www", id476_imgs[2]))) {
+                tagList(
+                  # 可以修改这里的标签文字
+                  div(class = "img-label", "Extended Signature Set (Image 2)"), 
+                  tags$img(src = id476_imgs[2], class = "signature-img", style = "max-width:100%; width:100%;",
+                           onclick = sprintf("Shiny.setInputValue('%s', new Date().getTime());", paste0("img_", id476_imgs[2])))
+                )
+              }
+          ) # 结束 img-container
         },
         
         if (!is.null(sig$desc)) {
@@ -461,6 +526,19 @@ server <- function(input, output, session) {
         actionButton("back_to_id83_list", "← Back to ID83 List", class = "btn-back", style = "margin-bottom:20px;"),
         h2(paste("ID83:", current_id83()), style = "color:#27ae60; font-weight:600; margin-bottom:25px;"),
         
+        # === [新增] 显示 ID83 的 Note 内容 ===
+        if (!is.null(id83_info$note)) {
+          is_important_83 <- grepl("^Important", id83_info$note, ignore.case = TRUE)
+          
+          div(style = paste0(
+            "padding: 15px; border-radius: 12px; margin-bottom: 25px; border-left: 5px solid ", 
+            if(is_important_83) "#e74c3c;" else "#3498db;", 
+            " background: ", if(is_important_83) "#fdf2f2;" else "#f0f7fb;",
+            " box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
+          ),
+          shiny::markdown(id83_info$note)
+          )
+        },
         # ID83 Signature 图片
         div(class = "id83-section",
             div(class = "id83-label", icon("layer-group"), " Signature Spectrum"),

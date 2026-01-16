@@ -1,0 +1,4 @@
+2023-09-03 23:33:16; CRITICAL; Service Manager; 4948; 4952] FlowLock OnSessionChange TryLock
+2023-09-03 23:33:16; CRITICAL; Service Manager; 4948; 4952] OnSessionChange Start, EventType = 5, EventData = 8, New SessionId = 1, Old SessionId = -1
+2023-09-03 23:33:16; CRITICAL; Service Manager; 4948; 4952] OnSessionChange End, EventType = 5, EventData = 8, New SessionId = 1, Old SessionId = -1
+2023-09-03 23:33:16; CRITICAL; Service Manager; 4948; 4952] FlowLock OnSessionChange Unlock

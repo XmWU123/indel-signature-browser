@@ -1,0 +1,1 @@
+InsDel_O and InsDel_1a as extracted in the 89-type classification have cosine similarity of 0.91 and as extracted in the 476-type classification have cosine similarity of 0.95. On balance we think they are different because of the deletions with microhomology in InsDel1a and the insertions of single T in long-poly-T contexts in InsDel_O.  
