@@ -1,1 +1,0 @@
-Deletions and insertions of T in long poly-T contexts were removed from the 83-type spectrum.
