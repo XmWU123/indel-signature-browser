@@ -11,25 +11,26 @@ source("ui_components/koh_tab.R")
 source("ui_components/cosmic_tab.R")
 source("ui_components/search_tab.R")
 source("ui_components/about_tab.R")
-
+source("ui_components/476_tab.R")
 # Main UI
 ui <- navbarPage(
-  title = "Indel Signature Explorer",
-  theme = NULL,
-  id = "navbar",
-
-  # Header: CSS and shinyjs
-  header = tagList(
-    tags$head(
-      tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
+    title = "Indel Signature Explorer",
+    theme = NULL,
+    id = "navbar", # 这个 id="navbar" 必须保留，后端书签依赖它
+    
+    # Header: CSS and shinyjs
+    header = tagList(
+      tags$head(
+        tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
+      ),
+      useShinyjs()
     ),
-    useShinyjs()
-  ),
 
   # Tab panels
   create_home_tab(),
   create_koh_tab(),
+  create_476_tab(),
   create_cosmic_tab(),
   create_search_tab(),
   create_about_tab()
-)
+  )

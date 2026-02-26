@@ -1,63 +1,280 @@
-/* 全局样式 - 明亮主题 */
+/* ==========================================================================
+   1. 全局基础样式 (Global Base Styles)
+      设定页面背景、字体、容器等通用属性
+   ========================================================================== */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #cfe9ff 0%, #ffffff 100%);
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   background-attachment: fixed;
   min-height: 100vh;
+  font-size: 16px; 
 }
 
-/* 顶部导航栏样式 */
-.navbar {
-  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
-  border: none;
-  box-shadow: 0 2px 15px rgba(0,0,0,0.2);
-  margin-bottom: 0;
-}
-.navbar-default .navbar-nav > li > a {
-  color: #ecf0f1 !important;
-  font-weight: 600;
-  font-size: 15px;
-  padding: 15px 20px;
-  transition: all 0.3s ease;
-}
-.navbar-default .navbar-nav > li > a:hover {
-  background: #3498db !important;
-  color: white !important;
-}
-.navbar-default .navbar-nav > .active > a {
-  background: #3498db !important;
-  color: white !important;
-  border-bottom: 3px solid #2ecc71;
-}
-.navbar-brand {
-  color: white !important;
-  font-weight: 700 !important;
-  font-size: 20px !important;
-}
-
-/* 内容容器 */
+/* 通用内容容器 */
 .container-fluid {
   padding: 30px;
   max-width: 1400px;
   margin: 0 auto;
 }
 
-/* 选项卡控制面板 */
-.control-panel {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 25px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  border: 2px solid rgba(52, 152, 219, 0.2);
-}
-.control-panel label {
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 16px;
+/* ==========================================================================
+   2. 导航栏样式 (Navigation)
+   ========================================================================== */
+.navbar {
+  background: #2c3e50 !important; /* 深蓝色沉稳背景 */
+  border: none !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+  margin-bottom: 0;
+  min-height: 60px;
 }
 
-/* 缩略图卡片 */
+/* 导航链接文字 */
+.navbar-default .navbar-nav > li > a {
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 15px 20px;
+  transition: all 0.3s ease;
+}
+
+/* 鼠标悬停 */
+.navbar-default .navbar-nav > li > a:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+}
+
+/* 选中状态 */
+.navbar-default .navbar-nav > .active > a {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border-bottom: 3px solid #fff;
+}
+
+/* 品牌标题 */
+.navbar-brand {
+  color: white !important;
+  font-weight: 800 !important;
+  font-size: 20px !important;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.1);
+}
+
+/* ==========================================================================
+   3. 首页样式 (Home Page)
+   ========================================================================== */
+
+/* --- 3.1 Hero 区域 (顶部大图) --- */
+.hero-section {
+  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%) !important;
+  box-shadow: 0 15px 30px rgba(44, 62, 80, 0.35);
+  color: white; 
+  padding: 90px 40px;
+  border-radius: 0 0 20px 20px;
+  margin-bottom: 60px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 背景网格纹理 */
+.hero-section::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.hero-title {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 800;
+  font-size: 4.2rem;
+  margin-bottom: 25px;
+  letter-spacing: -1.5px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  line-height: 1.1;
+}
+
+.hero-subtitle {
+  font-size: 1.5rem;
+  font-weight: 300;
+  opacity: 0.95;
+  max-width: 1000px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* DNA 动效图标 */
+.logo-icon {
+  font-size: 3.8rem;
+  color: rgba(255, 255, 255, 0.95);
+  margin-right: 25px;
+  vertical-align: middle;
+  display: inline-block;
+  animation: float-pulse 6s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+}
+
+@keyframes float-pulse {
+  0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.9; }
+  50% { transform: translateY(-8px) rotate(5deg) scale(1.05); opacity: 1; }
+  100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.9; }
+}
+
+/* --- 3.2 文字介绍区域 --- */
+.intro-text-section {
+  text-align: center;
+  max-width: 1100px;
+  margin: 0 auto 60px auto;
+  color: #34495e;
+}
+
+.intro-lead {
+  font-size: 2.0rem;
+  line-height: 1.8;
+  color: #2c3e50;
+  margin-bottom: 35px;
+  font-weight: 400;
+}
+
+.data-badge {
+  display: inline-block;
+  background: rgba(52, 152, 219, 0.1);
+  color: #2980b9;
+  padding: 2px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  border-bottom: 2px solid rgba(52, 152, 219, 0.25);
+  margin: 0 3px;
+}
+
+/* --- 3.3 Note Box (蓝色边框提示框) --- */
+.note-box {
+  background: #ffffff;
+  border-left: 5px solid #3498db;
+  padding: 35px 40px;
+  border-radius: 8px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+  margin: 50px auto;
+  max-width: 1000px;
+}
+
+.note-title {
+  color: #2c3e50;
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.note-title i {
+  color: #3498db;
+  margin-right: 10px;
+  font-size: 1.8rem;
+}
+
+.note-content {
+  font-size: 1.6rem;
+  line-height: 1.7;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.note-content strong {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+/* --- 3.4 功能入口卡片 (Feature Cards) --- */
+.feature-card {
+  background: white;
+  border-radius: 20px;
+  padding: 45px 30px;
+  height: 100%;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.02);
+  border-top: 8px solid transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.feature-card:hover {
+  transform: translateY(-15px);
+  box-shadow: 0 25px 50px rgba(52, 152, 219, 0.2);
+}
+
+.card-83 { border-top-color: #27ae60; }
+.card-89 { border-top-color: #e67e22; }
+.card-476 { border-top-color: #9b59b6; }
+
+.card-icon-large {
+  font-size: 64px;
+  margin-bottom: 25px;
+  opacity: 1;
+  transition: transform 0.3s ease;
+}
+
+.feature-card:hover .card-icon-large {
+  transform: scale(1.15);
+}
+
+.card-btn-fake {
+  margin-top: 30px;
+  display: inline-block;
+  padding: 12px 35px;
+  background: #f8f9fa;
+  color: #2c3e50;
+  border-radius: 35px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.feature-card:hover .card-btn-fake {
+  background: #3498db;
+  color: white;
+  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+
+/* --- 3.5 首页底部引用 (Citation) --- */
+.citation-box {
+  background: #f8f9fa;
+  border-left: 8px solid #95a5a6;
+  padding: 40px 50px;
+  margin-top: 80px;
+  border-radius: 8px;
+  font-size: 1.55rem;
+  line-height: 1.8;
+  color: #34495e;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  position: relative;
+}
+.citation-box span {
+  font-size: 1.75rem !important;
+  color: #2c3e50 !important;
+  margin-bottom: 10px;
+  display: inline-block;
+}
+.citation-box i {
+  font-size: 1.5rem;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+
+/* ==========================================================================
+   4. 列表页与详情页 (List & Details)
+   ========================================================================== */
+
+/* --- 4.1 列表页缩略图卡片 --- */
 .thumbnail-card {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border-radius: 16px;
@@ -73,12 +290,6 @@ body {
   box-shadow: 0 12px 30px rgba(52, 152, 219, 0.3);
   border-color: #3498db;
 }
-.thumbnail-card h4 {
-  color: #2c3e50;
-  font-weight: 700;
-  margin-bottom: 15px;
-  font-size: 18px;
-}
 .thumbnail-card img {
   border-radius: 12px;
   border: 3px solid #ecf0f1;
@@ -89,21 +300,8 @@ body {
   border-color: #3498db;
   transform: scale(1.05);
 }
-.thumbnail-card .btn {
-  width: 100%;
-  border-radius: 8px;
-  font-weight: 600;
-  padding: 12px;
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-  border: none;
-  color: white;
-}
-.thumbnail-card .btn:hover {
-  background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
-  transform: scale(1.05);
-}
 
+/* --- 4.2 详情页布局 --- */
 /* 图片容器 */
 .img-container {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
@@ -112,27 +310,10 @@ body {
   margin-bottom: 25px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   border: 2px solid rgba(52, 152, 219, 0.1);
-}
-.img-section-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #2c3e50;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 4px solid #3498db;
-  display: inline-block;
-}
-.img-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #7f8c8d;
-  text-align: center;
-  margin-bottom: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  z-index: 1;
 }
 
-/* 图片样式 */
+/* 图片本体（带交互） */
 .signature-img {
   border-radius: 12px;
   border: 3px solid #ecf0f1;
@@ -142,14 +323,18 @@ body {
   margin: 0 auto;
   background: white;
   padding: 5px;
+  position: relative;
+  z-index: 100; /* 提升层级，确保可点 */
+  pointer-events: auto !important;
 }
+
 .signature-img:hover {
-  border-color: #3498db;
+  border-color: #3498db; 
   box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
   transform: scale(1.03);
 }
 
-/* ID83 分组样式 */
+/* --- 4.3 ID83 专用区域 --- */
 .id83-section {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border-radius: 16px;
@@ -157,7 +342,9 @@ body {
   margin-bottom: 30px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   border: 2px solid rgba(52, 152, 219, 0.1);
+  z-index: 1;
 }
+
 .id83-label {
   font-size: 20px;
   font-weight: 700;
@@ -166,6 +353,8 @@ body {
   padding-left: 20px;
   border-left: 5px solid #3498db;
 }
+
+/* 成员名牌列表 */
 .member-section {
   background: linear-gradient(135deg, #ecf0f1 0%, #d5d8dc 100%);
   border-radius: 12px;
@@ -173,6 +362,7 @@ body {
   margin-bottom: 20px;
   border: 2px solid rgba(52, 152, 219, 0.2);
 }
+
 .member-name {
   font-weight: 700;
   font-size: 16px;
@@ -185,7 +375,7 @@ body {
   box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
 }
 
-/* 按钮样式 */
+/* --- 4.4 返回按钮 --- */
 .btn-back {
   background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
   color: white;
@@ -202,25 +392,121 @@ body {
   background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
 }
 
-.btn-info {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
-}
-.btn-success {
-  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%) !important;
-}
+/* ==========================================================================
+   5. 关于页面 (About Page)
+   ========================================================================== */
 
-/* Modal 样式 */
-.modal-content {
-  border-radius: 16px;
-  border: none;
-}
-.modal-header {
-  background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
+/* 顶部迷你 Hero */
+.about-hero {
+  background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%); 
+  padding: 80px 20px 120px 20px;
+  text-align: center;
   color: white;
-  border-radius: 16px 16px 0 0;
+  margin-bottom: 0;
 }
 
-/* 搜索页面样式 - 全面美化 */
+.about-title {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 800;
+  font-size: 3.8rem;
+  margin-bottom: 15px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.about-subtitle {
+  font-size: 1.7rem;
+  opacity: 0.95;
+  font-weight: 300;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* 悬浮白纸卡片 */
+.about-paper-card {
+  background: white;
+  max-width: 1000px;
+  margin: -60px auto 50px auto;
+  padding: 50px;
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+  position: relative;
+  z-index: 10;
+}
+
+/* About 内容排版 */
+.about-lead {
+  font-size: 1.7rem;
+  font-weight: 500;
+  color: #2c3e50;
+  line-height: 1.6;
+  margin-bottom: 35px;
+}
+
+.about-text {
+  font-size: 1.5rem;
+  line-height: 1.8;
+  color: #57606f;
+  margin-bottom: 25px;
+}
+
+.about-section-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-top: 40px;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f1f2f6;
+}
+
+/* 特性网格 */
+.about-feature-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 25px;
+  margin-bottom: 50px;
+}
+
+.about-feature-item {
+  flex: 1;
+  min-width: 260px;
+  background: #f8f9fa;
+  padding: 30px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  transition: all 0.3s;
+}
+.about-feature-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  border-color: #3498db;
+}
+
+.about-icon {
+  font-size: 2.5rem;
+  color: #3498db;
+  margin-bottom: 20px;
+}
+
+/* About 页引用块 */
+.citation-block {
+  background: #2c3e50;
+  color: #ecf0f1;
+  padding: 30px;
+  border-radius: 8px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  border-left: 6px solid #e74c3c;
+  margin-top: 20px;
+}
+
+/* ==========================================================================
+   6. 搜索页面 (Search Page)
+   包含布局与 Selectize 修复
+   ========================================================================== */
+
+/* 页面容器 */
 .search-page-container {
   display: flex;
   flex-direction: column;
@@ -232,36 +518,7 @@ body {
   overflow: hidden;
 }
 
-.search-page-container::before {
-  content: '';
-  position: absolute;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(52, 152, 219, 0.1) 0%, transparent 70%);
-  border-radius: 50%;
-  top: -200px;
-  left: -200px;
-  animation: float 20s ease-in-out infinite;
-}
-
-.search-page-container::after {
-  content: '';
-  position: absolute;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(46, 204, 113, 0.1) 0%, transparent 70%);
-  border-radius: 50%;
-  bottom: -150px;
-  right: -150px;
-  animation: float 15s ease-in-out infinite reverse;
-}
-
-@keyframes float {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  33% { transform: translate(30px, -30px) rotate(120deg); }
-  66% { transform: translate(-20px, 20px) rotate(240deg); }
-}
-
+/* 白色大卡片 */
 .search-box-large {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
@@ -276,26 +533,12 @@ body {
   transition: all 0.3s ease;
   border: 1px solid rgba(255, 255, 255, 0.8);
 }
-
 .search-box-large:hover {
   box-shadow: 0 25px 80px rgba(52, 152, 219, 0.2);
   transform: translateY(-5px);
 }
 
-.search-icon-decoration {
-  font-size: 60px;
-  margin-bottom: 20px;
-  background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.8; }
-}
-
+/* 搜索标题 */
 .search-title {
   font-size: 42px;
   font-weight: 800;
@@ -304,128 +547,101 @@ body {
   background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  letter-spacing: 0px;
-  text-shadow: 0 2px 10px rgba(52, 152, 219, 0.1);
 }
-
 .search-subtitle {
-  font-size: 18px;
+  font-size: 1.1rem;
   color: #7f8c8d;
-  margin-bottom: 45px;
-  font-weight: 400;
-  line-height: 1.6;
-}
-
-.search-input-container {
-  display: flex;
-  align-items: center;
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-  border-radius: 60px;
-  padding: 10px 15px;
   margin-bottom: 30px;
-  border: 3px solid transparent;
-  background-clip: padding-box;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
 }
 
-.search-input-container::before {
-  content: '';
-  position: absolute;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
-  background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
-  border-radius: 60px;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  z-index: -1;
+/* 搜索框外层容器 (Flex 布局核心) */
+.search-input-container {
+  display: flex !important;
+  align-items: center !important;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+  border-radius: 60px !important;
+  padding: 5px 15px !important; 
+  margin-bottom: 30px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08) !important;
+  border: 1px solid rgba(0,0,0,0.05) !important;
 }
 
-.search-input-container:focus-within::before {
-  opacity: 1;
-}
-
-.search-input-container:focus-within {
-  transform: scale(1.03);
-  box-shadow: 0 15px 40px rgba(52, 152, 219, 0.25);
-}
-
-.search-input-large {
-  flex: 1;
-  background: transparent !important;
-  border: none !important;
-  padding: 18px 25px !important;
-  font-size: 18px !important;
-  color: #2c3e50 !important;
-  font-weight: 500;
-}
-
-.search-input-large::placeholder {
-  color: #95a5a6;
-  font-weight: 400;
-}
-
+/* 搜索按钮 */
 .search-btn-large {
   background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
   border: none !important;
   color: white !important;
-  padding: 18px 40px !important;
+  padding: 15px 40px !important;
   border-radius: 50px !important;
   font-size: 16px !important;
   font-weight: 700 !important;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.35);
   margin-left: 10px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.35);
+  white-space: nowrap;
 }
 
-.search-examples {
-  margin-top: 35px;
-  padding-top: 30px;
-  border-top: 2px dashed rgba(52, 152, 219, 0.2);
+/* --- SelectizeInput 深度修复 (解决输入问题) --- */
+/* 控件容器 */
+.search-input-container .selectize-control.single .selectize-input {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 10px 5px !important;
+  min-height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
 }
 
-.example-tag {
-  display: inline-block;
-  background: linear-gradient(135deg, #ecf0f1 0%, #ffffff 100%);
-  padding: 12px 24px;
-  border-radius: 25px;
-  margin: 8px;
-  font-size: 14px;
-  font-weight: 600;
+/* 输入框本体 - 强制撑开 */
+.search-input-container .selectize-input input {
+  font-size: 18px !important;
+  color: #2c3e50 !important;
+  line-height: 1.5 !important;
+  position: static !important; 
+  width: 100% !important;
+  min-width: 250px !important; 
+  max-width: none !important;
+  display: block !important;
+  opacity: 1 !important;
+}
+
+/* 下拉菜单与占位符 */
+.search-input-container .selectize-input .item {
+  font-size: 18px !important;
+  color: #2c3e50 !important;
+}
+.search-input-container .selectize-input input::placeholder {
+  color: #95a5a6 !important;
+  opacity: 0.8;
+}
+
+/* 下拉框弹窗 */
+.search-input-container .selectize-dropdown {
+  margin-top: 15px !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+  font-size: 16px !important;
+  z-index: 9999 !important;
+}
+.search-input-container .selectize-dropdown .option {
+  padding: 12px 20px !important;
   color: #2c3e50;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 2px solid #ecf0f1;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  position: relative;
-  overflow: hidden;
+}
+.search-input-container .selectize-dropdown .option.active {
+  background-color: #3498db !important;
+  color: white !important;
 }
 
-.search-hint {
-  margin-top: 25px;
-  font-size: 13px;
-  color: #95a5a6;
-  font-style: italic;
-}
+/* ==========================================================================
+   7. 全局工具类与修复 (Global Utilities & Fixes)
+   ========================================================================== */
 
-@media (max-width: 768px) {
-  .search-box-large {
-    padding: 40px 30px;
-  }
-  .search-title {
-    font-size: 32px;
-  }
-  .search-input-container {
-    flex-direction: column;
-    gap: 15px;
-  }
-  .search-btn-large {
-    width: 100%;
-    margin-left: 0;
-  }
+/* 模态框层级修复 (防止被背景遮挡) */
+.modal-backdrop {
+  z-index: 1040 !important;
+}
+.modal {
+  z-index: 1050 !important;
 }

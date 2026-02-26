@@ -5,171 +5,172 @@ library(readxl)
 library(dplyr)
 library(tidyr)
 library(data.table)
+library(ggplot2)
 
 # ==============================================================================
 # 1. 数据加载与预处理 (在 Server 函数外部执行)
 # ==============================================================================
-data_path_prefix <- "Manuscript_data 1.16"
-img_subdir <- "parallel_plots1.16/"
+data_path_prefix <- "Manuscript_data1.17"
+img_subdir <- "parallel_plots1.17/" 
 
-# 读取文件 (请确保路径正确)
-raw_data <- data.table::fread(
-  file.path(data_path_prefix, "89type_to_83type_connection1.tsv"), 
-  data.table = FALSE, 
-  fill = TRUE
-)
+# --- 读取统计摘要表 ---
+summary_dir <- "vignette1.17"
+stats_filename <- "prot_table_1.csv"
+target_path <- file.path(summary_dir, stats_filename)
 
-# 清洗数据
+if (file.exists(target_path)) {
+  message("正在从目录加载摘要表：", target_path)
+  sig_stats_df <- read.csv(target_path, stringsAsFactors = FALSE)
+  if ("type89_sig_id" %in% colnames(sig_stats_df)) sig_stats_df$type89_sig_id <- as.character(sig_stats_df$type89_sig_id)
+} else if (file.exists(stats_filename)) {
+  message("警告：在根目录找到了摘要表。")
+  sig_stats_df <- read.csv(stats_filename, stringsAsFactors = FALSE)
+  if ("type89_sig_id" %in% colnames(sig_stats_df)) sig_stats_df$type89_sig_id <- as.character(sig_stats_df$type89_sig_id)
+} else {
+  sig_stats_df <- NULL
+  warning("严重警告：无法找到统计表。")
+}
+
+# --- 读取关系表 ---
+raw_data <- data.table::fread(file.path(data_path_prefix, "89type_to_83type_connection1.tsv"), data.table = FALSE, fill = TRUE)
+
 id89_df <- raw_data %>%
-  dplyr::select(
-    InDel83 = InDel83,
-    InDel89 = InDel89,
-    Aetiology = `Proposed.Etiology`
-  ) %>%
+  dplyr::select(InDel83 = InDel83, InDel89 = InDel89, Aetiology = `Proposed.Etiology`) %>%
   fill(InDel83, .direction = "down") %>%
   dplyr::filter(!is.na(InDel89)) %>%
-  mutate(
-    InDel83 = as.character(InDel83),
-    InDel89 = as.character(InDel89),
-    Aetiology = as.character(Aetiology)
-  )
+  mutate(across(c(InDel83, InDel89, Aetiology), as.character))
 
-id89_df$InDel89[id89_df$InDel89 == "InsDel_Aα"] <- "InsDel_A_alpha"
-id89_df$InDel89[id89_df$InDel89 == "InsDel_Aβ"] <- "InsDel_A_beta"
-id89_df$InDel89[id89_df$InDel89 == "InsDel_Kα"] <- "InsDel_K_alpha"
-id89_df$InDel89[id89_df$InDel89 == "InsDel_Kβ"] <- "InsDel_K_beta"
+# 修复希腊字母
+id89_df$InDel89 <- gsub("InsDel_Aα", "InsDel_A_alpha", id89_df$InDel89)
+id89_df$InDel89 <- gsub("InsDel_Aβ", "InsDel_A_beta", id89_df$InDel89)
+id89_df$InDel89 <- gsub("InsDel_Kα", "InsDel_K_alpha", id89_df$InDel89)
+id89_df$InDel89 <- gsub("InsDel_Kβ", "InsDel_K_beta", id89_df$InDel89)
 
-# 读取 476 列表
-id476_df <- data.table::fread(
-  "./Manuscript_data 1.16/Liu_et_al_final_476_type_signatures.tsv",
-  header = TRUE,
-  data.table = FALSE
-  )
-ID476_list <- colnames(id476_df)
-
-# 获取所有图片列表
-all_pngs <- list.files(file.path("www", img_subdir), pattern = "\\.png$", full.names = FALSE)
-
-# --- 构建 signature_groups (以 ID89 为核心) ---
+# ==============================================================================
+# [构建 signature_groups]
+# ==============================================================================
 signature_groups <- list()
+
+img_dir_full_path <- file.path("www", img_subdir)
+if (!dir.exists(img_dir_full_path)) {
+  warning(paste("警告：找不到图片目录:", img_dir_full_path))
+  all_pngs <- character(0)
+} else {
+  all_pngs <- list.files(img_dir_full_path, pattern = "\\.png$", full.names = FALSE)
+}
 
 for (i in seq_len(nrow(id89_df))) {
   ID89 <- id89_df$InDel89[i]
   ID83 <- id89_df$InDel83[i]
   if (is.na(ID83)) ID83 <- "Unknown"
-  
   aetiology <- id89_df$Aetiology[i]
-  if (is.na(aetiology)) aetiology <- "Unknown"
+  if (is.na(aetiology)) aetiology <- ""
   
-  # --- [新增] 读取对应的 .md 文件内容 ---
-  # 路径示例：Manuscript_data 1.16/per_sig_txt/InsDel1a.md
+  # --- 读取 Note ---
   md_file_path <- file.path(data_path_prefix, "per_sig_txt", paste0(ID89, ".md"))
-  
   note_content <- NULL
   if (file.exists(md_file_path)) {
-    # 读取所有行并用换行符连接
     note_lines <- readLines(md_file_path, warn = FALSE)
-    if (length(note_lines) > 0) {
-      note_content <- paste(note_lines, collapse = "\n")
+    if (length(note_lines) > 0) note_content <- paste(note_lines, collapse = "\n")
+  }
+  
+  # --- 读取 ID83 Note ---
+  note_content_83 <- NULL
+  if (ID83 != "Unknown") {
+    md_file_path_83 <- file.path(data_path_prefix, "per_sig_txt", paste0(ID83, ".md"))
+    if (file.exists(md_file_path_83)) {
+      note_lines_83 <- readLines(md_file_path_83, warn = FALSE)
+      if (length(note_lines_83) > 0) note_content_83 <- paste(note_lines_83, collapse = "\n")
     }
   }
   
-  # 安全文件名处理
   safe_name <- gsub("[^a-zA-Z0-9_]", "_", ID89)
   
-  # --- 1. ID89 图片 ---
-  f_sig      <- paste0(safe_name, "_id89_sig.png")
-  f_catalog  <- paste0(safe_name, "_id89_catalog.png")
-  f_residual <- paste0(safe_name, "_id89_residual.png")
-  f_target   <- paste0(safe_name, "_id89_target_sig_partial_spectrum.png")
+  # --- 寻找图片 ---
+  img_89_top_path <- NULL
+  top_filename <- paste0(safe_name, "_89-1.png") 
+  if (file.exists(file.path("www", "89", top_filename))) {
+    img_89_top_path <- file.path("89", top_filename)
+  }
   
-  #  如果文件存在，存储时加上 "parallel_plots/" 前缀
-  imgs <- c()
-  if (f_sig %in% all_pngs)      imgs <- c(imgs, paste0(img_subdir, f_sig))
-  if (f_catalog %in% all_pngs)  imgs <- c(imgs, paste0(img_subdir, f_catalog))
-  if (f_residual %in% all_pngs) imgs <- c(imgs, paste0(img_subdir, f_residual))
-  if (f_target %in% all_pngs)   imgs <- c(imgs, paste0(img_subdir, f_target))
+  find_one_img <- function(suffix) {
+    fname <- paste0(safe_name, suffix)
+    if (fname %in% all_pngs) return(paste0(img_subdir, fname)) else return(NULL)
+  }
   
-  # --- 2. ID83 图片 ---
-  f_id83_sig     <- paste0(safe_name, "_id83_sig.png")
-  f_id83_catalog <- paste0(safe_name, "_id83_catalog.png")
+  find_matches <- function(type_pattern) {
+    pattern <- paste0("^", safe_name, type_pattern, ".*\\.png$")
+    matches <- grep(pattern, all_pngs, value = TRUE)
+    if (length(matches) > 0) return(sort(paste0(img_subdir, matches))) else return(character(0))
+  }
   
-  id83_imgs <- c()
-  if (f_id83_sig %in% all_pngs)     id83_imgs <- c(id83_imgs, paste0(img_subdir, f_id83_sig))
-  if (f_id83_catalog %in% all_pngs) id83_imgs <- c(id83_imgs, paste0(img_subdir, f_id83_catalog))
+  img_89_sig      <- find_one_img("_id89_sig.png")
+  img_89_mapped   <- find_one_img("_id89_mapped.png")
+  img_89_cat      <- find_one_img("_id89_catalog.png")
+  img_89_target   <- find_one_img("_id89_target_sig_partial_spectrum.png")
+  img_89_residual <- find_one_img("_id89_residual.png")
+  id89_decomp_list <- c(img_89_cat, img_89_target, img_89_residual)
+  id89_decomp_list <- id89_decomp_list[!is.null(id89_decomp_list)]
   
-  # --- 3. Koh476 图片 ---
-  f_id476_sig     <- paste0(safe_name, "_id476_sig.png")
-  f_id476_catalog <- paste0(safe_name, "_id476_catalog.png")
+  img_koh_matches <- find_matches("_koh_")
   
-  id476_imgs <- c()
-  if (f_id476_sig %in% all_pngs)     id476_imgs <- c(id476_imgs, paste0(img_subdir, f_id476_sig))
-  if (f_id476_catalog %in% all_pngs) id476_imgs <- c(id476_imgs, paste0(img_subdir, f_id476_catalog))
+  # 476 图片
+  img_476_sig     <- find_one_img("_id476_sig.png")
+  img_476_cat     <- find_one_img("_id476_catalog.png")
+  id476_list <- c(img_476_sig, img_476_cat)
+  id476_list <- id476_list[!is.null(id476_list)]
   
-  # --- 4. 缩略图 ---
-  thumb_name <- paste0(safe_name, "_Thumbnail.png")
-  final_thumb <- if (thumb_name %in% all_pngs) paste0(img_subdir, thumb_name) else NULL
+  # 476 缩略图
+  id476_thumb <- find_one_img("_id476_Thumbnail.png")
+  
+  img_83_sig      <- find_one_img("_id83_sig.png")
+  img_83_mapped   <- find_one_img("_id83_mapped.png")
+  img_83_cat      <- find_one_img("_id83_catalog.png")
+  
+  img_83_sig_abl    <- find_one_img("_id83_sig_ablated.png")
+  img_83_mapped_abl <- find_one_img("_id83_mapped_ablated.png")
+  img_83_cat_abl    <- find_one_img("_id83_catalog_ablated.png")
+  
+  img_cosmic_matches <- find_matches("_cosmic_")
+  img_jin_matches    <- find_matches("_jin_")
+  final_thumb <- find_one_img("_Thumbnail.png")
   
   signature_groups[[ID89]] <- list(
-    imgs = imgs,
-    id83 = id83_imgs,
+    img_89_top = img_89_top_path,
+    id89_sig = img_89_sig, id89_mapped = img_89_mapped, id89_decomp = id89_decomp_list, koh_matches = img_koh_matches,
+    id476 = id476_list, 
+    id476_sig_only = img_476_sig,
+    id476_thumb = id476_thumb,
     id83_name = ID83,
-    id476 = id476_imgs,
-    thumbnail = final_thumb,
-    aetiology = aetiology,
-    note = note_content
+    id83_sig = img_83_sig, id83_mapped = img_83_mapped, id83_cat = img_83_cat,
+    id83_sig_abl = img_83_sig_abl, id83_mapped_abl = img_83_mapped_abl, id83_cat_abl = img_83_cat_abl,
+    cosmic_matches = img_cosmic_matches, jin_matches = img_jin_matches,
+    thumbnail = final_thumb, aetiology = aetiology, 
+    note = note_content,
+    note_id83 = note_content_83 
   )
 }
 
-# --- 构建 id83_groups  ---
+# --- 构建 id83_groups ---
 id83_groups <- list()
-existing_thumbnails <- list.files(file.path("www", img_subdir), pattern = "_Thumbnail\\.png$", full.names = FALSE)
-
 for (i in seq_len(nrow(id89_df))) {
-  
   raw_id83 <- id89_df$InDel83[i]
   raw_id89 <- id89_df$InDel89[i]
-  safe_name_89 <- gsub("[^a-zA-Z0-9_]", "_", raw_id89)
-  
   if (is.na(raw_id83) || raw_id83 == "Unknown") next
-  
   id83_key <- trimws(as.character(raw_id83))
   
-  # 初始化
   if (is.null(id83_groups[[id83_key]])) {
-    # === [新增] 读取 ID83 对应的 .md 文件内容 ===
     md_file_path_83 <- file.path(data_path_prefix, "per_sig_txt", paste0(id83_key, ".md"))
     note_content_83 <- NULL
-    if (file.exists(md_file_path_83)) {
-      note_content_83 <- paste(readLines(md_file_path_83, warn = FALSE), collapse = "\n")
-    }
-    id83_groups[[id83_key]] <- list(
-      members = character(),
-      id83_all = character(),
-      thumbnail = character(),
-      note = note_content_83
-    )
+    if (file.exists(md_file_path_83)) note_content_83 <- paste(readLines(md_file_path_83, warn = FALSE), collapse = "\n")
+    id83_groups[[id83_key]] <- list(members = character(), id83_all = NULL, thumbnail = NULL, note = note_content_83)
   }
   
-  # 添加成员
-  if (!raw_id89 %in% id83_groups[[id83_key]]$members) {
-    id83_groups[[id83_key]]$members <- c(id83_groups[[id83_key]]$members, raw_id89)
-  }
+  if (!raw_id89 %in% id83_groups[[id83_key]]$members) id83_groups[[id83_key]]$members <- c(id83_groups[[id83_key]]$members, raw_id89)
+  if (is.null(id83_groups[[id83_key]]$id83_all)) id83_groups[[id83_key]]$id83_all <- signature_groups[[raw_id89]]$id83_sig
   
-  # 设置大图路径
-  expected_83all <- paste0(safe_name_89, "_id83_sig.png")
-  if (length(id83_groups[[id83_key]]$id83_all) == 0) {
-    if (expected_83all %in% all_pngs) {
-      id83_groups[[id83_key]]$id83_all <- paste0(img_subdir, expected_83all)
-    }
-  }
-  
-  # ID83 缩略图
-  expected_thumb <- paste0(id83_key, "_Thumbnail.png")
-  if (length(id83_groups[[id83_key]]$thumbnail) == 0) {
-    if (expected_thumb %in% existing_thumbnails) {
-      id83_groups[[id83_key]]$thumbnail <- paste0(img_subdir, expected_thumb)
-    }
+  if (is.null(id83_groups[[id83_key]]$thumbnail)) {
+    id83_groups[[id83_key]]$thumbnail <- paste0(img_subdir, id83_key, "_Thumbnail.png")
   }
 }
 
@@ -179,334 +180,325 @@ for (i in seq_len(nrow(id89_df))) {
 
 server <- function(input, output, session) {
   
+  observe({ runjs("$('.sidebar-menu li').removeClass('active');") })
+  
+  
+  current_integrated_sig <- reactiveVal(NULL)
+  
+  # ============================================================================
+  # NEW: 纯手工 URL 路由机制 (精简版：只认一个状态变量)
+  # ============================================================================
+  
+  # 1. 监听状态并推送到地址栏
   observe({
-    runjs("$('.sidebar-menu li').removeClass('active');")
-  })
-  
-  current_group <- reactiveVal(NULL)
-  current_id83 <- reactiveVal(NULL)
-  
-  # ---------------- Home page navigation links ----------------
-  observeEvent(input$home_goto_koh89, {
-    updateNavbarPage(session, "navbar", selected = "Koh89 Classification")
-  })
-  
-  observeEvent(input$home_goto_cosmic83, {
-    updateNavbarPage(session, "navbar", selected = "COSMIC83 Classification")
-  })
-  
-  # ---------------- Search 页面逻辑 ----------------
-  search_signature <- function(search_term) {
-    search_term <- trimws(search_term)
+    nav <- input$navbar
+    id <- current_integrated_sig() # 现在的核心变量只有这一个
     
-    if (search_term == "") {
-      showModal(modalDialog(
-        title = "Search Error",
-        "Please enter a signature name to search.",
-        easyClose = TRUE,
-        footer = modalButton("Close")
-      ))
-      return()
+    qs <- paste0("?nav=", URLencode(nav, reserved = TRUE))
+    if (!is.null(id)) {
+      qs <- paste0(qs, "&id=", URLencode(id, reserved = TRUE))
     }
     
-    matched89 <- grep(search_term, names(signature_groups), ignore.case = TRUE, value = TRUE)
+    current_qs <- session$clientData$url_search
+    if (qs != current_qs) {
+      updateQueryString(qs, mode = "push")
+    }
+  })
+  
+  # 2. 监听地址栏后退按钮并恢复状态
+  observeEvent(session$clientData$url_search, {
+    query <- getQueryString()
     
-    matched83_found <- character(0)
-    matched83_names <- character(0)
-    
-    for (g_name in names(id83_groups)) {
-      info <- id83_groups[[g_name]]
-      if (any(grepl(search_term, info$members, ignore.case = TRUE))) {
-        matched83_found <- c(matched83_found, g_name)
+    if (length(query) == 0) {
+      current_integrated_sig(NULL)
+    } else {
+      # 恢复 Tab
+      if (!is.null(query$nav) && isolate(input$navbar) != query$nav) {
+        updateNavbarPage(session, "navbar", selected = query$nav)
       }
-      aliases <- c(g_name, paste0("ID", g_name), paste0("ID_", g_name), paste0("C_ID", g_name), paste0("C_ID_", g_name))
-      if (any(grepl(search_term, aliases, ignore.case = TRUE))) {
-        matched83_names <- c(matched83_names, g_name)
+      # 恢复详情页状态
+      if (!is.null(query$id)) {
+        current_integrated_sig(query$id)
+      } else {
+        current_integrated_sig(NULL)
       }
     }
-    matched83 <- unique(c(matched83_found, matched83_names))
-    
-    if (length(matched89) == 0 && length(matched83) == 0) {
-      showModal(modalDialog(
-        title = "Signature Not Found",
-        paste0("'", search_term, "' not found in ID89 or ID83."),
-        easyClose = TRUE,
-        footer = modalButton("Close")
-      ))
-      return()
-    }
-    
-    if ((length(matched89) > 0 && length(matched83) > 0) || length(matched89) > 1 || length(matched83) > 1) {
-      choices <- c()
-      if (length(matched89) > 0) choices <- c(choices, paste0(matched89, " [Type: Koh89]"))
-      if (length(matched83) > 0) choices <- c(choices, paste0(matched83, " [Type: COSMIC83]"))
-      
-      showModal(modalDialog(
-        title = "Select Signature",
-        tags$p(paste0("Multiple matches found for '", search_term, "':")),
-        radioButtons("select_search", label = NULL, choices = choices),
-        easyClose = TRUE,
-        footer = tagList(
-          modalButton("Cancel"),
-          actionButton("confirm_search", "Go", class = "btn-primary")
-        )
-      ))
-      return()
-    }
-    
-    if (length(matched89) == 1) {
-      updateNavbarPage(session, "navbar", selected = "Koh89 Classification")
-      current_group(matched89[1])
-      updateTextInput(session, "search_input", value = "")
-      return()
-    }
-    if (length(matched83) == 1) {
-      updateNavbarPage(session, "navbar", selected = "COSMIC83 Classification")
-      current_id83(matched83[1])
-      updateTextInput(session, "search_input", value = "")
-      return()
-    }
+  })
+  
+  # ============================================================================
+  # 通用跳转逻辑
+  # ============================================================================
+  jump_to_tab <- function(tab_name, set_group_fn = NULL) {
+    updateNavbarPage(session, "navbar", selected = tab_name)
+    if (!is.null(set_group_fn)) set_group_fn()
   }
   
-  observeEvent(input$confirm_search, {
-    choice <- input$select_search
-    if (is.null(choice)) return()
-    
-    if (grepl("\\[Type: Koh89\\]$", choice)) {
-      sig89 <- sub(" \\[Type: Koh89\\]$", "", choice)
-      updateNavbarPage(session, "navbar", selected = "Koh89 Classification")
-      current_group(sig89)
-    }
-    
-    if (grepl("\\[Type: COSMIC83\\]$", choice)) {
-      sig83 <- sub(" \\[Type: COSMIC83\\]$", "", choice)
-      updateNavbarPage(session, "navbar", selected = "COSMIC83 Classification")
-      current_id83(sig83)
-    }
-    updateTextInput(session, "search_input", value = "")
-    removeModal()
-  })
+  observeEvent(input$home_goto_89, { updateNavbarPage(session, "navbar", selected = "89-type classification") })
+  observeEvent(input$home_goto_83, { updateNavbarPage(session, "navbar", selected = "83-type classification") })
+  observeEvent(input$home_goto_476, { updateNavbarPage(session, "navbar", selected = "476-type classification") })
   
-  observeEvent(input$search_btn, {
-    search_signature(input$search_input)
-  })
+  # ============================================================================
+  # 辅助函数 (移到 server 内部顶层，避免在 renderUI 中重复定义)
+  # ============================================================================
+  img_block <- function(img_path, width="100%", border=TRUE) {
+    if (is.null(img_path) || is.na(img_path)) return(NULL)
+    if(length(img_path) > 1) img_path <- img_path[1] 
+    div(style = "text-align: center; margin-bottom: 10px;",
+        tags$img(src = img_path, class = "signature-img",
+                 style = paste0("width: ", width, "; max-width: 900px; ", if(border) "border: 1px solid #ddd; padding: 2px;" else ""),
+                 onclick = sprintf("Shiny.setInputValue('%s', new Date().getTime());", paste0("img_", basename(img_path))))
+    )
+  }
   
-  # ---------------- Signature Classification 页面 (Koh89) ----------------
+  render_83_pair_block <- function(title, std_img, abl_img, caution_text = NULL) {
+    tagList(
+      h4(title, style = "color: #2c3e50; font-weight: 600; margin-top: 25px; margin-bottom: 15px;"),
+      if (!is.null(caution_text)) {
+        div(style = "background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 10px 15px; border-radius: 4px; margin-bottom: 15px;",
+            div(style = "color: #856404; font-weight: bold; margin-bottom: 5px;", icon("exclamation-triangle"), " Caution"),
+            div(style = "color: #333; font-size: 14px; line-height: 1.4;", caution_text)
+        )
+      },
+      if (!is.null(std_img)) img_block(std_img) else div(style="color:#999; font-style:italic;", "Image not available"),
+      if (!is.null(abl_img)) {
+        tags$details(
+          style = "margin-bottom: 20px; border: 1px solid #eee; border-radius: 5px; padding: 10px; background-color: #f9f9f9;",
+          tags$summary(
+            tags$span("▶ Click here to see with insertions and deletions of T in long poly-T suppressed", 
+                      style = "color: #3498db; cursor: pointer; font-weight: bold; user-select: none;")
+          ),
+          div(style = "margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 10px;", img_block(abl_img))
+        )
+      }
+    )
+  }
+  
+  # ============================================================================
+  # 辅助渲染函数：生成带折叠功能的图片对比块
+  # ============================================================================
+  render_styled_pair_block <- function(title_text, std_img, abl_img, caution_text = NULL) {
+    div(class = "id83-section", style = "margin-bottom: 30px; padding: 30px; background: #fff; border: 1px solid #eee; box-shadow: 0 5px 20px rgba(0,0,0,0.03);",
+        if(!is.null(caution_text)) caution_text,
+        
+        # 标题 
+        h4(title_text, style = "color: #2c3e50; font-weight: 700; margin-top: 0; margin-bottom: 20px; font-size: 1.2rem;"),
+        
+        # 1. Standard Scale 图片 (直接显示)
+        if (!is.null(std_img)) {
+          tags$img(src = std_img, class = "signature-img",
+                   onclick = paste0("Shiny.setInputValue('open_modal_image', '", std_img, "', {priority: 'event'})"),
+                   style = "width:100%; margin-bottom: 15px;")
+        } else { div("Standard scale image not available", style="color:#ccc; padding: 10px;") },
+        
+        # 2. Abelson Scale 图片 (折叠隐藏)
+        if (!is.null(abl_img)) {
+          tags$details(
+            style = "margin-top: 10px;",
+            
+            #  箭头图标
+            tags$summary(
+              style = "cursor: pointer; color: #3498db; font-weight: 500; font-size: 1.35rem; outline: none; user-select: none;",
+              # 绿色箭头
+              icon("chevron-circle-right", style="color: #27ae60; margin-right: 8px;"), 
+              # 蓝色文字
+              "Click here to see with insertions and deletions of T in long poly-T suppressed."
+            ),
+            
+            div(style = "margin-top: 15px; border-top: 1px dashed #eee; padding-top: 15px;",
+                tags$img(src = abl_img, class = "signature-img",
+                         onclick = paste0("Shiny.setInputValue('open_modal_image', '", abl_img, "', {priority: 'event'})"),
+                         style = "width:100%;")
+            )
+          )
+        }
+    )
+  }
+  
+  # ============================================================================
+  # 终极“三合一”综合详情页生成器 (Integrated Page Builder)
+  # ============================================================================
+  build_integrated_page <- function(sig_name, back_btn_id) {
+    sig <- signature_groups[[sig_name]]
+    
+    current_stats <- if (!is.null(sig_stats_df)) sig_stats_df[sig_stats_df$type89_sig_id == sig_name, ] else NULL
+    exemplar_name <- if(!is.null(current_stats)) current_stats$exemplar_id else "Exemplar Sample"
+    
+    # Poly-T 警告信息
+    polyT_sigs <- c("C_ID7", "ID_J", "C_ID10", "ID_N", "ID_O")
+    tumor_caution <- if (sig$id83_name %in% polyT_sigs) {
+      div(style="font-size: 13px; color: #c0392b; background: #fadbd8; padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #c0392b; display: flex; align-items: center;",
+          icon("triangle-exclamation", style="margin-right: 10px; font-size: 1.2em;"), 
+          div("For the supporting tumor plot, mutation counts for insertions and deletions of T in long-poly-T contexts were set to 0. They were also set to 0 when calculating cosine similarity with the signature. The signature was not altered when computing the cosine similarity.")
+      )
+    } else { NULL }
+    
+    tagList(
+      # 顶部导航 (返回按钮)
+      div(style = "display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;", 
+          actionButton(back_btn_id, "← Back to Thumbnails", class = "btn-back"), div()),
+      
+      # 页面主标题
+      h2(paste("Integrated Signature Profile:", sig_name), style = "color:#2c3e50; font-weight:700; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;"),
+      
+      # 关联信息框 (合并后不需要跳转链接了，直接展示文本)
+      div(style="margin-bottom: 25px; font-size: 15px; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 5px solid #34495e; box-shadow: 0 4px 15px rgba(0,0,0,0.05);",
+          div(style="margin-bottom: 8px;", tags$span("Base 89-type Unit: ", style="font-weight:bold; color:#7f8c8d; margin-right: 10px;"), tags$span(sig_name, style="color:#e67e22; font-weight:bold;")),
+          div(style="margin-bottom: 8px;", tags$span("Associated 476-type: ", style="font-weight:bold; color:#7f8c8d; margin-right: 10px;"), tags$span(sig_name, style="color:#9b59b6; font-weight:bold;")),
+          div(tags$span("Associated 83-type Group: ", style="font-weight:bold; color:#7f8c8d; margin-right: 10px;"), tags$span(sig$id83_name, style="color:#27ae60; font-weight:bold;"))
+      ),
+      
+      # Note & Etiology
+      if (!is.null(sig$note)) shiny::markdown(sig$note),
+      if (nchar(sig$aetiology) > 0) div(style="background:#e8f5e9; padding:15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2ecc71;", icon("lightbulb"), strong(" Etiology: "), sig$aetiology),
+      
+      # --- 1. 89-type Classification (橙色) ---
+      h3("1. 89-type classification", style = "color: #2c3e50; font-weight: 700; margin-top: 40px; margin-bottom: 20px;"),
+      div(class = "id83-section", div(class = "id83-label", style="border-left-color: #e67e22;", icon("dna"), " Signature Profile"), 
+          tags$img(src = sig$id89_sig, class = "signature-img", onclick = paste0("Shiny.setInputValue('open_modal_image', '", sig$id89_sig, "', {priority: 'event'})"), style = "width:100%;")),
+      
+      if (length(sig$id89_decomp) > 0) { 
+        tagList(h4("Sample Decomposition Analysis", style = "color: #7f8c8d; margin-top: 20px; font-weight: bold; text-align: center;"), 
+                div(class = "id83-section", style="background: #fff;", fluidRow(lapply(seq_along(sig$id89_decomp), function(i) { 
+                  lbl <- c("Spectrum (Observed)", "Reconstructed", "Residual")[i]; 
+                  column(4, div(class = "img-label", lbl), tags$img(src = sig$id89_decomp[i], class = "signature-img", onclick = paste0("Shiny.setInputValue('open_modal_image', '", sig$id89_decomp[i], "', {priority: 'event'})"), style = "width:100%;"))}))))
+      },
+      
+      # --- 2. 476-type Classification (紫色) ---
+      h3("2. 476-type classification", style = "color: #2c3e50; font-weight: 700; margin-top: 40px; margin-bottom: 20px;"),
+      if (length(sig$id476) > 0) { 
+        div(class = "id83-section", div(class = "id83-label", style="border-left-color: #9b59b6;", icon("microscope"), " 476-type Representations"), 
+            lapply(sig$id476, function(p) { label_text <- "476-type Image"; if (grepl("catalog", p, ignore.case = TRUE)) label_text <- "476-type Spectrum" else if (grepl("sig", p, ignore.case = TRUE)) label_text <- "476-type Signature"; 
+            div(style = "margin-bottom: 30px;", div(class = "img-label", label_text), tags$img(src = p, class = "signature-img", onclick = paste0("Shiny.setInputValue('open_modal_image', '", p, "', {priority: 'event'})"), style = "width:100%;"))}))
+      } else { div(class = "alert alert-warning", "No 476-type representation available.")},
+      
+      # --- 3. 83-type Classification (绿色) ---
+      h3("3. 83-type classification", style = "color: #2c3e50; font-weight: 700; margin-top: 40px; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 10px;"),
+      if (!is.null(sig$note_id83)) {
+        div(style = "background-color: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;", shiny::markdown(sig$note_id83))
+      },
+      render_styled_pair_block("3.1 83-type signature from de-novo extraction", sig$id83_sig, sig$id83_sig_abl),
+      if (!is.null(sig$id83_mapped)) {
+        render_styled_pair_block(paste0("3.2 83-type signature converted from 476-type signature corresponding to ", sig_name), sig$id83_mapped, sig$id83_mapped_abl)
+      },
+      render_styled_pair_block(paste("3.3 83-type spectrum of the supporting tumor", exemplar_name), sig$id83_cat, sig$id83_cat_abl, tumor_caution),
+      
+      # --- 4. Similarity Summary ---
+      if (!is.null(current_stats) && nrow(current_stats) > 0) {
+        tagList(
+          h3("4. Similarity Summary", style = "color: #2c3e50; font-weight: 700; margin-top: 50px; border-bottom: 2px solid #eee; padding-bottom: 10px;"),
+          div(style = "overflow-x: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);",
+              tags$table(class = "table table-hover", style = "width: 100%; margin-top: 10px; font-size: 1.05rem;",
+                         tags$thead(tags$tr(style="background:#f8f9fa;", tags$th("Metric"), tags$th("Result / Best Match"), tags$th("Cosine Similarity"))),
+                         tags$tbody(
+                           tags$tr(tags$td(tags$strong("83-type Representation")), tags$td(sig$id83_name), tags$td(format(current_stats$cosine83, digits=4))),
+                           tags$tr(tags$td(tags$strong("476-type Representation")), tags$td("Mapped from 476"), tags$td(format(current_stats$cos_v_collapsed_476, digits=4))),
+                           tags$tr(tags$td(tags$strong("Original Sample (89-type)")), tags$td(current_stats$exemplar_id), tags$td(format(current_stats$cosine_89_exemplar, digits=4))),
+                           tags$tr(tags$td(tags$strong("Best COSMIC Match")), tags$td(current_stats$best_match_cosmic), tags$td(format(current_stats$cosine_v_cosmic, digits=4))),
+                           tags$tr(tags$td(tags$strong("Best Jin Match")), tags$td(current_stats$best_match_jin), tags$td(format(current_stats$cosine_v_jin, digits=4))),
+                           tags$tr(tags$td(tags$strong("Best Koh Match")), tags$td(current_stats$best_match_koh), tags$td(format(current_stats$cosine_v_koh, digits=4)))
+                         )
+              )
+          )
+        )
+      }
+    )
+  }
+  
+  # ============================================================================
+  # 页面 1: 89-type Classification (列表 / 综合详情页)
+  # ============================================================================
   output$signature_display <- renderUI({
-    if (is.null(current_group())) {
+    if (is.null(current_integrated_sig())) {
+      # 渲染原来的 89 缩略图大厅
       fluidRow(
         lapply(names(signature_groups), function(group_name) {
-          if (is.null(signature_groups[[group_name]])) return(NULL)
           sig <- signature_groups[[group_name]]
           thumb <- sig$thumbnail
-          
           column(3,
                  div(class = "thumbnail-card",
-                     actionLink(
-                       inputId = paste0("show_", group_name),
-                       label = tagList(
-                         h4(group_name, style = "color:#2c3e50;font-weight:bold;margin-top:0;"),
+                     onclick = paste0("$('#show_", group_name, "').click()"),
+                     style = "cursor: pointer; min-height: 220px; display: flex; flex-direction: column; justify-content: space-between;",
+                     actionLink(inputId = paste0("show_", group_name), label = NULL, style="display:none;"),
+                     h4(group_name, style = "color:#2c3e50; font-weight:700; margin-top:0; margin-bottom: 15px; text-align: center;"),
+                     div(style = "flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 8px; overflow: hidden; padding: 5px;",
                          if (!is.null(thumb) && file.exists(file.path("www", thumb))) {
-                           tags$img(src = thumb, style = "width:100%; max-width:200px; height:auto;border-radius:5px; transition: transform 0.2s;")
-                         } else {
-                           div(style = "height:120px; line-height:120px; color:#95a5a6;", icon("image", style = "font-size:48px;"))
-                         }
-                       ),
-                       style = "text-decoration: none;color: inherit; display: block; cursor:pointer;"
+                           tags$img(src = thumb, style = "width:100%; max-height: 150px; object-fit: contain; border-radius: 4px;")
+                         } else { div(style = "color:#bdc3c7;", icon("image", class="fa-3x")) }
                      )
                  )
           )
         })
       )
     } else {
-      sig <- signature_groups[[current_group()]]
-      show_types <- input$show_types %||% c("ID89", "ID83", "ID476")
-      current_selection <- if (is.null(input$show_types)) c("ID89", "ID83", "ID476") else input$show_types
-      
-      id89_imgs <- if ("ID89" %in% show_types) sig$imgs else character(0)
-      id83_imgs <- if ("ID83" %in% show_types) sig$id83 else character(0)
-      id476_imgs <- if ("ID476" %in% show_types) sig$id476 else character(0)
-      
-      id89_imgs <- id89_imgs[!is.na(id89_imgs) & nzchar(id89_imgs)]
-      id83_imgs <- id83_imgs[!is.na(id83_imgs) & nzchar(id83_imgs)]
-      id476_imgs <- id476_imgs[!is.na(id476_imgs) & nzchar(id476_imgs)]
-      
-      tagList(
-        actionButton("back_to_list", "← Back to List", class = "btn-back", style = "margin-bottom:20px;"),
-        h2(current_group(), style = "color:#2c3e50; font-weight:600; margin-bottom:25px;"),
-        
-        div(style = "margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius:5px; border: 1px solid #e9ecef;",
-            checkboxGroupInput("show_types", "Select signature types to display:", 
-                               choices = c("Koh89" = "ID89", "COSMIC83" = "ID83", "Koh476" = "ID476"),
-                               selected = current_selection, inline = TRUE)
-        ),
-        
-        if (!is.null(sig$aetiology) && !is.na(sig$aetiology) && nchar(sig$aetiology) > 0) {
-          div(style = "background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding:20px; border-radius:12px; margin-bottom:25px; border-left:5px solid #2ecc71; box-shadow: 0 2px 8px rgba(0,0,0,0.1);",
-              div(style = "display:flex; align-items:center; margin-bottom:10px;",
-                  icon("lightbulb", style = "font-size:24px; color:#27ae60; margin-right:12px;"),
-                  tags$span(style = "font-size:16px; color:#27ae60; font-weight:700; text-transform:uppercase; letter-spacing:1px;", "Proposed Aetiology")
-              ),
-              tags$p(style = "font-size:16px; color:#2c3e50; line-height:1.8; margin:0;", sig$aetiology)
-          )
-        },
-        
-        # 2. [新增] 显示来自 .md 文件的 Note (放在 Aetiology 下面)
-        if (!is.null(sig$note)) {
-          is_important <- grepl("^Important", sig$note, ignore.case = TRUE)
-          
-          div(style = paste0(
-            "padding: 15px; border-radius: 12px; margin-bottom: 25px; border-left: 5px solid ", 
-            if(is_important) "#e74c3c;" else "#3498db;", 
-            " background: ", if(is_important) "#fdf2f2;" else "#f0f7fb;",
-            " box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
-          ),
-          # 使用 shiny 自带的 markdown 渲染器（如果你的 shiny 版本较新）
-          # 如果渲染不出来，请确保安装了 markdown 包
-          shiny::markdown(sig$note)
-          )
-        },
-        
-        # Koh89 Spectrum
-        if (length(id89_imgs) >= 1 && file.exists(file.path("www", id89_imgs[1]))) {
-          div(class = "img-container",
-              div(class = "img-section-title", "Koh89 Signature"),
-              div(class = "img-label", "Signature Spectrum"),
-              tags$img(src = id89_imgs[1], class = "signature-img", style = "max-width:700px; width:100%;",
-                       onclick = sprintf("Shiny.setInputValue('%s', new Date().getTime());", paste0("img_", id89_imgs[1])))
-          )
-        },
-        
-        # Koh89 Samples
-        if (length(id89_imgs) > 1) {
-          div(class = "img-container",
-              div(class = "img-section-title", "Koh89 Sample Spectrums"),
-              p(class = "text-muted", style = "margin-top: -8px; margin-bottom: 12px; color:#6c757d; font-size: 12px;",
-                "Click an image to view details. Samples A is the example tumor spectrum; Sample B is the partial spectrum contributed by all other signatures; Sample A-B is the difference."),
-              fluidRow(
-                lapply(seq_along(id89_imgs[-1]), function(i) {
-                  nm <- c("A", "B", "A-B")[i]
-                  imgnm <- id89_imgs[-1][i]
-                  column(4,
-                         div(class = "img-label", paste("Sample", nm)),
-                         tags$img(src = imgnm, class = "signature-img", style = "max-width:100%; width:100%;",
-                                  onclick = sprintf("Shiny.setInputValue('%s', new Date().getTime());", paste0("img_", imgnm)))
-                  )
-                })
-              )
-          )
-        },
-        
-        # COSMIC83
-        if (length(id83_imgs) > 0) {
-          div(class = "img-container",
-              div(class = "img-section-title", "COSMIC83 Signature"),
-              if (length(id83_imgs) >= 1 && file.exists(file.path("www", id83_imgs[1]))) {
-                tagList(div(class = "img-label", "Siganture Spectrum"),
-                        tags$img(src = id83_imgs[1], class = "signature-img", style = "max-width:700px; width:100%; margin-bottom:25px;",
-                                 onclick = sprintf("Shiny.setInputValue('%s', new Date().getTime());", paste0("img_", id83_imgs[1]))))
-              },
-              if (length(id83_imgs) >= 2 && file.exists(file.path("www", id83_imgs[2]))) {
-                tagList(div(class = "img-label", "Sample A in COSMIC83 representation"),
-                        tags$img(src = id83_imgs[2], class = "signature-img", style = "max-width:700px; width:100%;",
-                                 onclick = sprintf("Shiny.setInputValue('%s', new Date().getTime());", paste0("img_", id83_imgs[2]))))
-              }
-          )
-        },
-        
-        # Koh476
-        if (length(id476_imgs) >= 1) {
-          
-          # 创建外层容器
-          div(class = "img-container",
-              div(class = "img-section-title", "Koh476 Signature"),
-              p(style = "font-size: 13px; color: #7f8c8d; margin-top: -5px; margin-bottom: 10px;",
-                icon("mouse-pointer"), " Right-click and open in new tab for full view"
-              ),
-              
-              # --- 显示第 1 张图片 ---
-              if (file.exists(file.path("www", id476_imgs[1]))) {
-                tagList(
-                  div(class = "img-label", "Extended Signature Set (Image 1)"),
-                  tags$img(src = id476_imgs[1], class = "signature-img", style = "max-width:100%; width:100%; margin-bottom: 20px;",
-                           onclick = sprintf("Shiny.setInputValue('%s', new Date().getTime());", paste0("img_", id476_imgs[1])))
-                )
-              },
-              
-              # --- 显示第 2 张图片 (如果存在) ---
-              if (length(id476_imgs) >= 2 && file.exists(file.path("www", id476_imgs[2]))) {
-                tagList(
-                  # 可以修改这里的标签文字
-                  div(class = "img-label", "Extended Signature Set (Image 2)"), 
-                  tags$img(src = id476_imgs[2], class = "signature-img", style = "max-width:100%; width:100%;",
-                           onclick = sprintf("Shiny.setInputValue('%s', new Date().getTime());", paste0("img_", id476_imgs[2])))
-                )
-              }
-          ) # 结束 img-container
-        },
-        
-        if (!is.null(sig$desc)) {
-          div(style = "background:#fff3cd; border-left:4px solid #ffc107; padding:15px; border-radius:8px; margin-top:20px;",
-              icon("info-circle"), " ", sig$desc
-          )
-        }
-      )
+      # 调用工厂函数，生成综合页！
+      build_integrated_page(current_integrated_sig(), "back_to_list")
     }
   })
   
-  # ---------------- ID83 Classification 页面----------------
+  # ============================================================================
+  # 页面 2: 476-type Classification (列表 / 综合详情页)
+  # ============================================================================
+  output$id476_display <- renderUI({
+    if (is.null(current_integrated_sig())) {
+      # 渲染原来的 476 缩略图大厅
+      sig_names <- names(signature_groups)
+      fluidRow(
+        lapply(sig_names, function(name) {
+          thumb_path <- signature_groups[[name]]$id476_thumb
+          real_thumb_path <- if(!is.null(thumb_path)) file.path("www", thumb_path) else NULL
+          column(3,
+                 div(class = "thumbnail-card",
+                     onclick = sprintf("Shiny.setInputValue('show_476_%s', 1, {priority: 'event'})", name),
+                     style = "cursor: pointer; min-height: 200px; display: flex; flex-direction: column; justify-content: space-between;",
+                     h4(name, style="color:#2c3e50; font-weight:700; margin-top:0; margin-bottom: 15px; text-align: center;"),
+                     div(style = "flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 5px;",
+                         if (!is.null(real_thumb_path) && file.exists(real_thumb_path)) {
+                           tags$img(src = thumb_path, style = "max-height: 120px; max-width: 100%; border-radius: 4px;")
+                         } else { div(style="font-size: 32px; color: #bdc3c7;", icon("border-all")) }
+                     ),
+                     actionLink(inputId = paste0("btn_show_476_", name), label = NULL, style="display:none;")
+                 )
+          )
+        })
+      )
+    } else {
+      # 调用工厂函数，生成综合页！
+      build_integrated_page(current_integrated_sig(), "back_to_476_list")
+    }
+  })
+  
+  # ============================================================================
+  # 页面 3: 83-type Classification (列表 / 综合详情页)
+  # ============================================================================
   output$id83_display <- renderUI({
-    
-    if (is.null(current_id83())) {
-      # === 列表视图 (网格对齐) ===
-      
+    if (is.null(current_integrated_sig())) {
+      # 渲染原来的 83 缩略图大厅
       all_names <- names(id83_groups)
       if (length(all_names) == 0) return(NULL)
-      
-      # 分组逻辑：每行 4 个项目
       chunk_size <- 4
       id_chunks <- split(all_names, ceiling(seq_along(all_names) / chunk_size))
       
       tagList(
         lapply(id_chunks, function(chunk_names) {
           fluidRow(
-            style = "margin-bottom: 20px;", # 行间距
             lapply(chunk_names, function(id83_name) {
-              
-              # 获取组数据
               id83_info <- id83_groups[[id83_name]]
-              members_text <- paste(id83_info$members, collapse = ", ")
-              thumbnail_path <- id83_info$thumbnail
-              
+              thumb <- id83_info$thumbnail
               column(3,
                      div(class = "thumbnail-card",
-                         # 卡片样式：固定高度 (280px) 
-                         style = "background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; height: 280px; overflow-y: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: box-shadow 0.3s;",
-                         onmouseover = "this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)'",
-                         onmouseout = "this.style.boxShadow='0 2px 5px rgba(0,0,0,0.05)'",
-                         
-                         actionLink(
-                           inputId = paste0("show_id83_", id83_name),
-                           label = tagList(
-                             # 1. 标题
-                             h4(id83_name, style = "color:#27ae60; margin-top:0; font-weight:700; text-align: center;"),
-                             
-                             # 2. 图片容器
-                             div(style = "height: 150px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; background: #f9f9f9; border-radius: 4px;",
-                                 if (!is.null(thumbnail_path) && length(thumbnail_path) > 0 && file.exists(file.path("www", thumbnail_path))) {
-                                   tags$img(src = thumbnail_path, style = "max-height: 100%; max-width: 100%; border-radius: 4px;")
-                                 } else {
-                                   div(style = "color:#ccc; text-align: center;", icon("image", style = "font-size:32px; display: block;"), tags$small("No Image"))
-                                 }
-                             ),
-                             
-                             # 3. 成员列表
-                             div(style = "background:#f4f6f7; padding:8px; border-radius:4px; text-align:left;",
-                                 div(style = "font-size:11px; color:#7f8c8d; margin-bottom:5px; font-weight:bold;", "Corresponds to:"),
-                                 div(style = "font-size:12px; color:#34495e; line-height:1.4;", members_text)
-                             )
-                           ),
-                           style = "text-decoration: none; color: inherit; display: block;"
+                         onclick = paste0("$('#show_id83_", id83_name, "').click()"),
+                         style = "cursor: pointer; min-height: 280px; display: flex; flex-direction: column; justify-content: space-between;",
+                         actionLink(inputId = paste0("show_id83_", id83_name), label = NULL, style="display:none;"),
+                         h4(id83_name, style = "color:#2c3e50; margin-top:0; font-weight:700; text-align: center; margin-bottom: 15px;"),
+                         div(style = "flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; border-radius: 4px; padding: 5px; margin-bottom: 10px;",
+                             if (!is.null(thumb) && file.exists(file.path("www", thumb))) {
+                               tags$img(src = thumb, style = "max-height: 120px; max-width: 100%; border-radius: 4px;")
+                             } else { div(style = "color:#bdc3c7; text-align: center;", icon("image", class="fa-2x"), br(), tags$small("No Image")) }
+                         ),
+                         div(style = "background:#f8f9fa; padding:8px; border-radius:4px; text-align:left; border: 1px solid #eee;",
+                             div(style = "font-size:11px; color:#95a5a6; margin-bottom:3px; font-weight:bold; text-transform:uppercase;", "Members:"),
+                             div(style = "font-size:12px; color:#34495e; line-height:1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;", 
+                                 paste(id83_info$members, collapse = ", "))
                          )
                      )
               )
@@ -514,156 +506,235 @@ server <- function(input, output, session) {
           )
         })
       )
-      
     } else {
-      # === 详情视图 ===
-      
-      id83_info <- id83_groups[[current_id83()]]
-      members <- id83_info$members
-      id83_all_img <- id83_info$id83_all
-      
-      tagList(
-        actionButton("back_to_id83_list", "← Back to ID83 List", class = "btn-back", style = "margin-bottom:20px;"),
-        h2(paste("ID83:", current_id83()), style = "color:#27ae60; font-weight:600; margin-bottom:25px;"),
-        
-        # === [新增] 显示 ID83 的 Note 内容 ===
-        if (!is.null(id83_info$note)) {
-          is_important_83 <- grepl("^Important", id83_info$note, ignore.case = TRUE)
-          
-          div(style = paste0(
-            "padding: 15px; border-radius: 12px; margin-bottom: 25px; border-left: 5px solid ", 
-            if(is_important_83) "#e74c3c;" else "#3498db;", 
-            " background: ", if(is_important_83) "#fdf2f2;" else "#f0f7fb;",
-            " box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
-          ),
-          shiny::markdown(id83_info$note)
-          )
-        },
-        # ID83 Signature 图片
-        div(class = "id83-section",
-            div(class = "id83-label", icon("layer-group"), " Signature Spectrum"),
-            if (!is.null(id83_all_img) && length(id83_all_img) > 0 && file.exists(file.path("www", id83_all_img))) {
-              tags$img(src = id83_all_img, class = "signature-img", style = "max-width:700px; width:100%;",
-                       onclick = sprintf("Shiny.setInputValue('%s', new Date().getTime());", paste0("img_", id83_all_img)))
-            } else {
-              div(style = "color:#95a5a6; text-align:center; padding:40px;", icon("image", style = "font-size:48px;"), br(), "No image available")
-            }
-        ),
-        
-        # 成员详细信息
-        div(class = "id83-section",
-            div(class = "id83-label", icon("dna"), " Member Signatures"),
-            lapply(members, function(member_name) {
-              sig <- signature_groups[[member_name]]
-              if (is.null(sig)) return(NULL)
-              
-              koh89_spectrum <- if (length(sig$imgs) >= 1) sig$imgs[1] else NULL
-              koh89_sampleA <- if (length(sig$imgs) >= 2) sig$imgs[2] else NULL
-              cosmic83_filtered <- if (length(sig$id83) >= 2) sig$id83[2] else NULL
-              
-              div(class = "member-section",
-                  div(class = "member-name", icon("chevron-right"), " ", member_name),
-                  
-                  # 病因推测 (仅在详情视图显示)
-                  if (!is.null(sig$aetiology) && !is.na(sig$aetiology) && nchar(sig$aetiology) > 0) {
-                    div(style = "background:#fff3cd; padding:12px; border-radius:6px; margin-bottom:15px; border-left:3px solid #ffc107;",
-                        tags$strong(style = "color:#856404; font-size:12px;", icon("lightbulb"), " Proposed Aetiology: "),
-                        tags$span(style = "color:#856404; font-size:13px;", sig$aetiology)
-                    )
-                  },
-                  
-                  # 成员图片
-                  fluidRow(
-                    if (!is.null(koh89_spectrum) && file.exists(file.path("www", koh89_spectrum))) {
-                      column(4, div(class = "img-label", "Koh89 Spectrum"), tags$img(src = koh89_spectrum, class = "signature-img", style = "width:100%;", onclick = sprintf("Shiny.setInputValue('%s', new Date().getTime());", paste0("img_", koh89_spectrum))))
-                    },
-                    if (!is.null(koh89_sampleA) && file.exists(file.path("www", koh89_sampleA))) {
-                      column(4, div(class = "img-label", "Koh89 Sample A"), tags$img(src = koh89_sampleA, class = "signature-img", style = "width:100%;", onclick = sprintf("Shiny.setInputValue('%s', new Date().getTime());", paste0("img_", koh89_sampleA))))
-                    },
-                    if (!is.null(cosmic83_filtered) && file.exists(file.path("www", cosmic83_filtered))) {
-                      column(4, div(class = "img-label", "Sample A (COSMIC83)"), tags$img(src = cosmic83_filtered, class = "signature-img", style = "width:100%;", onclick = sprintf("Shiny.setInputValue('%s', new Date().getTime());", paste0("img_", cosmic83_filtered))))
-                    }
-                  )
-                 )
-            })
-        )
-      )
+      # 调用工厂函数，生成综合页！
+      build_integrated_page(current_integrated_sig(), "back_to_id83_list")
     }
   })
   
-  # ---------------- Event Handlers ----------------
-  lapply(names(signature_groups), function(group_name) {
-    observeEvent(input[[paste0("show_", group_name)]], {
-      current_group(group_name)
+  
+  # ============================================================================
+  # 其他逻辑
+  # ============================================================================
+  
+  # ==============================================================================
+  # 1. 初始化搜索数据 (Client-side 模式以获得更好的即时反馈)
+  # ==============================================================================
+  observe({
+    # 准备所有可能的 Signature 名字
+    # 分组显示，体验更好
+    search_choices <- list(
+      "89-Type Signatures" = names(signature_groups),
+      "83-Type Signatures" = names(id83_groups)
+    )
+    
+    # server = FALSE
+    # 这让搜索选项直接加载到浏览器，结合 UI 端的 create=TRUE，
+    # 允许用户输入不在列表里的文字（实现模糊搜素的基础）
+    updateSelectizeInput(session, "search_input", 
+                         choices = search_choices, 
+                         selected = character(0),
+                         server = FALSE) 
+  })
+  
+  # ==============================================================================
+  # 2. 核心搜索逻辑 (支持模糊搜索 + 弹窗选择)
+  # ==============================================================================
+  # 定义一个处理函数，方便复用
+  search_logic <- function(query) {
+    req(query)
+    query <- trimws(query) # 去掉首尾空格
+    
+    # --- 步骤 A: 准备全量数据 ---
+    names89 <- names(signature_groups)
+    names83 <- names(id83_groups)
+    
+    # --- 步骤 B: 尝试精准匹配 (Exact Match) ---
+    # 如果用户输入的名字完全等于某个 Signature，直接跳转
+    if (query %in% names89) {
+      updateNavbarPage(session, "navbar", selected = "89-type classification")
+      current_integrated_sig(query)
+      return()
+    }
+    if (query %in% names83) {
+      updateNavbarPage(session, "navbar", selected = "83-type classification")
+      current_integrated_sig(query)
+      return()
+    }
+    
+    # --- 步骤 C: 模糊匹配 (Fuzzy Match) ---
+    # 如果不是精准匹配，我们去库里“捞”一下包含这个词的名字
+    matches89 <- grep(query, names89, ignore.case = TRUE, value = TRUE)
+    matches83 <- grep(query, names83, ignore.case = TRUE, value = TRUE)
+    
+    total_matches <- length(matches89) + length(matches83)
+    
+    # 情况 1: 完全没找到
+    if (total_matches == 0) {
+      showModal(modalDialog(
+        title = "Not Found", 
+        paste0("No signatures found matching '", query, "'"), 
+        easyClose = TRUE,
+        footer = modalButton("Close")
+      ))
+      return()
+    }
+    
+    # 情况 2: 瞎猫碰死耗子，刚好只模糊匹配到 1 个 (直接跳转)
+    if (total_matches == 1) {
+      if (length(matches89) == 1) {
+        updateNavbarPage(session, "navbar", selected = "89-type classification")
+        current_integrated_sig(matches89)
+      } else {
+        updateNavbarPage(session, "navbar", selected = "83-type classification")
+        current_integrated_sig(matches83)
+      }
+      return()
+    }
+    
+    # 情况 3: 找到多个 (弹窗让用户选)
+    # 这就是你要的“不僵硬”：列出所有可能的选项
+    choices_list <- c(
+      if(length(matches89)>0) setNames(matches89, paste0(matches89, " (89-type)")),
+      if(length(matches83)>0) setNames(matches83, paste0(matches83, " (83-type)"))
+    )
+    
+    showModal(modalDialog(
+      title = "Multiple Matches Found",
+      "We found several signatures matching your query. Please select one:",
+      radioButtons("fuzzy_select", NULL, choices = choices_list),
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("confirm_fuzzy_search", "Go", class = "btn-primary")
+      ),
+      easyClose = TRUE
+    ))
+  }
+  
+  # --- 监听搜索按钮 (Search Button) ---
+  observeEvent(input$search_btn, {
+    search_logic(input$search_input)
+  })
+  
+  # --- 监听弹窗里的确认按钮 (Go Button) ---
+  observeEvent(input$confirm_fuzzy_search, {
+    req(input$fuzzy_select)
+    removeModal() # 关闭弹窗
+    # 拿到用户选中的那个精准名字，再跑一次逻辑 (这次它会进入步骤 B，直接跳转)
+    search_logic(input$fuzzy_select)
+  })
+  
+  # ============================================================================
+  # NEW: 缩略图点击与跳转逻辑 (核心修改：一对一 vs 一对多)
+  # ============================================================================
+  
+  # 1. 点击 89-type 和 476-type 缩略图 (直接进入三合一综合页)
+  lapply(names(signature_groups), function(n) {
+    observeEvent(input[[paste0("show_", n)]], { current_integrated_sig(n) })
+    observeEvent(input[[paste0("show_476_", n)]], { current_integrated_sig(n) })
+    observeEvent(input[[paste0("btn_show_476_", n)]], { current_integrated_sig(n) })
+  })
+  
+  # 2. 点击所有页面的 "Back to List" 按钮
+  observeEvent(input$back_to_list, { current_integrated_sig(NULL) })
+  observeEvent(input$back_to_476_list, { current_integrated_sig(NULL) })
+  observeEvent(input$back_to_id83_list, { current_integrated_sig(NULL) })
+  
+  # 3. 点击 83-type 缩略图 (弹出选择框)
+  lapply(names(id83_groups), function(n) {
+    observeEvent(input[[paste0("show_id83_", n)]], {
+      members <- id83_groups[[n]]$members
+      
+      if (length(members) == 1) {
+        current_integrated_sig(members[1])
+      } else {
+        showModal(modalDialog(
+          title = paste("Select a signature from", n),
+          tags$p("This 83-type signature represents a group containing multiple 89/476-type members. Which specific profile would you like to view?"),
+          br(),
+          div(style = "display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;",
+              lapply(members, function(m) {
+                actionButton(paste0("go_to_integrated_", m), m, class = "btn-primary btn-lg")
+              })
+          ),
+          easyClose = TRUE,
+          footer = modalButton("Cancel")
+        ))
+      }
     })
   })
   
-  observeEvent(input$back_to_list, {
-    current_group(NULL)
-  })
-  
-  lapply(names(id83_groups), function(id83_name) {
-    observeEvent(input[[paste0("show_id83_", id83_name)]], {
-      current_id83(id83_name)
+  # 4. 监听弹窗按钮点击
+  lapply(names(signature_groups), function(m) {
+    observeEvent(input[[paste0("go_to_integrated_", m)]], {
+      removeModal() 
+      current_integrated_sig(m) 
     })
   })
   
-  observeEvent(input$back_to_id83_list, {
-    current_id83(NULL)
-  })
-  
-  # 图片点击弹窗
+  # ==============================================================================
+  # 4. 图片查看器逻辑 (Image Viewer - 已适配综合页) 
+  # ==============================================================================
   observe({
     all_imgs <- character()
-    if (!is.null(current_group())) {
-      sig <- signature_groups[[current_group()]]
-      all_imgs <- unique(c(sig$imgs, sig$id83, sig$id476))
-    }
-    if (!is.null(current_id83())) {
-      id83_info <- id83_groups[[current_id83()]]
-      all_imgs <- c(all_imgs, id83_info$id83_all)
-      for (member in id83_info$members) {
-        sig <- signature_groups[[member]]
-        if (!is.null(sig)) {
-          all_imgs <- c(all_imgs, sig$imgs, sig$id83, sig$id476)
-        }
+    
+    # 因为现在只有综合页，只要 current_integrated_sig() 有值，就把三合一所有的图都收集起来
+    if (!is.null(current_integrated_sig())) {
+      sig_name <- current_integrated_sig()
+      sig <- signature_groups[[sig_name]]
+      
+      # 收集当前 89 和 476 的图片
+      all_imgs <- c(sig$img_89_top, sig$id89_sig, sig$id89_mapped, sig$id89_decomp, sig$koh_matches, sig$id476,
+                    sig$id83_sig, sig$id83_mapped, sig$id83_cat,
+                    sig$id83_sig_abl, sig$id83_mapped_abl, sig$id83_cat_abl,
+                    sig$cosmic_matches, sig$jin_matches)
+      
+      # 收集它关联的那个 83 的大头图
+      if (sig$id83_name != "Unknown") {
+        all_imgs <- c(all_imgs, id83_groups[[sig$id83_name]]$id83_all)
       }
     }
     
-    # 去除空值
-    all_imgs <- unique(all_imgs[!is.na(all_imgs) & nzchar(all_imgs)])
-    
-    # 2. 为每张图片绑定点击事件
-    lapply(all_imgs, function(img) {
-      observeEvent(input[[paste0("img_", img)]], ignoreInit = TRUE, {
-        
-        display_title <- "Signature View"
-        
-        if (grepl("signature\\.89spectrum", img)) {
-          display_title <- "Koh89 Signature Spectrum"
-        } else if (grepl("_89spectrumA", img)) {
-          display_title <- "Koh89 Sample A (Original Spectrum)"
-        } else if (grepl("_89spectrumB", img)) {
-          display_title <- "Koh89 Sample B (Reconstructed)"
-        } else if (grepl("_89spectrumC", img)) {
-          display_title <- "Koh89 Sample A-B (Residual)"
-        } else if (grepl("_83all", img)) {
-          display_title <- "COSMIC83 Signature Spectrum"
-        } else if (grepl("_83filtered", img)) {
-          display_title <- "Sample A in COSMIC83 Representation"
-        } else if (grepl("_476all", img)) {
-          display_title <- "Koh476 Extended Signature"
-        } else if (grepl("Thumbnail", img)) {
-          display_title <- "Group Thumbnail"
-        }
+    # 注册图片点击模态框
+    valid_imgs <- unique(all_imgs[!is.null(all_imgs) & !is.na(all_imgs) & all_imgs != ""])
+    lapply(valid_imgs, function(p) {
+      observeEvent(input[[paste0("img_", basename(p))]], ignoreInit = TRUE, {
         showModal(modalDialog(
-          title = display_title,
-          easyClose = TRUE,
-          size = "l",
-          footer = NULL,
-          tags$img(src = img, style = "width:100%; height:auto; border-radius:8px;box-shadow: 0 4px 12px rgba(0,0,0,0.15);")
+          title = "Image View", 
+          easyClose = TRUE, 
+          size = "l", 
+          footer = NULL, 
+          tags$img(src = p, style = "width:100%; height:auto;")
         ))
       })
     })
+  })
+  
+  # ============================================================================
+  # 监听图片点击并弹出窗口的逻辑
+  # ============================================================================
+  observeEvent(input$open_modal_image, {
+    req(input$open_modal_image) # 确保接收到了图片路径
+    
+    img_path <- input$open_modal_image
+    
+    # 打印一下路径，方便调试 (在 RStudio 控制台能看到)
+    print(paste("User clicked image:", img_path)) 
+    
+    showModal(modalDialog(
+      title = NULL,
+      div(style = "text-align: center;",
+          tags$img(src = img_path, 
+                   style = "max-width: 100%; max-height: 85vh; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);")
+      ),
+      footer = tagList(
+        tags$a(href = img_path, download = basename(img_path), 
+               class = "btn btn-primary", icon("download"), "Download", style = "color: white;"),
+        modalButton("Close")
+      ),
+      size = "l",
+      easyClose = TRUE,
+      fade = TRUE
+    ))
   })
 }

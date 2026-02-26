@@ -1,47 +1,99 @@
-# About Tab Component
 create_about_tab <- function() {
   tabPanel(
-    "About",
-    icon = icon("info-circle"),
-    fluidRow(
-      column(10, offset = 1,
-             div(class = "img-container",
-                 h2("About",
-                    style = "color:#2c3e50; font-weight:700; margin-bottom:35px; text-align:center; font-size:32px;"),
-
-                 h3("Contact Us",
-                    style = "color:#3498db; font-weight:700; margin-top:25px; margin-bottom:15px; font-size:24px;"),
-                 tags$p(style = "font-size:17px; line-height:1.9; color:#555;",
-                        "If you experience any issues or have suggestions while visiting this website, don't hesitate to reach out to us."
-                 ),
-
-                 hr(style = "margin: 35px 0; border-top: 2px solid #3498db; opacity: 0.3;"),
-
-                 h3("Main Contributors",
-                    style = "color:#2ecc71; font-weight:700; margin-top:25px; margin-bottom:15px; font-size:24px;"),
-                 tags$p(style = "font-size:17px; line-height:2.2; color:#555;",
-                        "• Xueming Wu", tags$br(),
-                        "• Mo Liu", tags$br(),
-                        "• Steverozen"
-                 ),
-
-                 hr(style = "margin: 35px 0; border-top: 2px solid #2ecc71; opacity: 0.3;"),
-
-                 h3("Email",
-                    style = "color:#e74c3c; font-weight:700; margin-top:25px; margin-bottom:15px; font-size:24px;"),
-                 tags$p(style = "font-size:17px; line-height:1.9; color:#555;",
-                        icon("envelope", style = "color:#e74c3c; margin-right:10px; font-size:20px;"),
-                        tags$a(href = "mailto:wuxm8523@gmail.com",
-                               "wuxm8523@gmail.com",
-                               style = "color:#3498db; text-decoration:none; font-weight:600;")
-                 ),
-
-                 hr(style = "margin: 45px 0; border-top: 1px solid #bdc3c7;"),
-
-                 tags$p(style = "text-align:center; color:#7f8c8d; margin-top:40px; font-size:15px; font-weight:500;",
-                        "© 2025 Indel Signature Browser. All rights reserved."
-                 )
-             )
+    title = "About",
+    icon = icon("circle-info"),
+    
+    # 1. 顶部 Hero 区域 (蓝色背景)
+    div(
+      class = "about-hero",
+      h1("About the Project", class = "about-title"),
+      p("Elucidating the landscape of somatic indel mutations in human cancer through advanced signature extraction.", class = "about-subtitle")
+    ),
+    
+    # 2. 悬浮的白色大卡片
+    div(
+      class = "about-paper-card",
+      
+      # --- Section: Introduction ---
+      h3("Project Overview", class = "about-section-title",
+         style = "color: #2980b9; border-bottom-color: #2980b9;"),
+      
+      p(class = "about-text",
+        "Indel mutational signatures provide crucial insights into the mutational processes operative in human cancer. ",
+        "While single base substitution (SBS) signatures have been extensively cataloged, the classification and analysis of small insertions and deletions (indels) present unique challenges due to their complexity."
+      ),
+      p(class = "about-text",
+        "This web application serves as a comprehensive interactive browser for exploring indel signatures derived from ",
+        tags$strong("6,975 tumors across 32 cancer types"), ". It integrates multiple classification schemes (83-type, 89-type, and 476-type) to provide multi-granular perspectives."
+      ),
+      
+      # --- Section: Key Features (Icon Grid) ---
+      h3("Key Features", class = "about-section-title",
+         style = "color: #d35400; border-bottom-color: #d35400;"),
+      
+      div(
+        class = "about-feature-grid",
+        
+        # Feature 1
+        div(class = "about-feature-item",
+            icon("layer-group", class = "about-icon"),
+            h4("Multi-Granularity", style="font-weight:700; margin-top:0;"),
+            p("Seamlessly switch between 83, 89, and 476 classification systems to view data at different resolutions.")
+        ),
+        
+        # Feature 2
+        div(class = "about-feature-item",
+            icon("chart-pie", class = "about-icon"),
+            h4("Interactive Visualization", style="font-weight:700; margin-top:0;"),
+            p("High-resolution, interactive plots for signature profiles and sample decomposition analysis.")
+        ),
+        
+        # Feature 3
+        div(class = "about-feature-item",
+            icon("database", class = "about-icon"),
+            h4("Comprehensive Data", style="font-weight:700; margin-top:0;"),
+            p("Based on a robust dataset of somatic mutations processed with non-negative matrix factorization.")
+        )
+      ),
+      
+      # --- Section: Methodology ---
+      h3("Methodology", class = "about-section-title",
+         style = "color: #8e44ad; border-bottom-color: #8e44ad;"),
+      
+      p(class = "about-text",
+        "Signatures were extracted using a Hierarchical Dirichlet Process (HDP) framework, ensuring robust discovery of mutational patterns. ",
+        "The classification schemes were developed to capture specific biological phenomena, such as repeat-mediated mutagenesis and microhomology-mediated deletions."
+      ),
+      
+      # --- Section: Contact (支持多个邮箱) ---
+      h3("Contact Us", class = "about-section-title",
+         style = "color: #16a085; border-bottom-color: #16a085;"),
+      
+      p(class = "about-text",
+        "We welcome feedback, questions, and collaboration opportunities. Please direct your inquiries to:"
+      ),
+      
+      div(style = "background: #f8f9fa; padding: 25px; border-radius: 12px; border-left: 5px solid #3498db; margin-top: 20px;",
+          tags$ul(style = "list-style: none; padding-left: 10px; margin-bottom: 0; font-size: 1.75rem; line-height: 2.2; color: #2c3e50;",
+                  
+                  # [请在这里填入你之前的邮箱]
+                  tags$li(icon("envelope", style="margin-right:12px; color:#16a085;"), 
+                          strong("Xueming Wu: "), "wuxm8523@gmail.com"),
+                  
+                  tags$li(icon("envelope", style="margin-right:12px; color:#16a085;"), 
+                          strong("Mo Liu : "), "lmliumo@foxmail.com"),
+                  
+                  tags$li(icon("envelope", style="margin-right:12px; color:#16a085;"), 
+                          strong("Steve.G.Rozen: "), "steverozen@pm.me")
+          )
+      ),
+      
+      # 底部 GitHub 按钮
+      div(style = "text-align: center; margin-top: 40px;",
+          a(href = "https://github.com/XmWU123/indel-signature-browser", target = "_blank",
+            class = "btn btn-default btn-lg", 
+            icon("github"), " View Project on GitHub", 
+            style = "border-radius: 50px; padding: 12px 35px; border: 1px solid #bdc3c7; color: #555; transition: all 0.3s;")
       )
     )
   )

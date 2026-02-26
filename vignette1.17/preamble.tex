@@ -1,0 +1,61 @@
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage[explicit]{titlesec}
+\usepackage{fancyhdr}
+
+% Colors matching the HTML CSS
+\definecolor{headerblue}{HTML}{4a5568}
+\definecolor{lightgray}{HTML}{edf2f7}
+\definecolor{darktext}{HTML}{2d3748}
+\definecolor{noteyellow}{HTML}{fefcbf}
+\definecolor{noteborder}{HTML}{d69e2e}
+
+% Section headers - gray bar with white text, with page break before
+\titleformat{\section}
+  {\normalfont\large\bfseries\color{white}}
+  {}
+  {0pt}
+  {\clearpage\colorbox{headerblue}{\parbox{\dimexpr\textwidth-2\fboxsep}{\strut#1\strut}}}
+\titlespacing*{\section}{0pt}{20pt}{10pt}
+
+% Subsection headers - light gray with left border
+\titleformat{\subsection}
+  {\normalfont\normalsize\bfseries\color{darktext}}
+  {}
+  {0pt}
+  {\tcbox[colback=lightgray,colframe=headerblue,boxrule=0pt,leftrule=4pt,arc=0pt,boxsep=5pt,left=10pt]{#1}}
+\titlespacing*{\subsection}{0pt}{15pt}{8pt}
+
+% Subsubsection headers - same background as subsection, but italic and not bold
+\titleformat{\subsubsection}
+  {\normalfont\small\itshape\color{darktext}}
+  {}
+  {0pt}
+  {\tcbox[colback=lightgray,colframe=headerblue,boxrule=0pt,leftrule=4pt,arc=0pt,boxsep=5pt,left=10pt]{#1}}
+\titlespacing*{\subsubsection}{0pt}{15pt}{8pt}
+
+% Callout boxes for notes
+\newtcolorbox{callout-note}{
+  colback=lightgray,
+  colframe=headerblue,
+  boxrule=0pt,
+  leftrule=4pt,
+  arc=0pt,
+  boxsep=5pt,
+  left=10pt
+}
+
+\newtcolorbox{callout-important}{
+  colback=noteyellow,
+  colframe=noteborder,
+  boxrule=0pt,
+  leftrule=4pt,
+  arc=0pt,
+  boxsep=5pt,
+  left=10pt
+}
+
+% Smaller body text (matching p { font-size: 0.9em })
+\usepackage{relsize}
+\AtBeginDocument{\smaller}
