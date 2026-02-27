@@ -108,6 +108,19 @@ colnames(connect_89_to_83) <- c(
   "type746_signature_id",
   "type476_where_extracted"
 )
+
+# =====================================================================
+# 清洗关系表：剔除旧版的 InsDel4b，将 InsDel4a 改名为 InsDel4
+# 这样循环取列时就不会找不到人了！
+# =====================================================================
+if ("InsDel4b" %in% connect_89_to_83$ID89_signature) {
+  connect_89_to_83 <- connect_89_to_83[connect_89_to_83$ID89_signature != "InsDel4b", ]
+}
+
+if ("InsDel4a" %in% connect_89_to_83$ID89_signature) {
+  connect_89_to_83$ID89_signature[connect_89_to_83$ID89_signature == "InsDel4a"] <- "InsDel4"
+}
+# =====================================================================
 ```
 
 ```{r}

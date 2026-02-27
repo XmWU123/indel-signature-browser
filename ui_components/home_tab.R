@@ -28,7 +28,7 @@ create_home_tab <- function() {
          div(
             class = "intro-text-section",
             
-            # 第一段：数据来源 + Indel 定义 (合并到一个 HTML paste0 中，避免括号混乱)
+            # 第一段：数据来源 + Indel 定义 (已替换为加粗链接，并去除了上标 1, 2)
             p(class = "intro-lead",
               HTML(paste0(
                  "Small insertions and deletions, \"indels\", are mutations that add or delete short (< ~50 base pairs) sequences of DNA.",
@@ -36,16 +36,14 @@ create_home_tab <- function() {
                  "This web site presents signatures extracted from somatic indel mutations in ",
                  "<span class='data-badge'>6,975 tumors</span> from ",
                  "<span class='data-badge'>32 cancer types</span> using methods based on ",
-                 "<strong>Non-negative Matrix Factorization</strong><sup>1</sup> and <strong>Hierarchical Dirichlet Processes</strong><sup>2</sup>."
+                 "<a href='https://doi.org/10.1016/j.xgen.2022.100179' target='_blank'><strong>Non-negative Matrix Factorization</strong></a> and <a href='https://doi.org/10.1093/nargab/lqad094' target='_blank'><strong>Hierarchical Dirichlet Processes</strong></a>."
               ))
             ),
             
             hr(style = "border-top: 1px solid #eee; margin: 50px 0;")
-         ), # <--- Intro Section 结束，加逗号
+         ), 
          
-         # --- Cards Section Header ---
-         h3("Explore Classification Schemes", 
-            style = "text-align: center; font-weight: 700; color: #2c3e50; margin-bottom: 40px; text-transform: uppercase; font-size: 1.2rem; letter-spacing: 1px;"), # <--- 加逗号
+         # (已删除原有的 "Explore Classification Schemes" 标题)
          
          # --- Cards Grid ---
          fluidRow(
@@ -55,8 +53,10 @@ create_home_tab <- function() {
                       class = "feature-card card-83",
                       onclick = "$('#home_goto_83').click();",
                       div(icon("cubes"), class = "card-icon-large", style = "color: #27ae60;"),
-                      h3("83-Type Scheme", style = "font-weight: 700; color: #2c3e50; margin-top: 0;"),
-                      p("This widely used classification scheme recognizes 83 types of indel. Described in Alexandrov et al., 2020 and used on the COSMIC mutational signatures web site.", 
+                      # 更改 Scheme 为 Classification
+                      h3("83-Type Classification", style = "font-weight: 700; color: #2c3e50; margin-top: 0;"),
+                      # 将 Alexandrov et al., 2020 转为超链接
+                      p(HTML("This widely used classification recognizes 83 types of indel. Described in <a href='https://doi.org/10.1038/s41586-020-1943-3' target='_blank'><b>Alexandrov et al., 2020</b></a> and used on the COSMIC mutational signatures web site."), 
                         style = "color: #7f8c8d; min-height: 60px; margin-bottom: 15px;"), 
                       div("Explore", class = "card-btn-fake"),
                       actionLink("home_goto_83", "", style = "display: none;") 
@@ -68,8 +68,10 @@ create_home_tab <- function() {
                       class = "feature-card card-89",
                       onclick = "$('#home_goto_89').click();",
                       div(icon("dna"), class = "card-icon-large", style = "color: #e67e22;"),
-                      h3("89-Type Scheme", style = "font-weight: 700; color: #2c3e50; margin-top: 0;"),
-                      p("This new indel classification scheme (Koh et al., 2025) recognizes 89 types of indel. Often provides more informative granularity for indels in homopolymers.", 
+                      # 更改 Scheme 为 Classification
+                      h3("89-Type Classification", style = "font-weight: 700; color: #2c3e50; margin-top: 0;"),
+                      # 将 Koh et al., 2025 转为超链接 (请替换 LINK_TO_KOH_2025)
+                      p(HTML("This new indel classification (<a href='LINK_TO_KOH_2025' target='_blank'><b>Koh et al., 2025</b></a>) recognizes 89 types of indel. Often provides more informative granularity for indels in homopolymers."), 
                         style = "color: #7f8c8d; min-height: 60px; margin-bottom: 15px;"),
                       div("Explore", class = "card-btn-fake"),
                       actionLink("home_goto_89", "", style = "display: none;")
@@ -81,41 +83,29 @@ create_home_tab <- function() {
                       class = "feature-card card-476",
                       onclick = "$('#home_goto_476').click();",
                       div(icon("microscope"), class = "card-icon-large", style = "color: #9b59b6;"),
-                      h3("476-Type Scheme", style = "font-weight: 700; color: #2c3e50; margin-top: 0;"),
-                      p("Koh et al., 2025 also present an even more granular classification of 476 types of indel. This scheme provides the highest resolution for analyzing complex patterns.", 
+                      # 更改 Scheme 为 Classification
+                      h3("476-Type Classification", style = "font-weight: 700; color: #2c3e50; margin-top: 0;"),
+                      # 重写描述并加超链接
+                      p(HTML("<a href='LINK_TO_KOH_2025' target='_blank'><b>Koh et al., 2025</b></a> also present an even more granular classification of 476 types of indel. This classification provides the highest resolution for analyzing similarities and differences between signatures."), 
                         style = "color: #7f8c8d; min-height: 60px; margin-bottom: 15px;"),
                       div("Explore", class = "card-btn-fake"),
                       actionLink("home_goto_476", "", style = "display: none;")
                    )
             )
-         ), # <--- fluidRow 结束，加逗号
+         ), 
          
          # -----------------------------------------------------------
-         # 4. Note Section (简约蓝白样式)
+         # 4. Note Section 
          # -----------------------------------------------------------
          div(
             class = "note-box",
+            # 已删除 'Note on Translation' 标题、第一段啰嗦的话，以及底部的文献注脚
             
-            # 标题
-            h4(class = "note-title", icon("circle-info"), " Note on Translation"), # <--- 逗号
-            
-            # 第一段
             p(class = "note-content",
-              HTML("There is no single intuitive and naturally constrained classification of indel mutation types (as there arguably is for single base mutations), but <strong>two classifications have been useful</strong>.")
-            ), # <--- 逗号
-            
-            # 第二段
-            p(class = "note-content",
-              "Algorithmic translation between signatures in the 83-type and 89-type classification schemes is not possible. However, this web site leverages tumor mutational spectra dominated by individual signatures to exhaustively elucidate the correspondences between signatures in the two classification schemes plus the 476-type classification scheme."
-            ), # <--- 逗号
-            
-            # 底部注脚 (引用)
-            div(style = "margin-top: 20px; color: #7f8c8d; font-size: 1.3rem; font-weight: 500; line-height: 1.6;", # <--- 修正: font-style 改为 font-weight
-                HTML("<sup>1</sup> Islam, S.M.A., et al. <strong>Uncovering novel mutational signatures by de novo extraction with SigProfilerExtractor.</strong> Cell Genomics (2022).<br>"),
-                HTML("<sup>2</sup> Liu, M., et al. <strong>mSigHdp: hierarchical Dirichlet process mixture modeling for mutational signature discovery.</strong> NAR Genomics and Bioinformatics (2023).")
-            ) 
+              "Algorithmic translation between signatures in the three classification schemes is not possible. However, we leverage tumor mutational spectra dominated by individual signatures to exhaustively elucidate the correspondences between signatures in the three classification schemes."
+            )
          ) 
          
       ) 
    ) 
-} 
+}

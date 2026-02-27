@@ -11,7 +11,7 @@ library(ggplot2)
 # 1. 数据加载与预处理 (在 Server 函数外部执行)
 # ==============================================================================
 data_path_prefix <- "Manuscript_data1.17"
-img_subdir <- "parallel_plots1.17/" 
+img_subdir <- "parallel_plots/" 
 
 # --- 读取统计摘要表 ---
 summary_dir <- "vignette1.17"

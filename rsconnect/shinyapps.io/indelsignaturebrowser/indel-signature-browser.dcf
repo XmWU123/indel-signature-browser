@@ -5,9 +5,9 @@ account: indelsignaturebrowser
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 16352657
-bundleId: 11631816
+bundleId: 11637761
 url: https://indelsignaturebrowser.shinyapps.io/indel-signature-browser/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: app_ML.R|claude_code_interaction.txt
+ignoredFiles: app_ML.R|claude_code_interaction.txt|code|mSigPlot-main

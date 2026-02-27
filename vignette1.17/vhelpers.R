@@ -84,6 +84,20 @@ compute_sig_data <- function(
 ) {
   message("处理签名 ID = ", type89_sig_id)
   
+  # =====================================================================
+  # 还原历史逻辑：直接删除 InsDel4b，将 InsDel4a 改名为 InsDel4
+  # =====================================================================
+  if ("InsDel4b" %in% rownames(assignment_matrix)) {
+    # 彻底删除 4b
+    assignment_matrix <- assignment_matrix[rownames(assignment_matrix) != "InsDel4b", , drop = FALSE]
+  }
+  
+  if ("InsDel4a" %in% rownames(assignment_matrix)) {
+    # 将 4a 强制改名为 InsDel4
+    rownames(assignment_matrix)[rownames(assignment_matrix) == "InsDel4a"] <- "InsDel4"
+  }
+  # =====================================================================
+  
   # 检查映射的 89-type 签名是否存在（列名为 {signature}_converted）
   mapped_col_name <- paste0(type89_sig_id, "_converted")
   has_mapped_476_sig <- !is.null(ID89_mapped_signatures) &&
@@ -297,10 +311,9 @@ generate_plots_to_files <- function(
     mSigPlot::plot_89(
       catalog,
       plot_title = plot_title,
-      text_size = getp('textsize89'),
-      top_bar_text_size = getp('topbartextsize89'),
       base_size = getp('basesize89'),
-      setyaxis = setyaxis
+      setyaxis = setyaxis,
+      plot_complex = FALSE
     )
   }
   
@@ -319,9 +332,11 @@ generate_plots_to_files <- function(
   if (!is.null(paths$id89_thumb)) {
     p1_thumb_raw <- mSigPlot::plot_89(
       ID89_signatures[, sig_data$type89_sig_id, drop = FALSE],
-      text_size = 0.8,
-      plot_title = sig_data$type89_sig_id,
-      base_size = getp('basesize89')
+      plot_title = "",                # <--- 缩略图不需要标题
+      base_size = 8,                  # <--- 将基础字号缩小为 8
+      text_cex = 1.5,                 # <--- 【关键修复】强制缩小条带文字
+      top_bar_text_cex = 1.5,         # <--- 【关键修复】强制缩小顶部说明文字
+      show_x_axis_text = FALSE        # <--- 缩略图不需要 X 轴文字
     )
     
     # 注意：这里不需要手动循环修复字体，因为 plot_89 已生成合适的对象，只需应用 theme_void
@@ -333,7 +348,8 @@ generate_plots_to_files <- function(
         axis.title = ggplot2::element_blank(), 
         axis.ticks = ggplot2::element_blank(),
         legend.position = "none", 
-        plot.margin = ggplot2::margin(0,0,0,0)
+        plot.margin = ggplot2::margin(0,0,0,0),
+        strip.text = ggplot2::element_text(size = 8)
       ) +
       ggplot2::labs(title = NULL, x = NULL, y = NULL)
     
@@ -393,15 +409,16 @@ generate_plots_to_files <- function(
   }
   
   # --- 4. ID476 绘图包装 (包含标签修复逻辑 22bp -> 2bp) ---
-  p476 <- function(catalog, plot_title, custom_text_size = 5, custom_base_size = plot476_base_size) {
+  p476 <- function(catalog, plot_title, custom_text_cex = 0.8, custom_base_size = plot476_base_size) {
     p <- mSigPlot::plot_476(
       catalog,
       plot_title = plot_title,
-      text_size = custom_text_size,  # <--- 使用参数
-      label_size = plot476_label_size,
+      block_text_cex = custom_text_cex,  # <--- 修改 1：text_size 改为 block_text_cex
+      ggrepel_cex = 0.52,                 # <--- 修改 2：label_size 改为 ggrepel_cex (设为 0.5 比较安全)
       num_labels = 5,
-      base_size = custom_base_size,  # <--- 使用参数
-      simplify_labels = plot476_simplify_labels
+      base_size = custom_base_size,      
+      simplify_labels = plot476_simplify_labels,
+      plot_complex = FALSE
     )
     
     # 修复 ggplot 对象中的 "22bp" -> "2bp"
@@ -452,7 +469,7 @@ generate_plots_to_files <- function(
       p5_mini <- p476(
         ID476_signatures[, sig_data$type89_sig_id], # 使用签名数据
         plot_title = "", 
-        custom_text_size = 3.5, 
+        custom_text_cex = 0.5, 
         custom_base_size = 8
       )
       
@@ -484,7 +501,7 @@ generate_plots_to_files <- function(
       p5_mini <- p476(
         ID476_catalogs[, sig_data$exemplar_id], # [注意] 这里使用 Spectrum 数据
         plot_title = "", 
-        custom_text_size = 3.5, 
+        custom_text_cex = 0.5, 
         custom_base_size = 8
       )
       
@@ -508,7 +525,6 @@ generate_plots_to_files <- function(
     plot_83_w_wout_t(
       catalog,
       plot_title = plot_title,
-      text_size = getp('textsize83'),
       base_size = getp('basesize83'),
       min_ts_to_trigger = min_ts
     )

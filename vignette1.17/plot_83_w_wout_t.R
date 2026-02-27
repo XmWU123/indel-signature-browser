@@ -23,24 +23,18 @@
 #'
 #' @export
 plot_83_w_wout_t <- function(
-  catalog,
-  plot_title = NULL,
-  text_size = NULL,
-  base_size = NULL,
-  min_ts_to_trigger = .1,
-  ablate_both = TRUE
+    catalog,
+    plot_title = NULL,
+    base_size = NULL,
+    min_ts_to_trigger = .1,
+    ablate_both = TRUE
 ) {
-  # Row names for polyT 5+ rows
   del_t_row <- "DEL:T:1:5+"
   ins_t_row <- "INS:T:1:5+"
-
-  # Get counts from catalog
   del_t_count <- catalog[del_t_row, 1]
   ins_t_count <- catalog[ins_t_row, 1]
-
-  # Determine if we're using proportions or absolute counts
+  
   use_proportion <- min_ts_to_trigger < 1.1
-
   if (use_proportion) {
     total_count <- sum(catalog[, 1])
     del_t_val <- del_t_count / total_count
@@ -49,55 +43,34 @@ plot_83_w_wout_t <- function(
     del_t_val <- del_t_count
     ins_t_val <- ins_t_count
   }
-
-  # Check which rows are offending
+  
   del_t_offending <- del_t_val >= min_ts_to_trigger
   ins_t_offending <- ins_t_val >= min_ts_to_trigger
   if (ablate_both) {
     del_t_offending <- del_t_offending || ins_t_offending
     ins_t_offending <- del_t_offending || ins_t_offending
   }
-
-  # Build argument list for plot_83, excluding NULL values
+  
   plot_args <- list(catalog = catalog)
-  if (!is.null(plot_title)) {
-    plot_args$plot_title <- plot_title
-  }
-  if (!is.null(text_size)) {
-    plot_args$text_size <- text_size
-  }
-  if (!is.null(base_size)) {
-    plot_args$base_size <- base_size
-  }
-
-  # Create the original plot
+  if (!is.null(plot_title)) plot_args$plot_title <- plot_title
+  if (!is.null(base_size)) plot_args$base_size <- base_size
+  
+  # 创建主图
   p_with_ts <- do.call(mSigPlot::plot_83, plot_args)
-
-  # If no offending rows, return single plot
+  
   if (!del_t_offending && !ins_t_offending) {
     return(list(plots = p_with_ts))
   }
-
-  # Create modified catalog
+  
   catalog_modified <- catalog
-  if (del_t_offending) {
-    catalog_modified[del_t_row, 1] <- 0
-  }
-  if (ins_t_offending) {
-    catalog_modified[ins_t_row, 1] <- 0
-  }
-
-  # Decide how far down to plot the ablated mutation count
+  if (del_t_offending) catalog_modified[del_t_row, 1] <- 0
+  if (ins_t_offending) catalog_modified[ins_t_row, 1] <- 0
+  
   ablation_amount = -0.2 * max(catalog_modified, 1)
   catalog_modified2 <- catalog
-  if (del_t_offending) {
-    catalog_modified2[del_t_row, 1] <- ablation_amount
-  }
-  if (ins_t_offending) {
-    catalog_modified2[ins_t_row, 1] <- ablation_amount
-  }
-
-  # Build title suffix
+  if (del_t_offending) catalog_modified2[del_t_row, 1] <- ablation_amount
+  if (ins_t_offending) catalog_modified2[ins_t_row, 1] <- ablation_amount
+  
   if (del_t_offending && ins_t_offending) {
     pref <- "ins T and del T"
   } else if (ins_t_offending) {
@@ -105,37 +78,18 @@ plot_83_w_wout_t <- function(
   } else {
     pref <- "del T"
   }
-  suffix <- paste(
-    pref,
-    "in long poly-T suppressed (indicated by negative)"
-  )
-
-  # Build modified title
-  if (is.null(plot_title) || plot_title == "") {
-    modified_title <- suffix
-  } else {
-    modified_title <- paste(plot_title, suffix, sep = ", ")
-  }
-
-  # Build argument list for modified plot
-  plot_args_modified <- list(
-    catalog = catalog_modified2,
-    plot_title = modified_title
-  )
-  if (!is.null(text_size)) {
-    plot_args_modified$text_size <- text_size
-  }
-  if (!is.null(base_size)) {
-    plot_args_modified$base_size <- base_size
-  }
-
-  # Create the modified plot
+  suffix <- paste(pref, "in long poly-T suppressed (indicated by negative)")
+  
+  modified_title <- if (is.null(plot_title) || plot_title == "") suffix else paste(plot_title, suffix, sep = ", ")
+  
+  plot_args_modified <- list(catalog = catalog_modified2, plot_title = modified_title)
+  if (!is.null(base_size)) plot_args_modified$base_size <- base_size
+  
+  # 创建消融图
   p_wout_ts <- do.call(mSigPlot::plot_83, plot_args_modified)
-
-  # Return both plots and the catalog with
-  # the offendening peaks 0
+  
   return(list(
-    plots = c(p_with_ts, p_wout_ts),
+    plots = c(list(p_with_ts), list(p_wout_ts)), 
     ablated_catalog = catalog_modified
   ))
 }
