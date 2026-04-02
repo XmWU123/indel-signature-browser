@@ -1,0 +1,505 @@
+---
+title: "Interactive Dendrogram"
+format: 
+  html:
+    page-layout: full
+    include-in-header:
+      text: |
+        <style>
+          /* This allows the .column-screen class to work in Shiny mode */
+          .quarto-container, .page-columns, .main-container {
+            max-width: 100% !important;
+          }
+          /* Ensure the plot container itself isn't padded */
+          .column-screen {
+            width: 100% !important;
+            margin: 0 !important;
+          }
+        </style>
+server: shiny
+date: now
+date-format: "YYYY-MM-DD HH:mm"
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| context: setup
+
+library(shiny)
+library(plotly)
+library(ggdendro)
+library(lsa)
+library(mSigPlot)
+library(gridExtra)
+library(ggplot2)
+
+source("dendro2_helpers.R")
+
+# Pre-load both full datasets
+all_data <- list()
+for (ds in c("Koh89", "Koh476", "COSMIC83")) {
+  all_data[[ds]] <- load_all_signatures(ds)
+}
+
+# Signature names grouped by dataset and source group
+sig_names_by_source <- list()
+for (ds in c("Koh89", "Koh476", "COSMIC83")) {
+  sv <- all_data[[ds]]$source_vec
+  sig_names_by_source[[ds]] <- split(names(sv), sv)
+}
+```
+
+
+This interactive dendrogram loads **all** CAP9/NoCAP signature extractions and lets you
+pick a seed signature from any source group. Only signatures with cosine similarity >= threshold to
+the seed are shown in the dendrogram.
+
+## Controls
+
+```{r}
+#| label: ui-controls
+#| panel: input
+
+selectInput(
+  "dataset",
+  "Dataset:",
+  choices = c("Koh89" = "Koh89", "Koh476" = "Koh476", "COSMIC83" = "COSMIC83"),
+  selected = "Koh89"
+)
+
+selectInput(
+  "seed_source",
+  "Seed Source:",
+  choices = names(sig_names_by_source[["Koh89"]]),
+  selected = "Liu"
+)
+
+selectInput(
+  "seed_signature",
+  "Seed Signature:",
+  choices = sig_names_by_source[["Koh89"]][["Liu"]]
+)
+
+numericInput(
+  "cosine_sim_to_seed",
+  "Min Cosine Similarity to Seed:",
+  value = 0.8,
+  min = 0,
+  max = 1,
+  step = 0.05
+)
+
+uiOutput("source_type_checkboxes")
+
+actionButton("update_dendro", "Update Dendrogram")
+actionButton("select_all", "Select All Leaves")
+
+uiOutput("selection_display")
+```
+
+```{r}
+#| label: server-logic
+#| context: server
+
+# Update source group dropdown when dataset changes
+observeEvent(input$dataset, {
+  sources <- names(sig_names_by_source[[input$dataset]])
+  updateSelectInput(session, "seed_source", choices = sources, selected = "Liu")
+})
+
+# Update seed signature dropdown when dataset or source group changes
+observeEvent(list(input$dataset, input$seed_source), {
+  ds <- input$dataset
+  src <- input$seed_source
+  sigs <- sig_names_by_source[[ds]][[src]]
+  updateSelectInput(session, "seed_signature", choices = sigs)
+})
+
+# Display labels for source groups
+source_display_labels <- c(
+  Liu = "Liu",
+  C.H = "FMH",
+  C.P = "PCAWG",
+  C.PH = "PCAWG+FMH",
+  N.H = "FMH",
+  Koh = "Koh",
+  COSMIC = "COSMIC v3.5",
+  Liu.m = "Liu (mapped from 476)",
+  C.H.m = "FMH (mapped from 476)",
+  C.P.m = "PCAWG (mapped from 476)",
+  C.PH.m = "PCAWG+FMH (mapped from 476)",
+  N.H.m = "FMH (mapped from 476)",
+  Sp.C = "Spectra",
+  Sp.N = "Spectra",
+  `~Sp.C` = "Spectra (from matches in other indel type)",
+  `~Sp.N` = "Spectra (from matches in other indel type)"
+)
+
+# Render source type checkboxes dynamically based on dataset
+output$source_type_checkboxes <- renderUI({
+  ds <- input$dataset
+  all_sources <- unique(all_data[[ds]]$source_vec)
+  default_off <- grepl("\\.m$", all_sources) |
+    grepl("^~?Sp\\.", all_sources) |
+    all_sources == "N.H"
+  selected <- all_sources[!default_off]
+
+  # Build named choices (display label = internal value)
+  make_choices <- function(srcs) {
+    labels <- ifelse(
+      srcs %in% names(source_display_labels),
+      source_display_labels[srcs],
+      srcs
+    )
+    setNames(srcs, labels)
+  }
+
+  # Define ordering: Capped (C.*) + Liu + Koh first, then Uncapped (N.*)
+  capped_order <- c(
+    "Liu",
+    "Koh",
+    "COSMIC",
+    "C.H",
+    "C.P",
+    "C.PH",
+    "C.H.m",
+    "C.P.m",
+    "C.PH.m",
+    "Liu.m",
+    "Sp.C",
+    "~Sp.C"
+  )
+  uncapped_order <- c("N.H", "N.H.m", "Sp.N", "~Sp.N")
+
+  capped_sources <- intersect(capped_order, all_sources)
+  uncapped_sources <- intersect(uncapped_order, all_sources)
+
+  tagList(
+    tags$strong("Capped (R ≤ 9):"),
+    checkboxGroupInput(
+      "source_types_capped",
+      label = NULL,
+      choices = make_choices(capped_sources),
+      selected = intersect(capped_sources, selected),
+      inline = TRUE
+    ),
+    tags$strong("Uncapped:"),
+    checkboxGroupInput(
+      "source_types_uncapped",
+      label = NULL,
+      choices = make_choices(uncapped_sources),
+      selected = intersect(uncapped_sources, selected),
+      inline = TRUE
+    )
+  )
+})
+
+# Reactive: selected signatures (max 10)
+selected_sigs <- reactiveVal(character(0))
+
+# Clear selection on dataset switch or dendro update
+observeEvent(input$dataset, {
+  selected_sigs(character(0))
+})
+
+# Filtered + clustered data, recomputed only on button click
+filtered_result <- eventReactive(
+  input$update_dendro,
+  {
+    ds <- isolate(input$dataset)
+    seed <- isolate(input$seed_signature)
+    threshold <- isolate(input$cosine_sim_to_seed)
+    active_sources <- c(
+      isolate(input$source_types_capped),
+      isolate(input$source_types_uncapped)
+    )
+
+    combined <- all_data[[ds]]$combined
+    source_vec <- all_data[[ds]]$source_vec
+
+    # Filter to active source types (always keep the seed signature)
+    # When NULL (initial render before UI exists), use defaults: exclude .m and Sp. groups
+    if (is.null(active_sources)) {
+      all_sources <- unique(source_vec)
+      default_off <- grepl("\\.m$", all_sources) |
+        grepl("^~?Sp\\.", all_sources) |
+        all_sources == "N.H"
+      active_sources <- all_sources[!default_off]
+    }
+    keep_cols <- names(source_vec)[source_vec %in% active_sources]
+    if (!(seed %in% keep_cols)) {
+      keep_cols <- c(seed, keep_cols)
+    }
+    combined <- combined[, keep_cols, drop = FALSE]
+    source_vec <- source_vec[keep_cols]
+
+    filtered <- filter_by_seed(combined, seed, threshold)
+    filtered_source <- source_vec[colnames(filtered)]
+
+    dendro <- compute_dendrogram(filtered)
+
+    selected_sigs(character(0))
+
+    list(
+      combined = filtered,
+      source_vec = filtered_source,
+      dendro = dendro
+    )
+  },
+  ignoreNULL = FALSE
+)
+
+# Render selection badges
+output$selection_display <- renderUI({
+  sigs <- selected_sigs()
+  if (length(sigs) == 0) {
+    return(tags$p(
+      tags$em(
+        "Click leaves in the dendrogram or use the rectangle or lasso select tool to select signatures for plotting below."
+      )
+    ))
+  }
+
+  res <- filtered_result()
+  sv <- res$source_vec
+
+  badges <- lapply(sigs, function(s) {
+    col <- dendro2_colors[sv[s]]
+    tags$span(
+      s,
+      style = paste0(
+        "display: inline-block; margin: 2px 4px; padding: 3px 8px; ",
+        "border-radius: 4px; color: white; font-size: 0.85em; ",
+        "background-color: ",
+        col,
+        ";"
+      )
+    )
+  })
+
+  tagList(
+    tags$p(tags$strong(paste0("Selected (", length(sigs), "): ")), badges),
+    actionButton("clear_selection", "Clear All", style = "margin-top: 4px;")
+  )
+})
+
+observeEvent(input$clear_selection, {
+  selected_sigs(character(0))
+})
+
+observeEvent(input$select_all, {
+  res <- filtered_result()
+  selected_sigs(colnames(res$combined))
+})
+```
+
+
+::: {.column-screen}
+
+```{r}
+#| label: dendrogram-plot
+
+plotlyOutput("dendrogram", height = "500px", width = "100%")
+```
+
+:::
+
+```{r}
+#| label: dendrogram-server
+#| context: server
+
+output$dendrogram <- renderPlotly({
+  res <- filtered_result()
+  build_plotly_dendrogram(
+    res$dendro$dend_data,
+    res$source_vec,
+    colors = dendro2_colors
+  )
+})
+
+# Handle click to toggle signature selection
+observeEvent(event_data("plotly_click", source = "dendrogram"), {
+  click <- event_data("plotly_click", source = "dendrogram")
+  if (!is.null(click)) {
+    sig_name <- click$customdata
+    if (is.list(sig_name)) {
+      sig_name <- sig_name[[1]]
+    }
+    if (!is.null(sig_name) && nzchar(sig_name)) {
+      current <- selected_sigs()
+      if (sig_name %in% current) {
+        selected_sigs(setdiff(current, sig_name))
+      } else {
+        selected_sigs(c(current, sig_name))
+      }
+    }
+  }
+})
+
+# Handle lasso/box selection of leaf markers
+observeEvent(event_data("plotly_selected", source = "dendrogram"), {
+  sel <- event_data("plotly_selected", source = "dendrogram")
+  if (!is.null(sel) && !is.null(sel$customdata)) {
+    sig_names <- unlist(sel$customdata)
+    sig_names <- sig_names[!is.na(sig_names) & nzchar(sig_names)]
+    if (length(sig_names) > 0) {
+      selected_sigs(unique(sig_names))
+    }
+  }
+})
+```
+
+## Signature Profiles
+
+```{r}
+#| label: sig-profiles
+
+uiOutput("sig_plots_ui")
+```
+
+```{r}
+#| label: sig-profiles-server
+#| context: server
+
+output$sig_plots_ui <- renderUI({
+  sigs <- selected_sigs()
+  if (length(sigs) == 0) {
+    return(tags$p(tags$em("Select signatures above to view their profiles.")))
+  }
+  height_per <- if (input$dataset == "Koh476") 400 else 300
+  total_height <- paste0(length(sigs) * height_per, "px")
+  plotOutput("sig_plots", height = total_height, width = "100%")
+})
+
+sig_plots_height <- reactive({
+  sigs <- selected_sigs()
+  if (length(sigs) == 0) {
+    return(300)
+  }
+  height_per <- if (input$dataset == "Koh476") 400 else 300
+  length(sigs) * height_per
+})
+
+output$sig_plots <- renderPlot(
+  {
+    sigs <- selected_sigs()
+    req(length(sigs) > 0)
+
+    res <- filtered_result()
+    leaf_order <- res$dendro$hc$labels[res$dendro$hc$order]
+    sigs <- sigs[order(match(sigs, leaf_order))]
+    combined <- res$combined
+    plot_fn <- if (input$dataset == "Koh89") {
+      mSigPlot::plot_89
+    } else if (input$dataset == "COSMIC83") {
+      mSigPlot::plot_83
+    } else {
+      mSigPlot::plot_476
+    }
+
+    plots <- lapply(sigs, function(s) {
+      sig_data <- combined[, s, drop = FALSE]
+      plot_fn(sig_data, plot_title = s)
+    })
+
+    gridExtra::grid.arrange(grobs = plots, ncol = 1)
+  },
+  res = 100,
+  width = function() {
+    if (input$dataset == "Koh476") 1400 else 900 # Koh89 and COSMIC83 both use 900
+  },
+  height = function() {
+    sig_plots_height()
+  }
+)
+```
+
+## Cosine Similarity
+
+```{r}
+#| label: cosine-table
+
+uiOutput("cosine_table")
+```
+
+```{r}
+#| label: cosine-table-server
+#| context: server
+
+output$cosine_table <- renderUI({
+  sigs <- selected_sigs()
+  if (length(sigs) < 2) {
+    return(tags$p(tags$em(
+      "Select at least 2 signatures to see cosine similarity."
+    )))
+  }
+
+  res <- filtered_result()
+  leaf_order <- res$dendro$hc$labels[res$dendro$hc$order]
+  sigs <- sigs[order(match(sigs, leaf_order))]
+  cos_mat <- res$dendro$cosine_sim[sigs, sigs]
+  n <- length(sigs)
+
+  # Build body rows (lower triangle: row i shows columns 1..i-1)
+  body_rows <- lapply(2:n, function(i) {
+    cells <- list(tags$td(
+      style = "font-weight: bold; white-space: nowrap; padding: 4px; font-size: 0.85em;",
+      sigs[i]
+    ))
+    for (j in seq_len(i - 1)) {
+      val <- cos_mat[i, j]
+      bg <- if (val >= 0.9) {
+        "#ffcccc"
+      } else if (val >= 0.8) {
+        "#ffe0cc"
+      } else {
+        "#ffffff"
+      }
+      cells <- c(
+        cells,
+        list(tags$td(
+          style = paste0(
+            "text-align: center; padding: 4px; font-size: 0.85em; background-color: ",
+            bg,
+            ";"
+          ),
+          sprintf("%.3f", val)
+        ))
+      )
+    }
+    do.call(tags$tr, cells)
+  })
+
+  # Build footer row with vertical column labels (skip last sig — it's only a row)
+  footer_cells <- list(tags$td(""))
+  for (j in seq_len(n - 1)) {
+    footer_cells <- c(
+      footer_cells,
+      list(tags$td(
+        style = "writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; padding: 4px; font-size: 0.85em; font-weight: bold;",
+        sigs[j]
+      ))
+    )
+  }
+  footer_row <- do.call(tags$tr, footer_cells)
+
+  tags$table(
+    style = "border-collapse: collapse; border: 1px solid #ddd;",
+    do.call(tags$tbody, body_rows),
+    tags$tfoot(footer_row)
+  )
+})
+```
+
+## About
+
+- **Source colors**: Liu (red), CAP9 FMH (green), CAP9 PCAWG (purple), CAP9 PCAWG+FMH (orange), NoCAP FMH (blue), Koh (brown); "(mapped)" groups are 476→89 mapped versions (lighter shades); Spectra CAP9 = CAP9 best-match spectra (teal), Spectra NoCAP = NoCAP best-match spectra (crimson)
+- **Workflow**: Select a dataset, pick a seed source and signature, set cosine similarity threshold, click "Update Dendrogram"
+- **Click** a leaf marker to select/deselect it (shown in badges above)
+- **Zoom** into crowded regions using plotly's built-in zoom
+- Signature profiles are rendered with mSigPlot (`plot_89` or `plot_476`)
+- No limit on the number of signatures that can be selected

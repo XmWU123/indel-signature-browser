@@ -1,0 +1,285 @@
+---
+title: "Interactive Dendrogram"
+format: 
+  html:
+    page-layout: full
+    include-in-header:
+      text: |
+        <style>
+          /* Remove max-width limits from all potential containers */
+          .container-fluid, .main-container, .page-columns {
+            max-width: 100% !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+          }
+        </style>
+server: shiny
+date: now
+date-format: "YYYY-MM-DD HH:mm"
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| context: setup
+
+library(shiny)
+library(plotly)
+library(ggdendro)
+library(lsa)
+library(mSigPlot)
+library(gridExtra)
+library(ggplot2)
+
+source("dendrogram_helpers.R")
+
+# Pre-compute both datasets
+datasets <- list()
+dendrograms <- list()
+
+for (ds in c("Koh89", "Koh476")) {
+  datasets[[ds]] <- load_cap9_signatures(ds)
+  dendrograms[[ds]] <- compute_dendrogram(datasets[[ds]]$combined)
+}
+```
+
+```{r}
+#| label: wide-layout
+tags$style(".container-fluid { max-width: 100% !important; padding: 0 15px; }")
+```
+
+This interactive dendrogram lets you explore hierarchical clustering of CAP9 signature extractions.
+Zoom into regions of interest and click leaves or use rectangle or lasso select to select leaves to compare signature profiles.
+
+## Controls
+
+```{r}
+#| label: ui-controls
+#| panel: input
+
+selectInput(
+  "dataset",
+  "Dataset:",
+  choices = c("Koh89" = "Koh89", "Koh476" = "Koh476"),
+  selected = "Koh89"
+)
+
+uiOutput("selection_display")
+```
+
+```{r}
+#| label: selection-display-server
+#| context: server
+
+# Reactive: selected signatures (max 10)
+selected_sigs <- reactiveVal(character(0))
+
+# Clear selection on dataset switch
+observeEvent(input$dataset, {
+  selected_sigs(character(0))
+})
+
+# Render selection badges
+output$selection_display <- renderUI({
+  sigs <- selected_sigs()
+  if (length(sigs) == 0) {
+    return(tags$p(
+      tags$em("Click leaves in the dendrogram to select signatures (max 10).")
+    ))
+  }
+
+  ds <- input$dataset
+  sv <- datasets[[ds]]$source_vec
+
+  badges <- lapply(sigs, function(s) {
+    col <- cap9_colors[sv[s]]
+    tags$span(
+      s,
+      style = paste0(
+        "display: inline-block; margin: 2px 4px; padding: 3px 8px; ",
+        "border-radius: 4px; color: white; font-size: 0.85em; ",
+        "background-color: ",
+        col,
+        ";"
+      )
+    )
+  })
+
+  tagList(
+    tags$p(tags$strong(paste0("Selected (", length(sigs), "/10): ")), badges),
+    actionButton("clear_selection", "Clear All", style = "margin-top: 4px;")
+  )
+})
+
+observeEvent(input$clear_selection, {
+  selected_sigs(character(0))
+})
+```
+
+
+::: {.column-screen}
+
+```{r}
+#| label: dendrogram-plot
+
+plotlyOutput("dendrogram", height = "500px", width = "100vw")
+```
+
+:::
+
+```{r}
+#| label: dendrogram-server
+#| context: server
+
+# Render dendrogram only on dataset change (not on selection change,
+# which would clear the click event and create a feedback loop)
+output$dendrogram <- renderPlotly({
+  ds <- input$dataset
+  build_plotly_dendrogram(
+    dendrograms[[ds]]$dend_data,
+    datasets[[ds]]$source_vec,
+    colors = cap9_colors
+  )
+})
+
+# Handle click to toggle signature selection
+observeEvent(event_data("plotly_click", source = "dendrogram"), {
+  click <- event_data("plotly_click", source = "dendrogram")
+  if (!is.null(click)) {
+    sig_name <- click$customdata
+    if (is.list(sig_name)) {
+      sig_name <- sig_name[[1]]
+    }
+    if (!is.null(sig_name) && nzchar(sig_name)) {
+      current <- selected_sigs()
+      if (sig_name %in% current) {
+        selected_sigs(setdiff(current, sig_name))
+      } else if (length(current) < 10) {
+        selected_sigs(c(current, sig_name))
+      }
+    }
+  }
+})
+```
+
+## Signature Profiles
+
+```{r}
+#| label: sig-profiles
+
+uiOutput("sig_plots_ui")
+```
+
+```{r}
+#| label: sig-profiles-server
+#| context: server
+
+output$sig_plots_ui <- renderUI({
+  sigs <- selected_sigs()
+  if (length(sigs) == 0) {
+    return(tags$p(tags$em("Select signatures above to view their profiles.")))
+  }
+  height_per <- if (input$dataset == "Koh89") 300 else 400
+  total_height <- paste0(length(sigs) * height_per, "px")
+  plotOutput("sig_plots", height = total_height, width = "100%")
+})
+
+sig_plots_height <- reactive({
+  sigs <- selected_sigs()
+  if (length(sigs) == 0) {
+    return(300)
+  }
+  height_per <- if (input$dataset == "Koh89") 300 else 400
+  length(sigs) * height_per
+})
+
+output$sig_plots <- renderPlot(
+  {
+    sigs <- selected_sigs()
+    req(length(sigs) > 0)
+
+    ds <- input$dataset
+    combined <- datasets[[ds]]$combined
+    plot_fn <- if (ds == "Koh89") mSigPlot::plot_89 else mSigPlot::plot_476
+
+    plots <- lapply(sigs, function(s) {
+      sig_data <- combined[, s, drop = FALSE]
+      plot_fn(sig_data, plot_title = s)
+    })
+
+    gridExtra::grid.arrange(grobs = plots, ncol = 1)
+  },
+  res = 100,
+  width = function() {
+    if (input$dataset == "Koh476") 1400 else 900
+  },
+  height = function() {
+    sig_plots_height()
+  }
+)
+```
+
+## Cosine Similarity
+
+```{r}
+#| label: cosine-heatmap
+
+plotlyOutput("cosine_heatmap", height = "500px")
+```
+
+```{r}
+#| label: cosine-heatmap-server
+#| context: server
+
+output$cosine_heatmap <- renderPlotly({
+  sigs <- selected_sigs()
+  if (length(sigs) < 2) {
+    return(
+      plot_ly(type = "scatter", mode = "markers") |>
+        layout(
+          title = "Select at least 2 signatures to see cosine similarity.",
+          xaxis = list(visible = FALSE),
+          yaxis = list(visible = FALSE)
+        )
+    )
+  }
+
+  ds <- input$dataset
+  cos_mat <- dendrograms[[ds]]$cosine_sim[sigs, sigs]
+
+  # Format for display
+  text_mat <- matrix(
+    sprintf("%.3f", cos_mat),
+    nrow = nrow(cos_mat)
+  )
+
+  plot_ly(
+    x = sigs,
+    y = sigs,
+    z = cos_mat,
+    text = text_mat,
+    type = "heatmap",
+    colorscale = list(c(0, "#FFFFFF"), c(1, "#FF0000")),
+    zmin = 0,
+    zmax = 1,
+    hovertemplate = "%{y} vs %{x}<br>Cosine: %{text}<extra></extra>"
+  ) |>
+    layout(
+      title = "Pairwise Cosine Similarity",
+      xaxis = list(title = "", tickangle = -45),
+      yaxis = list(title = "", autorange = "reversed"),
+      margin = list(l = 120, b = 120)
+    )
+})
+```
+
+## About
+
+- **Source colors**: Liu (red), PCAWG (purple), Hartwig cap9 (green), Hartwig nocap (blue)
+- **Click** a leaf marker to select/deselect it (shown in badges above).
+- **Zoom** into crowded regions using plotly's built-in zoom (drag to select area).
+- Signature profiles are rendered with mSigPlot (`plot_89` or `plot_476`).
+- Max 10 signatures can be selected at once.

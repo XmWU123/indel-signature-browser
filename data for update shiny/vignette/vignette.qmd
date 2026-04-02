@@ -1,0 +1,592 @@
+---
+title: "Unified repertoire of insertion/deletion mutational signatures based on three classification schemes"
+author:
+  - Mo Liu
+  - Mi Ni Huang
+  - Xue Ming Wu
+  - Qi Zheng
+  - Runtian Yao
+  - Ying Yang
+  - Runxi Shen
+  - Steven G. Rozen
+date: last-modified
+date-format: "YYYY-MM-DD HH:mm"
+format:
+  html:
+    output-file: "repertoire_of_indel_mutational_signatures.html"
+    toc: true
+    toc-location: left
+    toc-depth: 2
+    toc-title: "Contents"
+    code-fold: true
+    embed-resources: true
+    css: styles.css
+    grid:
+      sidebar-width: 130px
+      body-width: 900px
+      gutter-width: 1rem
+      margin-width: 200px
+  pdf:
+    output-file: "repertoire_of_indel_mutational_signatures.pdf"
+    toc: true
+    toc-depth: 2
+    documentclass: article
+    latex-max-runs: 3
+    pdf-engine: xelatex
+    mainfont: "TeX Gyre Heros"
+    sansfont: "TeX Gyre Heros"
+    geometry:
+      - margin=1in
+    include-in-header:
+      - preamble.tex
+execute:
+  warning: false
+  message: false
+---
+
+Source file:  `r knitr::current_input(dir = TRUE)`
+
+```{r}
+#| label: key-params
+#| include: true
+
+# Set to TRUE to force regeneration, otherwise the code
+# will use check_plot_cache to see if the cache is still
+# up-to-date and update if necessary (see below).
+
+# ======================================================
+# IMPORTANT: for developers, changing plot titles will
+# not automatically trigger plot regeneration. In
+# general the detection of changes is not perfect.
+# When in doubt regenerate the plots.
+# ======================================================
+REGENERATE_PLOTS <- T # FALSE 
+
+REGENERATE_CONNECTION_TABLE <- F # TRUE
+
+data_dir <- here::here("data for update shiny", "Manuscript_data3.31")
+
+# Minimum cosine similarity to show matching COSMIC signatures
+COSMIC_min_cosine <- 0.9
+
+# Minimum cosine similarity to show matching Jin signature
+Jin_min_cosine <- 0.9
+
+# Minimum cosine similarity to show matching Koh signatures
+koh_min_cosine <- 0.9
+
+# Minimum threshold for polyT suppression in 83-type plots (proportion of total)
+min_ts_to_trigger <- 0.15
+```
+
+```{r}
+#| label: libraries
+#| include: true
+
+library(magrittr)
+library(gridExtra)
+library(data.table)
+library(mSigPlot)
+library(ggplot2)
+library(scales)
+library(future)
+library(furrr)
+library(tidyr)
+library(tibble)
+library(DT)
+
+```
+
+```{r}
+#| label: other-globals
+#| include: true
+
+# Load plotting parameters from separate file (changes trigger plot regeneration)
+source(here::here("data for update shiny", "vignette", "ppar.R"))
+
+# Scale factor for 476-type plots (1.0 = default, 1.4 = 40% bigger)
+plot476_scale <- 1.2
+
+# Load helper functions for modular processing
+source(here::here("data for update shiny", "vignette", "vhelpers.R"))
+```
+
+```{r}
+#| label: regenerate-connection-table
+#| include: true
+
+if (REGENERATE_CONNECTION_TABLE) {
+source(here::here("data for update shiny", "Manuscript_data3.31", "Mo_CAP9_analysis", "make_connection_table.R"))
+}
+
+```
+
+```{r}
+#| label: get-data-1
+#| include: true
+
+connect_89_to_83 <- read_finalized("connection_table", row.names = NULL)
+```
+
+```{r}
+#| label: get-data-2-a
+#| include: false
+
+type83_spectra <- read_finalized("83_spectra")
+```
+
+```{r}
+#| label: get-data-2-b
+#| include: true
+type83_spectra.no.polyT <-
+  type83_spectra
+type83_spectra.no.polyT[c("DEL:T:1:5+", "INS:T:1:5+"), ] <- 0
+```
+
+```{r}
+#| label: get-data-3
+#| include: true
+
+type83_sigs <- read_finalized("83_signatures")
+
+```
+
+```{r}
+#| label: get-data-cosmic
+#| include: true
+
+# Read COSMIC ID signatures
+cosmic_sigs <- read.delim(
+  file.path(data_dir, "COSMIC_v3.5_ID_GRCh37_signatures.tsv"),
+  sep = "\t",
+  row.names = 1,
+  check.names = FALSE
+)
+
+# Compute pairwise cosine similarities between type83_sigs and cosmic_sigs
+# Result: rows = type83_sigs columns, cols = cosmic_sigs columns
+cosmic_cosine_matrix <- matrix(
+  NA,
+  nrow = ncol(type83_sigs),
+  ncol = ncol(cosmic_sigs),
+  dimnames = list(colnames(type83_sigs), colnames(cosmic_sigs))
+)
+
+for (i in seq_len(ncol(type83_sigs))) {
+  for (j in seq_len(ncol(cosmic_sigs))) {
+    cosmic_cosine_matrix[i, j] <- lsa::cosine(
+      as.numeric(type83_sigs[, i]),
+      as.numeric(cosmic_sigs[, j])
+    )
+  }
+}
+
+# For each type83 signature, find COSMIC signatures with cosine > threshold
+cosmic_matches <- lapply(seq_len(nrow(cosmic_cosine_matrix)), function(i) {
+  sig_name <- rownames(cosmic_cosine_matrix)[i]
+  cosines <- cosmic_cosine_matrix[i, ]
+  matches <- which(cosines >= COSMIC_min_cosine)
+  if (length(matches) == 0) {
+    return(NULL)
+  }
+  data.frame(
+    cosmic_sig = names(matches),
+    cosine = cosines[matches],
+    stringsAsFactors = FALSE
+  )
+})
+names(cosmic_matches) <- rownames(cosmic_cosine_matrix)
+```
+
+```{r}
+#| label: get-data-jin
+#| include: false
+
+# Read Jin 2024 ID signatures
+jin_sigs <- read.delim(
+  file.path(data_dir, "jin_2024_sup_tab_1_signatures.tsv"),
+  sep = "\t",
+  row.names = 1,
+  check.names = FALSE
+)
+
+# Compute pairwise cosine similarities between type83_sigs and jin_sigs
+jin_cosine_matrix <- matrix(
+  NA,
+  nrow = ncol(type83_sigs),
+  ncol = ncol(jin_sigs),
+  dimnames = list(colnames(type83_sigs), colnames(jin_sigs))
+)
+
+for (i in seq_len(ncol(type83_sigs))) {
+  for (j in seq_len(ncol(jin_sigs))) {
+    jin_cosine_matrix[i, j] <- lsa::cosine(
+      as.numeric(type83_sigs[, i]),
+      as.numeric(jin_sigs[, j])
+    )
+  }
+}
+
+# For each type83 signature, find Jin signatures with cosine > threshold
+jin_matches <- lapply(seq_len(nrow(jin_cosine_matrix)), function(i) {
+  sig_name <- rownames(jin_cosine_matrix)[i]
+  cosines <- jin_cosine_matrix[i, ]
+  matches <- which(cosines >= Jin_min_cosine)
+  if (length(matches) == 0) {
+    return(NULL)
+  }
+  data.frame(
+    jin_sig = names(matches),
+    cosine = cosines[matches],
+    stringsAsFactors = FALSE
+  )
+})
+names(jin_matches) <- rownames(jin_cosine_matrix)
+```
+
+
+```{r}
+#| label: setup3
+#| include: false
+
+type89_sigs <- read_finalized("89_signatures")
+
+type89_spectra <- read_finalized("89_spectra")
+```
+
+
+```{r}
+#| label: get-data-koh
+#| include: false
+
+# Read Koh 89-type signatures
+koh_sigs <- read.delim(
+  file.path(data_dir, "Koh_signatures.tsv"),
+  sep = "\t",
+  row.names = 1,
+  check.names = FALSE
+)
+
+# Compute pairwise cosine similarities between type89_sigs and koh_sigs
+koh_cosine_matrix <- matrix(
+  NA,
+  nrow = ncol(type89_sigs),
+  ncol = ncol(koh_sigs),
+  dimnames = list(colnames(type89_sigs), colnames(koh_sigs))
+)
+
+for (i in seq_len(ncol(type89_sigs))) {
+  for (j in seq_len(ncol(koh_sigs))) {
+    koh_cosine_matrix[i, j] <- lsa::cosine(
+      as.numeric(type89_sigs[, i]),
+      as.numeric(koh_sigs[, j])
+    )
+  }
+}
+
+# For each type89 signature, find Koh signatures with cosine > threshold
+koh_matches <- lapply(seq_len(nrow(koh_cosine_matrix)), function(i) {
+  sig_name <- rownames(koh_cosine_matrix)[i]
+  cosines <- koh_cosine_matrix[i, ]
+  matches <- which(cosines >= koh_min_cosine)
+  if (length(matches) == 0) {
+    return(NULL)
+  }
+  data.frame(
+    koh_sig = names(matches),
+    cosine = cosines[matches],
+    stringsAsFactors = FALSE
+  )
+})
+names(koh_matches) <- rownames(koh_cosine_matrix)
+```
+
+```{r}
+#| label: setup4
+#| include: false
+
+ID89.mSigAct.assignment <- read_finalized("89_assignment")
+```
+
+```{r}
+#| label: setup5
+#| include: false
+
+type476_sigs <- read_finalized("476_signatures")
+
+to.plot.all.ID476.catalogs <- read_finalized("476_spectra")
+```
+
+```{r}
+#| label: get-code-for-mapped-signatures
+#| include: false
+
+# Get functions to "collapse" 476 spectra or catalogs to
+# 89-type or 83-type spectra/catalogs
+source(here::here("data for update shiny", "code", "collapse_476_to_89.R"))
+
+# Load bipartite matching collapse function for 476-to-83 conversion
+source(here::here("data for update shiny", "code", "collapse_476_to_83.R"))
+```
+
+```{r}
+#| label: setup6-mapped-signatures
+#| include: false
+
+# Load 89-type signatures mapped from 476-type
+ID89_mapped_from_476 <- t476_to_89(type476_sigs)
+
+# Load 83-type signatures mapped from 476-type using bipartite matching
+# This uses optimal redistribution to minimize squared error vs target 83-type sig
+ID83_mapped_from_476 <- collapse_all_476_to_83_matrix(
+  type476_sigs,
+  store_flows = TRUE
+)
+
+# Extract cosine similarities for use in the vignette
+# These are the cosine similarities between the collapsed signature and the
+# native 83-type signature (computed during the bipartite matching)
+collapse_cosine_sims <- attr(ID83_mapped_from_476, "cosine_similarities")
+
+# Extract flows for Sankey plot generation
+collapse_flows <- attr(ID83_mapped_from_476, "flows")
+```
+
+```{r}
+#| label: precompute-all-data
+#| include: false
+
+# Pre-compute all signature data before rendering
+# This separates computation from plotting, making debugging easier
+
+all_sig_data <- lapply(
+  seq_len(nrow(connect_89_to_83)),
+  function(i) {
+    compute_sig_data(
+      type89_sig_id = connect_89_to_83$InDel89[i],
+      exemplar_89 = connect_89_to_83$BestMatch89_1[i],
+      exemplar_83 = connect_89_to_83$BestMatch83_1[i],
+      exemplar_476 = connect_89_to_83$BestMatch476_1[i],
+      ID83signature = connect_89_to_83$InDel83[i],
+      ID89_signatures = type89_sigs,
+      ID89_catalogs = type89_spectra,
+      ID83_signatures = type83_sigs,
+      ID83_catalogs = type83_spectra,
+      ID83_catalogs_no_polyT = type83_spectra.no.polyT,
+      ID476_signatures = type476_sigs,
+      ID476_catalogs = to.plot.all.ID476.catalogs,
+      assignment_matrix = ID89.mSigAct.assignment,
+      ID89_mapped_signatures = ID89_mapped_from_476,
+      ID83_mapped_signatures = ID83_mapped_from_476,
+      cosmic_matches = cosmic_matches,
+      jin_matches = jin_matches,
+      koh_matches = koh_matches
+    )
+  }
+)
+
+# Name the list for easier debugging
+names(all_sig_data) <- connect_89_to_83$InDel89
+```
+
+```{r}
+#| label: validate-precomputed-data
+#| include: false
+
+# Validate all data was computed correctly before rendering
+# This catches computation errors before they appear in plot rendering
+for (i in seq_along(all_sig_data)) {
+  sig <- all_sig_data[[i]]
+  if (is.na(sig$cosine89)) {
+    warning(paste("Missing cosine89 for:", sig$type89_sig_id))
+  }
+  if (is.na(sig$cosine83)) {
+    warning(paste("Missing cosine83 for:", sig$type89_sig_id))
+  }
+}
+```
+
+```{r}
+#| label: create-signature-table-1
+#| include: false
+
+# Transform all_sig_data to a tibble with nested columns
+sig_table <- all_sig_data %>%
+  enframe(name = "sig_name", value = "data") %>%
+  unnest_wider(data)
+
+stopifnot(sig_table$sig_name == sig_table$type89_sig_id)
+sig_table <- dplyr::mutate(sig_table, sig_name = NULL)
+```
+
+```{r}
+#| label: create-signature-table-2
+#| include: false
+
+# Extract best match (highest cosine) from each nested matches column
+get_best_match <- function(matches_df, sig_col, cosine_col = "cosine") {
+  if (is.null(matches_df) || nrow(matches_df) == 0) {
+    return(list(best_match = NA_character_, cosine = NA_real_))
+  }
+  best_idx <- which.max(matches_df[[cosine_col]])
+  list(
+    best_match = matches_df[[sig_col]][best_idx],
+    cosine = matches_df[[cosine_col]][best_idx]
+  )
+}
+```
+
+```{r}
+#| label: create-signature-table-3
+#| include: false
+sig_table2 <- sig_table %>%
+  dplyr::rowwise() %>%
+  dplyr::mutate(
+    best_cosmic = list(get_best_match(cosmic_matches, "cosmic_sig")),
+    best_jin = list(get_best_match(jin_matches, "jin_sig")),
+    best_koh = list(get_best_match(koh_matches, "koh_sig"))
+  ) %>%
+  dplyr::ungroup() %>%
+  unnest_wider(best_cosmic, names_sep = "_") %>%
+  unnest_wider(best_jin, names_sep = "_") %>%
+  unnest_wider(best_koh, names_sep = "_") %>%
+  dplyr::select(
+    -cosmic_matches,
+    -jin_matches,
+    -koh_matches,
+    -residual_spectrum,
+    -target_sig_partial_spectrum,
+    -cosine_sig_89_v_partial_spec,
+    -has_83_signature,
+    -has_83_mapped_signature,
+    -has_476_signature,
+    -is_insdel15_16,
+    -has_mapped_476_sig
+  ) %>%
+  dplyr::relocate(
+    signature_id = type89_sig_id,
+    sig89_from_476_v_89_cos = cosine89_mapped,
+
+    # compare sig89 to exemplar
+    exemplar_89,
+    exemplar_83,
+    exemplar_476,
+    sig89_v_exemplar_cos = cosine89,
+
+    # compare to Koh
+    best_match_koh = best_koh_best_match,
+    cos_v_koh = best_koh_cosine,
+
+    # compare sig476 to exemplar
+    sig476_v_exemplar_cos = cosine476,
+    sig476_v_linking_cos = cosine476_linking,
+
+    # type 83 section
+    type83_sig_id = ID83signature,
+    sig83_v_exemplar_cos = cosine83,
+    sig83_v_linking_cos = cosine83_linking,
+    best_match_cosmic = best_cosmic_best_match,
+    cosine_v_cosmic = best_cosmic_cosine,
+    best_match_jin = best_jin_best_match,
+    cosine_v_jin = best_jin_cosine,
+
+    sig83_from_476_v_83_cos = cosine83_mapped,
+
+    is_polyT_removed
+  )
+
+write.csv(sig_table2, "prot_table_1.csv", row.names = FALSE)
+
+```
+
+::: {.content-visible when-format="html"}
+
+# Overview {#overview .signature-section}
+
+```{r}
+#| label: overview-table
+#| echo: false
+
+create_overview_table(sig_table2)
+
+```
+
+:::
+
+```{r}
+#| label: generate-plots-parallel
+#| include: false
+
+# Plot caching: only regenerate if source data has changed
+# To force regeneration: delete figure/parallel_plots/ or set REGENERATE_PLOTS <- TRtUE
+plot_dir <- "figure/parallel_plots"
+
+cache_valid <- check_plot_cache(data_dir, plot_dir) &&
+  !REGENERATE_PLOTS
+
+if (cache_valid) {
+  warning("Using cached plots from: ", plot_dir)
+  all_plot_paths <- reconstruct_plot_paths(
+    names(all_sig_data),
+    plot_dir
+  )
+} else {
+  message("Generating plots (cache invalid or forced regeneration)...")
+  all_plot_paths <- generate_all_plots_parallel(
+    all_sig_data = all_sig_data,
+    ID89_signatures = type89_sigs,
+    ID89_catalogs = type89_spectra,
+    ID83_signatures = type83_sigs,
+    ID83_catalogs = type83_spectra,
+    ID83_catalogs_no_polyT = type83_spectra.no.polyT,
+    ID476_signatures = type476_sigs,
+    ID476_catalogs = to.plot.all.ID476.catalogs,
+    plot_dir = plot_dir,
+    ID89_mapped_signatures = ID89_mapped_from_476,
+    ID83_mapped_signatures = ID83_mapped_from_476,
+    cosmic_signatures = cosmic_sigs,
+    jin_signatures = jin_sigs,
+    koh_signatures = koh_sigs,
+    min_ts_to_trigger = min_ts_to_trigger,
+    collapse_flows = collapse_flows,
+    n_workers = 10
+  )
+  save_plot_cache(data_dir, plot_dir)
+  message("Plots generated and cache saved in: ", plot_dir)
+}
+```
+
+```{r}
+#| label: save-rds-for-standalone
+#| include: false
+
+# Save computed data to RDS files for use by onesig_standalone.qmd
+# This enables generating separate HTML pages per signature
+rds_dir <- "figure/standalone_data"
+dir.create(rds_dir, showWarnings = FALSE, recursive = TRUE)
+
+saveRDS(all_sig_data, file.path(rds_dir, "all_sig_data.rds"))
+saveRDS(all_plot_paths, file.path(rds_dir, "all_plot_paths.rds"))
+
+message("Saved RDS files for standalone rendering to: ", rds_dir)
+```
+
+```{r}
+#| label: render-all-sections
+#| output: asis
+#| echo: false
+
+# Each iteration uses the child template, isolating errors to specific sections
+# Plots are pre-generated, so this loop just inserts images (fast)
+
+for (i in seq_along(all_sig_data)) {
+  # Set sig_data and plot_paths in the environment for the child template
+  sig_data <- all_sig_data[[i]]
+  plot_paths <- all_plot_paths[[i]]
+
+  # Render the child template for this signature
+  # Errors will reference _signature_section.qmd with specific line numbers
+  res <- knitr::knit_child(here::here("data for update shiny", "vignette", "onesig.qmd"), envir = environment(), quiet = TRUE)
+  cat(res, sep = "\n")
+}
+```

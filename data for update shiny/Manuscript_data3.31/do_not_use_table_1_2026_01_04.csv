@@ -1,0 +1,61 @@
+											Enrichment in genomic regions						
+89-type signature ID (this study)	prev internal ID	89-type signature ID in Koh et al.	Cosine similarity between signature in current study and Koh et al.	does not correspond to the proposed cosmic sig	83-type signature ID	Cosine similarity between C_ID signatures and COSMIC v3.5 signatures	prev internal ID	Jin et al	Example tumor with spectrum dominated by the signature	need to update exemplar	Intergenic (I) vs genic (G)	Transcribed (T) vs non-transcribed (N) strand	Leading vs lagging replication strand	Replication timing trend from early (E) to late (L)	Corresponding 476-type signature extracted by mSigHdp (H) or SigProfilerExtractor (S)	TEMP NOTES	Proposed Etiology
+InsDel1a		InD1	0.982		C_ID1	0.999		1	Biliary::DRUP01010095T		I	N	Lag	Flat	H,S		Slippage during DNA replication of the replicated DNA strand
+InsDel1b		InD15	0.961						Colon::SP21400						H,S		Loss of POLE (Koh et al., 2025)
+InsDel1c		InD11	0.936						Liver::SP49229	Steve agrees yes (Mo think okay to not change)					H,S		Slippage during DNA replication of the replicated DNA strand
+InsDel1d		InD16b	0.908	yes					Lymphoid::SP59448	yes(Mo think okay to not change, SP135182 has best cosine similarity)					H 	q	Loss of POLE and defective DNA mismatch repair (Koh et al., 2025)
+InsDel1e									Bone.SoftTissue::CPCT02020428T								≥8bp homopolymers, defective DNA mismatch repair
+InsDel2a		InD2b	0.906	leave it	C_ID2	0.997		2	Esophagus::CPCT02010569T		Mix	Mix	Mix	L	H,S		Slippage during DNA replication of the replicated DNA strand
+InsDel2b									Colon::SP96118						H,S	MSI in our	5-7bp homopolymers, slippage during DNA replication of the replicated DNA strand
+InsDel2c									Lymphoid::CPCT02120032T	yes (Changed to suggested)					H,S	MSI in our	≥8bp homopolymers, defective DNA mismatch repair
+InsDel3a		InD3a	0.914		C_ID3	0.993		3	Lung::SP58101	yes (Changed to suggested)	I	T 	lead	L	H,S	Mo added H in column N	Tobacco smoking
+InsDel3b		InD3b	0.954						Other::CPCT02020815T	yes (Changed to suggested)					H,S		Tobacco smoking
+InsDel4a		InD4a	0.967		C_ID4	0.906			CNS::CPCT02100089T	yes (Mo think the current one looks more similar?)	Mix	N	Lag	Mix	H,S		
+InsDel4b				yes (novel?)					Breast::SP8564	not sure(Mo think the current one looks more similar?)					H,S		
+InsDel5a		InD29	0.936		C_ID5	0.926		5	Kidney::SP39298	no	Mix	N	None	Flat	H,S		Clock-like mutational process
+InsDel5b				yes(novel?) needs discussion – 83 just cannot capture it see also 4b					Liver::SP112290	yes (Changed to suggested)					H,S		Clock-like mutational process
+InsDel6		InD6	0.974		C_ID6	0.977		6	Ovary::SP62616		I	None	None	L	H,S		Defective homologous recombination-based DNA damage repair
+InsDel7		InD7	0.952	yes	C_ID7	0.938			Uterus::SP94741		G	T 	Lag	Mix	H,S	MSI in our and MMR in Koh et al	Defective DNA mismatch repair
+InsDel8		InD8	0.944		C_ID8	0.988		8	Breast::SP116365		Mix	None	None	Mix	H,S		Repair of DNA double strand breaks by NHEJ
+InsDel9		InD9b	0.92		C_ID9	0.913			Pancreas::SP102617		I	T 	Lag	L	H,S		
+InsDel10					C_ID10	0.529b			Other::SP109957		G	None	Lag	Mix			
+InsDel11					C_ID11	0.965		11a	Pancreas::SP77956		None	None	None	L	H,S		
+InsDel12					C_ID12	0.945		12	Prostate::SP112985		I	None	None	L	H	Mo added H in column N	
+InsDel13		InD13	0.99		C_ID13	0.983		13	Skin::SP124439		I	N	None	Flat	H,S		Ultraviolet light exposure
+InsDel14		InD12	0.98		C_ID14	0.974		14	Colon::CPCT02040258T		I	T 	Lag	L	H,S		
+InsDel15					C_ID15	0.993			WES::TCGA-EW-A2FV-01A-11D-A17D-09		ND	ND	ND	ND	From WES		Found in two TCGA WES data of Breast cancer
+InsDel16					C_ID16	0.945			WES::TCGA-13-0889-01A-01W-0420-08		ND	ND	ND	ND	From WES		Found in one TCGA WES data of Ovary cancer
+InsDel17					C_ID17	0.913			Other::CPCT02250003T		G	None	None	E	H	Mo added H in column N	TOP2A K743N associated mutagenesis
+InsDel18		InD18	0.99		C_ID18	0.975			Head::CPCT02070053T		I	T 	None	Flat	H,S		Exposure to E.coli bacteria carrying pks pathogenicity island, producing genotoxic compound colibactin
+InsDel19a				yes(novel?) similar to 5b and 4b	C_ID19	0.935			Bone.SoftTissue::CPCT02010408T		I	N	Lag 	L	H,S		
+InsDel19b									Skin::CPCT02340081T						H,S		
+InsDel19c				No change needed – (exemplar also has UV)					Skin::CPCT02060041T	 Skin::CPCT02060041T is mixture of insdel13 and insdel19c; the proposed exemplar looks good in 476					H,S		
+InsDel23					C_ID23	0.989			Kidney::SP102957		I	None	None	L			Aristolochic acid exposure
+InsDel_Aα	InsDel24a 				ID_A		H_ID24		Other::CPCT02330041T		I	N	Lag	L	H,S		APOBEC associated mutagenesis
+InsDel_Aβ	InsDel24b	InD9a	0.965						Breast::SP2293						H,S		
+InsDel_B	InsDel25				ID_B		H_ID25		Liver::CPCT02020413T		I	Mix	None	L	H,S		
+InsDel_C	InsDel26				ID_C		H_ID26		Breast::CPCT02010772T		I	N	Lead	Mix			
+InsDel_D	InsDel27				ID_D		H_ID27		Colon::CPCT02340014T		I	T	Lag	L	S		
+InsDel_E	InsDel28				ID_E		H_ID28		Uterus::DRUP01340014T		Mix	T	Lag 	Mix	H 		
+InsDel_F	InsDel29				ID_F		H_ID29	4	Head::DRUP01030028T		G	T	Lead	Mix	H,S		TOP1 transcription associated mutagenesis
+InsDel_G	InsDel30	InD32	0.857		ID_G		H_ID30	11b	Other::DRUP01030015T		G	N	Lag	Mix	H 		
+InsDel_H	InsDel31				ID_H		H_ID31		Bone.SoftTissue::CPCT02010648T		G	None	None	L	H	Mo added H in column N	
+InsDel_I	InsDel32				ID_I		H_ID32	25	CNS::SP107439		I	None	Lag	L			
+InsDel_J	InsDel33				ID_J		H_ID33		Colon::DRUP01230004T		G	N	Lag	Mix	H,S	MSI in our	Defective DNA mismatch repair
+					???												
+InsDel_Kα	InsDel34a				ID_K		H_ID34	26	Prostate::SP112817		Mix	T 	Lead 	Mix		MSI in our?	Defective DNA mismatch repair
+InsDel_Kβ	InsDel34b								Colon::SP17905						H 	MSI in our?	
+InsDel_L	InsDel35	InD26	0.97		ID_L		H_ID35		Pancreas::SP70106		I	N	Lag	L			Defective DNA mismatch repair
+InsDel_M	InsDel36				ID_M		H_ID36		Prostate::SP112777		ND	ND	ND	ND			
+InsDel_N (Identical as InsDel_J)	InsDel33				ID_N		H_ID37		Stomach::CPCT02030347T		G	N	None	Mix	H,S	MSI in out	Defective DNA mismatch repair
+InsDel_O	InsDel38	InD19	0.898		NA		H_ID38		CNS::CPCT02100101T		I	Mix	Mix	Mix	H,S	MSI in our MMR in Koh et al	Defective DNA mismatch repair
+					ID_P												
+																	
+a The signatures in Koh et al. that were not detected in the current study consist of:																	
+    2 InD signatures that were not found in tumors that we analyzed. 																	
+    4 InD signatures that are artefacts per Koh et al. 																	
+    7 InD signatures that can be reconstructed by combinations of<= 3 InsDel singatures (Table S1).																	
+    4 InD signatures are the split of InsDel signatures.																	
+b The key difference stems from the reduced 1-bp T insertions in 5+ T homopolymers within the COSMIC signatures.																	
+																	
+ND: No data due to small number of tumors with signature																	

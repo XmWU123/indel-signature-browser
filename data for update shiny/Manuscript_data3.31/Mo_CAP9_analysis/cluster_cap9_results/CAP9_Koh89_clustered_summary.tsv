@@ -1,0 +1,202 @@
+cluster_id	size	retained	medoid	min_cos_sim	mean_cos_sim	max_cos_sim	members
+1	6	TRUE	C.H.Colon.3	0.9574	0.9776	0.9964	C.H.All.1; C.H.Colon.3; C.P.Esophagus.1; C.P.Kidney.1; C.P.Pancreas.6; C.PH.Colon.18
+2	23	TRUE	C.H.All.2	0.9629	0.9887	1	C.H.All.2; C.H.Breast.7; C.H.Colon.9; C.H.Esophagus.2; C.H.Lung.1; C.H.MSI.5; C.H.Other.6; C.H.Prostate.9; C.H.Skin.4; C.P.All.17; C.P.Head.2; C.P.Lung.1; C.P.MSI.2; C.PH.All.3; C.PH.Breast.6; C.PH.Colon.5; C.PH.Esophagus.3; C.PH.Head.2; C.PH.Lung.1; C.PH.MSI.12; C.PH.Other.8; C.PH.Prostate.5; C.PH.Skin.7
+3	28	TRUE	C.PH.MSI.1	0.9714	0.9915	1	C.H.All.3; C.H.Biliary.1; C.H.Bladder.2; C.H.Breast.2; C.H.Colon.1; C.H.Kidney.2; C.H.Lung.8; C.H.MSI.1; C.H.Other.4; C.H.Prostate.1; C.H.Uterus.1; C.P.All.4; C.P.Colon.2; C.P.MSI.1; C.P.Uterus.1; C.PH.All.1; C.PH.Biliary.1; C.PH.Bladder.2; C.PH.Breast.3; C.PH.Colon.1; C.PH.Kidney.2; C.PH.Lung.4; C.PH.MSI.1; C.PH.Other.10; C.PH.Pancreas.2; C.PH.Prostate.1; C.PH.Skin.1; C.PH.Uterus.1
+4	8	TRUE	C.H.All.4	0.9794	0.9901	0.9997	C.H.All.4; C.H.Breast.10; C.H.Esophagus.5; C.H.Lung.6; C.PH.Breast.11; C.PH.Esophagus.6; C.PH.Lung.7; C.PH.Prostate.2
+5	8	TRUE	C.PH.Lung.3	0.9509	0.9754	0.9988	C.H.All.5; C.H.Head.6; C.H.Lung.2; C.H.Ovary.3; C.H.Thymus.3; C.H.Uterus.3; C.PH.Lung.3; C.PH.Thymus.4
+6	6	TRUE	C.H.All.6	0.959	0.9809	0.9985	C.H.All.6; C.H.Bone.SoftTissue.7; C.H.MSI.3; C.H.Skin.3; C.PH.Bone.SoftTissue.9; C.PH.MSI.9
+7	6	TRUE	C.H.All.7	0.9788	0.9872	1	C.H.All.7; C.H.Lung.15; C.H.Other.12; C.PH.All.26; C.PH.Lung.14; C.PH.Other.12
+8	4	TRUE	C.PH.Other.3	0.9969	0.9982	1	C.H.All.8; C.H.Other.7; C.PH.All.24; C.PH.Other.3
+9	7	TRUE	C.H.All.9	0.951	0.9757	0.9995	C.H.All.9; C.H.Breast.1; C.P.All.24; C.P.MSI.7; C.PH.All.19; C.PH.Breast.1; C.PH.Colon.21
+10	14	TRUE	C.P.All.12	0.9679	0.9874	0.9997	C.H.All.10; C.H.Colon.10; C.H.MSI.7; C.H.Other.11; C.P.All.12; C.P.Colon.4; C.P.Esophagus.3; C.P.Stomach.3; C.PH.All.27; C.PH.Colon.13; C.PH.Esophagus.5; C.PH.MSI.5; C.PH.Other.11; C.PH.Stomach.4
+11	12	TRUE	C.H.Bladder.6	0.967	0.9832	1	C.H.All.11; C.H.Bladder.6; C.H.Head.1; C.H.Kidney.4; C.H.Other.8; C.H.Prostate.10; C.PH.All.18; C.PH.Bladder.8; C.PH.Head.4; C.PH.Kidney.7; C.PH.Other.2; C.PH.Prostate.10
+12	6	TRUE	C.P.Kidney.2	0.9854	0.9947	0.9999	C.H.All.12; C.H.Kidney.1; C.P.All.11; C.P.Kidney.2; C.PH.All.15; C.PH.Kidney.3
+13	2	FALSE	C.H.All.13	0.9675	0.9675	0.9675	C.H.All.13; C.H.Lung.3
+14	14	TRUE	C.H.Breast.13	0.98	0.9893	0.9996	C.H.All.14; C.H.Bone.SoftTissue.6; C.H.Breast.13; C.H.Lung.12; C.H.Ovary.8; C.H.Prostate.11; C.H.Skin.9; C.H.Uterus.6; C.PH.Bone.SoftTissue.8; C.PH.Breast.13; C.PH.Lung.13; C.PH.Prostate.13; C.PH.Skin.10; C.PH.Uterus.9
+15	4	TRUE	C.H.Colon.7	0.978	0.9882	0.9978	C.H.All.15; C.H.Colon.7; C.PH.All.22; C.PH.Colon.7
+16	2	FALSE	C.H.All.16	0.9675	0.9675	0.9675	C.H.All.16; C.PH.All.4
+17	31	TRUE	C.H.Ovary.1	0.9556	0.9868	0.9998	C.H.All.17; C.H.Biliary.3; C.H.Breast.6; C.H.Colon.6; C.H.Esophagus.4; C.H.Liver.3; C.H.Lung.10; C.H.Other.10; C.H.Ovary.1; C.H.Pancreas.3; C.H.Prostate.5; C.H.Uterus.2; C.P.All.7; C.P.Head.1; C.P.Liver.6; C.P.Lung.2; C.P.Pancreas.4; C.P.Stomach.2; C.PH.All.7; C.PH.Biliary.3; C.PH.Breast.7; C.PH.Colon.10; C.PH.Esophagus.4; C.PH.Head.6; C.PH.Liver.1; C.PH.Lung.9; C.PH.Other.6; C.PH.Pancreas.5; C.PH.Prostate.7; C.PH.Stomach.3; C.PH.Uterus.3
+18	2	FALSE	C.H.All.18	0.9947	0.9947	0.9947	C.H.All.18; C.H.Breast.11
+19	5	TRUE	C.H.All.19	0.9566	0.9732	0.9985	C.H.All.19; C.H.Breast.8; C.H.Ovary.5; C.P.Ovary.5; C.PH.All.28
+20	8	TRUE	C.H.All.20	0.9907	0.9947	1	C.H.All.20; C.H.Bladder.7; C.H.Colon.5; C.H.Head.3; C.PH.All.21; C.PH.Bladder.6; C.PH.Colon.4; C.PH.Head.5
+21	8	TRUE	C.PH.CNS.6	0.9786	0.9886	0.9998	C.H.All.21; C.H.CNS.7; C.H.Head.7; C.P.All.9; C.P.CNS.3; C.PH.All.23; C.PH.CNS.6; C.PH.Head.7
+22	16	TRUE	C.PH.CNS.3	0.9579	0.9863	0.9994	C.H.All.22; C.H.Breast.5; C.H.CNS.1; C.H.Head.4; C.H.Liver.1; C.H.Prostate.8; C.P.All.16; C.P.Bone.SoftTissue.2; C.P.CNS.4; C.P.Head.4; C.PH.All.13; C.PH.Breast.4; C.PH.CNS.3; C.PH.Head.3; C.PH.Liver.6; C.PH.Prostate.17
+23	2	FALSE	C.H.All.23	0.9607	0.9607	0.9607	C.H.All.23; C.H.Lung.13
+24	27	TRUE	C.H.All.24	0.9719	0.9923	1	C.H.All.24; C.H.Biliary.4; C.H.Bladder.4; C.H.Bone.SoftTissue.3; C.H.Breast.4; C.H.CNS.6; C.H.Colon.11; C.H.Head.2; C.H.Kidney.3; C.H.Liver.5; C.H.Lung.9; C.H.Other.5; C.H.Ovary.2; C.H.Prostate.6; C.H.Skin.6; C.PH.All.12; C.PH.Bladder.5; C.PH.Bone.SoftTissue.2; C.PH.Breast.9; C.PH.Colon.12; C.PH.Head.1; C.PH.Kidney.1; C.PH.Lung.6; C.PH.Other.5; C.PH.Ovary.2; C.PH.Prostate.6; C.PH.Skin.5
+25	1	FALSE	C.H.All.25	NA	NA	NA	C.H.All.25
+26	2	FALSE	C.H.All.26	0.9518	0.9518	0.9518	C.H.All.26; C.PH.All.30
+27	10	TRUE	C.P.MSI.9	0.9502	0.9785	0.9999	C.H.All.27; C.H.MSI.10; C.P.All.26; C.P.MSI.9; C.P.Ovary.3; C.P.Uterus.3; C.PH.All.20; C.PH.MSI.3; C.PH.Ovary.3; C.PH.Uterus.7
+28	6	TRUE	C.H.All.28	0.9672	0.9834	0.9997	C.H.All.28; C.H.MSI.6; C.H.Stomach.2; C.PH.All.10; C.PH.MSI.13; C.PH.Stomach.2
+29	7	TRUE	C.PH.Other.4	0.9534	0.9772	0.9973	C.H.All.29; C.H.Bone.SoftTissue.4; C.H.Breast.9; C.H.Other.2; C.PH.Breast.14; C.PH.Lung.2; C.PH.Other.4
+30	2	FALSE	C.H.All.30	0.997	0.997	0.997	C.H.All.30; C.H.Colon.17
+31	3	TRUE	C.H.All.31	0.9634	0.9755	0.9854	C.H.All.31; C.H.Skin.8; C.PH.Skin.8
+32	2	FALSE	C.H.All.32	0.9895	0.9895	0.9895	C.H.All.32; C.H.Colon.2
+33	2	FALSE	C.H.All.33	0.9582	0.9582	0.9582	C.H.All.33; C.H.Other.13
+34	1	FALSE	C.H.All.34	NA	NA	NA	C.H.All.34
+35	12	TRUE	C.P.All.1	0.953	0.9743	0.9978	C.H.Biliary.2; C.H.Kidney.5; C.H.Pancreas.2; C.H.Prostate.3; C.P.All.1; C.P.CNS.1; C.PH.All.2; C.PH.Biliary.2; C.PH.CNS.7; C.PH.Head.9; C.PH.Kidney.6; C.PH.Ovary.7
+36	2	FALSE	C.H.Biliary.5	0.9699	0.9699	0.9699	C.H.Biliary.5; C.PH.Biliary.6
+37	4	TRUE	C.H.Bladder.1	0.9637	0.9752	0.9992	C.H.Bladder.1; C.P.Pancreas.8; C.PH.Bladder.1; C.PH.Prostate.8
+38	6	TRUE	C.PH.Other.1	0.9708	0.9799	0.9967	C.H.Bladder.3; C.H.Other.1; C.PH.Bladder.4; C.PH.Bone.SoftTissue.7; C.PH.Other.1; C.PH.Skin.13
+39	2	FALSE	C.H.Bladder.5	0.9826	0.9826	0.9826	C.H.Bladder.5; C.PH.Bladder.3
+40	6	TRUE	C.PH.MSI.6	0.973	0.9852	0.9977	C.H.Bladder.8; C.H.Bone.SoftTissue.2; C.H.MSI.8; C.PH.Bladder.7; C.PH.Bone.SoftTissue.1; C.PH.MSI.6
+41	2	FALSE	C.H.Bladder.9	0.9906	0.9906	0.9906	C.H.Bladder.9; C.PH.Bladder.11
+42	2	FALSE	C.H.Bladder.10	0.9784	0.9784	0.9784	C.H.Bladder.10; C.PH.Bladder.9
+43	4	TRUE	C.PH.Lung.5	0.9629	0.9751	0.9958	C.H.Bladder.11; C.H.Lung.4; C.PH.Bladder.10; C.PH.Lung.5
+44	2	FALSE	C.H.Bladder.12	0.9992	0.9992	0.9992	C.H.Bladder.12; C.PH.Bladder.12
+45	2	FALSE	C.H.Bladder.13	0.9926	0.9926	0.9926	C.H.Bladder.13; C.PH.Bladder.13
+46	10	TRUE	C.H.Bone.SoftTissue.1	0.9763	0.9863	0.9999	C.H.Bone.SoftTissue.1; C.H.Colon.8; C.H.Lung.5; C.H.Other.9; C.H.Uterus.5; C.PH.Bone.SoftTissue.3; C.PH.Colon.11; C.PH.Lung.10; C.PH.Other.9; C.PH.Uterus.6
+47	2	FALSE	C.H.Bone.SoftTissue.5	0.9702	0.9702	0.9702	C.H.Bone.SoftTissue.5; C.H.Skin.12
+48	9	TRUE	C.H.Lung.11	0.9676	0.983	0.9997	C.H.Bone.SoftTissue.8; C.H.Breast.18; C.H.Lung.11; C.H.MSI.11; C.P.Breast.2; C.PH.Bone.SoftTissue.6; C.PH.Breast.10; C.PH.Lung.11; C.PH.MSI.15
+49	2	FALSE	C.H.Bone.SoftTissue.9	0.9852	0.9852	0.9852	C.H.Bone.SoftTissue.9; C.PH.Bone.SoftTissue.5
+50	1	FALSE	C.H.Bone.SoftTissue.10	NA	NA	NA	C.H.Bone.SoftTissue.10
+51	3	TRUE	C.PH.Breast.2	0.9796	0.9881	0.9962	C.H.Breast.3; C.P.Breast.5; C.PH.Breast.2
+52	4	TRUE	C.H.Prostate.7	0.9667	0.9725	0.9799	C.H.Breast.12; C.H.Esophagus.9; C.H.Prostate.7; C.PH.Prostate.3
+53	2	FALSE	C.H.Breast.14	1	1	1	C.H.Breast.14; C.PH.Breast.16
+54	5	TRUE	C.PH.Ovary.8	0.9599	0.9727	0.9975	C.H.Breast.15; C.H.Ovary.6; C.H.Prostate.12; C.PH.Ovary.8; C.PH.Prostate.14
+55	2	FALSE	C.H.Breast.16	0.9956	0.9956	0.9956	C.H.Breast.16; C.PH.Breast.19
+56	7	TRUE	C.P.All.5	0.9521	0.9759	0.9919	C.H.Breast.17; C.H.Ovary.7; C.P.All.5; C.P.Bone.SoftTissue.1; C.PH.All.9; C.PH.Breast.15; C.PH.Ovary.6
+57	5	TRUE	C.P.All.2	0.9604	0.9755	0.9947	C.H.Breast.19; C.P.All.2; C.P.Lymphoid.2; C.PH.Breast.18; C.PH.Esophagus.2
+58	2	FALSE	C.H.Breast.20	0.9745	0.9745	0.9745	C.H.Breast.20; C.H.Esophagus.8
+59	2	FALSE	C.H.Breast.21	0.995	0.995	0.995	C.H.Breast.21; C.PH.Breast.20
+60	1	FALSE	C.H.Breast.22	NA	NA	NA	C.H.Breast.22
+61	2	FALSE	C.H.CNS.2	0.9955	0.9955	0.9955	C.H.CNS.2; C.PH.CNS.8
+62	1	FALSE	C.H.CNS.3	NA	NA	NA	C.H.CNS.3
+63	5	TRUE	C.PH.CNS.1	0.9649	0.9822	0.9995	C.H.CNS.4; C.H.Head.5; C.H.Stomach.3; C.PH.CNS.1; C.PH.Head.8
+64	4	TRUE	C.PH.MSI.11	0.9986	0.9992	0.9999	C.H.CNS.5; C.H.MSI.4; C.PH.CNS.2; C.PH.MSI.11
+65	2	FALSE	C.H.CNS.8	0.9998	0.9998	0.9998	C.H.CNS.8; C.PH.CNS.10
+66	1	FALSE	C.H.CNS.9	NA	NA	NA	C.H.CNS.9
+67	2	FALSE	C.H.Colon.4	0.9971	0.9971	0.9971	C.H.Colon.4; C.PH.Colon.14
+68	2	FALSE	C.H.Colon.12	0.9792	0.9792	0.9792	C.H.Colon.12; C.H.MSI.16
+69	2	FALSE	C.H.Colon.13	0.97	0.97	0.97	C.H.Colon.13; C.PH.Colon.3
+70	2	FALSE	C.H.Colon.14	0.9982	0.9982	0.9982	C.H.Colon.14; C.PH.Colon.17
+71	2	FALSE	C.H.Colon.15	0.9937	0.9937	0.9937	C.H.Colon.15; C.PH.Colon.19
+72	2	FALSE	C.H.Colon.16	0.9587	0.9587	0.9587	C.H.Colon.16; C.PH.Breast.21
+73	7	TRUE	C.H.Stomach.1	0.9692	0.9855	0.9944	C.H.Esophagus.1; C.H.Pancreas.1; C.H.Skin.1; C.H.Stomach.1; C.P.Stomach.1; C.PH.Esophagus.1; C.PH.Stomach.1
+74	8	TRUE	C.PH.All.6	0.9599	0.9781	0.9988	C.H.Esophagus.3; C.H.Lymphoid.5; C.H.Other.3; C.PH.All.6; C.PH.Lymphoid.2; C.PH.Other.7; C.PH.Pancreas.10; C.PH.Stomach.5
+75	10	TRUE	C.PH.Lymphoid.5	0.9641	0.9785	0.9939	C.H.Esophagus.6; C.H.Lymphoid.2; C.H.Uterus.4; C.PH.Biliary.4; C.PH.CNS.5; C.PH.Esophagus.7; C.PH.Liver.5; C.PH.Lymphoid.5; C.PH.Pancreas.6; C.PH.Uterus.4
+76	1	FALSE	C.H.Esophagus.7	NA	NA	NA	C.H.Esophagus.7
+77	1	FALSE	C.H.Head.8	NA	NA	NA	C.H.Head.8
+78	1	FALSE	C.H.Liver.2	NA	NA	NA	C.H.Liver.2
+79	1	FALSE	C.H.Liver.4	NA	NA	NA	C.H.Liver.4
+80	6	TRUE	C.H.Lung.7	0.9855	0.9922	0.9999	C.H.Lung.7; C.H.MSI.2; C.H.Skin.2; C.PH.Lung.8; C.PH.MSI.7; C.PH.Skin.6
+81	1	FALSE	C.H.Lung.14	NA	NA	NA	C.H.Lung.14
+82	2	FALSE	C.H.Lung.16	0.997	0.997	0.997	C.H.Lung.16; C.PH.Lung.15
+83	2	FALSE	C.H.Lymphoid.1	0.9796	0.9796	0.9796	C.H.Lymphoid.1; C.PH.Lymphoid.4
+84	2	FALSE	C.H.Lymphoid.3	0.996	0.996	0.996	C.H.Lymphoid.3; C.PH.Lymphoid.6
+85	1	FALSE	C.H.Lymphoid.4	NA	NA	NA	C.H.Lymphoid.4
+86	6	TRUE	C.H.Prostate.4	0.9537	0.9705	0.9987	C.H.MSI.9; C.H.Prostate.4; C.H.Uterus.8; C.PH.MSI.2; C.PH.Prostate.16; C.PH.Uterus.11
+87	2	FALSE	C.H.MSI.12	0.9716	0.9716	0.9716	C.H.MSI.12; C.PH.MSI.16
+88	2	FALSE	C.H.MSI.13	0.9742	0.9742	0.9742	C.H.MSI.13; C.PH.MSI.20
+89	1	FALSE	C.H.MSI.14	NA	NA	NA	C.H.MSI.14
+90	2	FALSE	C.H.MSI.15	0.9938	0.9938	0.9938	C.H.MSI.15; C.PH.MSI.22
+91	2	FALSE	C.H.Ovary.4	0.9648	0.9648	0.9648	C.H.Ovary.4; C.H.Pancreas.5
+92	1	FALSE	C.H.Pancreas.4	NA	NA	NA	C.H.Pancreas.4
+93	2	FALSE	C.H.Prostate.2	0.9719	0.9719	0.9719	C.H.Prostate.2; C.PH.Prostate.15
+94	1	FALSE	C.H.Prostate.13	NA	NA	NA	C.H.Prostate.13
+95	1	FALSE	C.H.Prostate.14	NA	NA	NA	C.H.Prostate.14
+96	1	FALSE	C.H.Prostate.15	NA	NA	NA	C.H.Prostate.15
+97	4	TRUE	C.PH.Skin.4	0.997	0.9979	0.9992	C.H.Skin.5; C.P.All.19; C.P.Skin.2; C.PH.Skin.4
+98	3	TRUE	C.PH.Skin.9	0.9708	0.9794	0.9867	C.H.Skin.7; C.P.Skin.4; C.PH.Skin.9
+99	2	FALSE	C.H.Skin.10	0.9988	0.9988	0.9988	C.H.Skin.10; C.PH.Skin.12
+100	1	FALSE	C.H.Skin.11	NA	NA	NA	C.H.Skin.11
+101	1	FALSE	C.H.Skin.13	NA	NA	NA	C.H.Skin.13
+102	2	FALSE	C.H.Skin.14	0.9857	0.9857	0.9857	C.H.Skin.14; C.PH.Skin.11
+103	2	FALSE	C.H.Thymus.1	0.9964	0.9964	0.9964	C.H.Thymus.1; C.PH.Thymus.2
+104	2	FALSE	C.H.Thymus.2	0.9994	0.9994	0.9994	C.H.Thymus.2; C.PH.Thymus.3
+105	1	FALSE	C.H.Uterus.7	NA	NA	NA	C.H.Uterus.7
+106	2	FALSE	C.P.All.3	0.9872	0.9872	0.9872	C.P.All.3; C.PH.Breast.12
+107	4	TRUE	C.P.All.6	0.9717	0.9861	0.9993	C.P.All.6; C.P.Liver.5; C.PH.All.17; C.PH.Liver.2
+108	6	TRUE	C.P.MSI.3	0.9759	0.9907	0.9991	C.P.All.8; C.P.Colon.5; C.P.MSI.3; C.PH.All.16; C.PH.Colon.8; C.PH.MSI.10
+109	5	TRUE	C.PH.Uterus.2	0.9755	0.9848	0.9944	C.P.All.10; C.P.MSI.6; C.P.Uterus.8; C.PH.MSI.14; C.PH.Uterus.2
+110	2	FALSE	C.P.All.13	0.9813	0.9813	0.9813	C.P.All.13; C.PH.All.32
+111	5	TRUE	C.P.MSI.5	0.9999	0.9999	1	C.P.All.14; C.P.MSI.5; C.P.Pancreas.3; C.PH.MSI.8; C.PH.Pancreas.4
+112	2	FALSE	C.P.All.15	0.9849	0.9849	0.9849	C.P.All.15; C.PH.All.8
+113	4	TRUE	C.PH.Skin.2	0.9956	0.9973	0.999	C.P.All.18; C.P.Skin.3; C.PH.All.14; C.PH.Skin.2
+114	4	TRUE	C.P.All.20	0.9595	0.9811	0.9984	C.P.All.20; C.P.Prostate.6; C.PH.All.29; C.PH.Prostate.9
+115	3	TRUE	C.P.All.21	0.9727	0.9825	0.998	C.P.All.21; C.P.Prostate.8; C.PH.Prostate.18
+116	1	FALSE	C.P.All.22	NA	NA	NA	C.P.All.22
+117	1	FALSE	C.P.All.23	NA	NA	NA	C.P.All.23
+118	2	FALSE	C.P.All.25	0.9563	0.9563	0.9563	C.P.All.25; C.PH.Lung.12
+119	3	TRUE	C.P.Breast.6	0.9827	0.9838	0.9849	C.P.All.27; C.P.Breast.6; C.PH.Breast.5
+120	6	TRUE	C.PH.MSI.4	0.9566	0.9798	0.9918	C.P.All.28; C.P.Colon.6; C.P.MSI.4; C.PH.All.25; C.PH.Colon.9; C.PH.MSI.4
+121	3	TRUE	C.P.All.29	0.9734	0.9786	0.9845	C.P.All.29; C.P.Prostate.11; C.PH.Liver.7
+122	1	FALSE	C.P.All.30	NA	NA	NA	C.P.All.30
+123	3	TRUE	C.P.Prostate.4	0.9989	0.9993	0.9997	C.P.All.31; C.P.Prostate.4; C.PH.Prostate.11
+124	4	TRUE	C.P.Liver.1	0.9637	0.9774	0.9889	C.P.Biliary.1; C.P.Kidney.5; C.P.Liver.1; C.P.Prostate.1
+125	4	TRUE	C.PH.Liver.4	0.9805	0.987	0.9958	C.P.Biliary.2; C.P.Liver.2; C.P.Skin.1; C.PH.Liver.4
+126	6	TRUE	C.P.Breast.1	0.9769	0.9889	0.9985	C.P.Biliary.3; C.P.Breast.1; C.P.Ovary.2; C.P.Prostate.3; C.P.Uterus.4; C.PH.Ovary.1
+127	3	TRUE	C.PH.Biliary.5	0.9803	0.9869	0.9923	C.P.Biliary.4; C.P.Liver.3; C.PH.Biliary.5
+128	1	FALSE	C.P.Biliary.5	NA	NA	NA	C.P.Biliary.5
+129	3	TRUE	C.P.Liver.4	0.9819	0.9885	0.9993	C.P.Bladder.1; C.P.Liver.4; C.PH.Liver.3
+130	1	FALSE	C.P.Bladder.2	NA	NA	NA	C.P.Bladder.2
+131	4	TRUE	C.P.Breast.4	0.9553	0.965	0.9733	C.P.Bladder.3; C.P.Breast.4; C.P.Lung.3; C.PH.Liver.9
+132	1	FALSE	C.P.Bone.SoftTissue.3	NA	NA	NA	C.P.Bone.SoftTissue.3
+133	6	TRUE	C.PH.Esophagus.8	0.9525	0.9698	0.9919	C.P.Breast.3; C.P.Esophagus.4; C.P.Stomach.9; C.PH.Breast.8; C.PH.Esophagus.8; C.PH.Stomach.6
+134	2	FALSE	C.P.CNS.2	0.9951	0.9951	0.9951	C.P.CNS.2; C.PH.CNS.4
+135	2	FALSE	C.P.CNS.5	1	1	1	C.P.CNS.5; C.PH.CNS.9
+136	1	FALSE	C.P.CNS.6	NA	NA	NA	C.P.CNS.6
+137	3	TRUE	C.PH.Colon.20	0.9714	0.976	0.979	C.P.Colon.1; C.P.MSI.10; C.PH.Colon.20
+138	4	TRUE	C.P.Colon.3	0.9838	0.991	0.9961	C.P.Colon.3; C.P.MSI.8; C.PH.Colon.6; C.PH.MSI.17
+139	1	FALSE	C.P.Colon.7	NA	NA	NA	C.P.Colon.7
+140	1	FALSE	C.P.Colon.8	NA	NA	NA	C.P.Colon.8
+141	1	FALSE	C.P.Colon.9	NA	NA	NA	C.P.Colon.9
+142	1	FALSE	C.P.Colon.10	NA	NA	NA	C.P.Colon.10
+143	6	TRUE	C.P.Pancreas.1	0.9547	0.9767	0.999	C.P.Esophagus.2; C.P.Pancreas.1; C.P.Stomach.8; C.PH.Colon.2; C.PH.Pancreas.1; C.PH.Stomach.8
+144	2	FALSE	C.P.Esophagus.5	0.9943	0.9943	0.9943	C.P.Esophagus.5; C.PH.Esophagus.9
+145	3	TRUE	C.P.Head.3	0.9585	0.9711	0.9917	C.P.Head.3; C.PH.Head.10; C.PH.Other.13
+146	2	FALSE	C.P.Head.5	0.9768	0.9768	0.9768	C.P.Head.5; C.P.Stomach.6
+147	2	FALSE	C.P.Kidney.3	0.9958	0.9958	0.9958	C.P.Kidney.3; C.PH.Kidney.4
+148	2	FALSE	C.P.Kidney.4	0.9999	0.9999	0.9999	C.P.Kidney.4; C.PH.Kidney.5
+149	1	FALSE	C.P.Liver.7	NA	NA	NA	C.P.Liver.7
+150	1	FALSE	C.P.Lung.4	NA	NA	NA	C.P.Lung.4
+151	3	TRUE	C.PH.Lymphoid.1	0.9598	0.9723	0.9914	C.P.Lymphoid.1; C.PH.Lymphoid.1; C.PH.MSI.19
+152	4	TRUE	C.PH.Lymphoid.3	0.9504	0.9679	0.9992	C.P.Lymphoid.3; C.P.Pancreas.2; C.PH.Lymphoid.3; C.PH.Pancreas.3
+153	1	FALSE	C.P.Lymphoid.4	NA	NA	NA	C.P.Lymphoid.4
+154	2	FALSE	C.P.Myeloid.1	0.9995	0.9995	0.9995	C.P.Myeloid.1; C.PH.Myeloid.1
+155	2	FALSE	C.PH.Myeloid.2	0.9936	0.9936	0.9936	C.P.Myeloid.2; C.PH.Myeloid.2
+156	4	TRUE	C.P.Ovary.1	0.9656	0.9766	0.9896	C.P.Ovary.1; C.P.Uterus.2; C.PH.Ovary.4; C.PH.Uterus.8
+157	2	FALSE	C.P.Ovary.4	0.9714	0.9714	0.9714	C.P.Ovary.4; C.P.Prostate.13
+158	1	FALSE	C.P.Pancreas.5	NA	NA	NA	C.P.Pancreas.5
+159	2	FALSE	C.P.Pancreas.7	0.9699	0.9699	0.9699	C.P.Pancreas.7; C.PH.Pancreas.7
+160	3	TRUE	C.P.Prostate.2	0.9751	0.9826	0.9954	C.P.Prostate.2; C.PH.Liver.8; C.PH.Prostate.4
+161	2	FALSE	C.P.Prostate.5	0.9991	0.9991	0.9991	C.P.Prostate.5; C.PH.Prostate.12
+162	1	FALSE	C.P.Prostate.7	NA	NA	NA	C.P.Prostate.7
+163	1	FALSE	C.P.Prostate.9	NA	NA	NA	C.P.Prostate.9
+164	1	FALSE	C.P.Prostate.10	NA	NA	NA	C.P.Prostate.10
+165	1	FALSE	C.P.Prostate.12	NA	NA	NA	C.P.Prostate.12
+166	1	FALSE	C.P.Skin.5	NA	NA	NA	C.P.Skin.5
+167	1	FALSE	C.P.Skin.6	NA	NA	NA	C.P.Skin.6
+168	1	FALSE	C.P.Skin.7	NA	NA	NA	C.P.Skin.7
+169	1	FALSE	C.P.Stomach.4	NA	NA	NA	C.P.Stomach.4
+170	1	FALSE	C.P.Stomach.5	NA	NA	NA	C.P.Stomach.5
+171	1	FALSE	C.P.Stomach.7	NA	NA	NA	C.P.Stomach.7
+172	2	FALSE	C.P.Thymus.1	0.9991	0.9991	0.9991	C.P.Thymus.1; C.PH.Thymus.1
+173	1	FALSE	C.P.Thymus.2	NA	NA	NA	C.P.Thymus.2
+174	2	FALSE	C.P.Uterus.5	0.9992	0.9992	0.9992	C.P.Uterus.5; C.PH.Uterus.5
+175	2	FALSE	C.PH.Uterus.13	0.9991	0.9991	0.9991	C.P.Uterus.6; C.PH.Uterus.13
+176	1	FALSE	C.P.Uterus.7	NA	NA	NA	C.P.Uterus.7
+177	1	FALSE	C.P.Uterus.9	NA	NA	NA	C.P.Uterus.9
+178	3	TRUE	C.PH.Bone.SoftTissue.4	0.9733	0.9803	0.9902	C.PH.All.5; C.PH.Bone.SoftTissue.4; C.PH.Ovary.5
+179	1	FALSE	C.PH.All.11	NA	NA	NA	C.PH.All.11
+180	1	FALSE	C.PH.All.31	NA	NA	NA	C.PH.All.31
+181	1	FALSE	C.PH.All.33	NA	NA	NA	C.PH.All.33
+182	1	FALSE	C.PH.All.34	NA	NA	NA	C.PH.All.34
+183	2	FALSE	C.PH.All.35	0.9784	0.9784	0.9784	C.PH.All.35; C.PH.Colon.15
+184	1	FALSE	C.PH.Bone.SoftTissue.10	NA	NA	NA	C.PH.Bone.SoftTissue.10
+185	1	FALSE	C.PH.Breast.17	NA	NA	NA	C.PH.Breast.17
+186	2	FALSE	C.PH.Colon.16	0.9576	0.9576	0.9576	C.PH.Colon.16; C.PH.MSI.18
+187	1	FALSE	C.PH.Esophagus.10	NA	NA	NA	C.PH.Esophagus.10
+188	1	FALSE	C.PH.Esophagus.11	NA	NA	NA	C.PH.Esophagus.11
+189	1	FALSE	C.PH.Kidney.8	NA	NA	NA	C.PH.Kidney.8
+190	1	FALSE	C.PH.Liver.10	NA	NA	NA	C.PH.Liver.10
+191	1	FALSE	C.PH.Lung.16	NA	NA	NA	C.PH.Lung.16
+192	1	FALSE	C.PH.MSI.21	NA	NA	NA	C.PH.MSI.21
+193	1	FALSE	C.PH.Pancreas.8	NA	NA	NA	C.PH.Pancreas.8
+194	1	FALSE	C.PH.Pancreas.9	NA	NA	NA	C.PH.Pancreas.9
+195	1	FALSE	C.PH.Prostate.19	NA	NA	NA	C.PH.Prostate.19
+196	1	FALSE	C.PH.Skin.3	NA	NA	NA	C.PH.Skin.3
+197	1	FALSE	C.PH.Skin.14	NA	NA	NA	C.PH.Skin.14
+198	1	FALSE	C.PH.Skin.15	NA	NA	NA	C.PH.Skin.15
+199	1	FALSE	C.PH.Stomach.7	NA	NA	NA	C.PH.Stomach.7
+200	1	FALSE	C.PH.Uterus.10	NA	NA	NA	C.PH.Uterus.10
+201	1	FALSE	C.PH.Uterus.12	NA	NA	NA	C.PH.Uterus.12
