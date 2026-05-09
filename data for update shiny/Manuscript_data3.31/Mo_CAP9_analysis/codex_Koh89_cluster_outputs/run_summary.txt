@@ -1,9 +1,0 @@
-Input directory: Manuscript_data/Mo_CAP9_analysis/Signatures/Koh89
-Number of files: 67
-Rows: 89
-Columns: 693
-min_similarity: 0.9500
-min_cluster_size: 3
-Retained clusters: 72
-Retained columns: 504
-Dropped columns: 189
