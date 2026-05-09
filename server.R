@@ -6,34 +6,55 @@ library(dplyr)
 library(tidyr)
 library(data.table)
 library(ggplot2)
+library(BSgenome.Hsapiens.1000genomes.hs37d5)
+library(BSgenome.Hsapiens.UCSC.hg38)
+library(mSigSpectra) # 负责计算和生成矩阵
+library(mSigPlot)    # 负责画图
+library(reticulate) # 用于调用 Python
+library(DT)
 
 # ==============================================================================
-# 1. 数据加载与预处理 (在 Server 函数外部执行)
+# 使用 Conda 环境替代虚拟环境
 # ==============================================================================
-# 更新为最新的 3.31 路径
-data_path_prefix <- "data for update shiny/Manuscript_data3.31"
+# 强行绑定我们刚才用 Conda 创建的环境
+reticulate::use_condaenv("sigprofiler_env", required = TRUE)
+
+# ==============================================================================
+# 1. 数据加载与预处理 (路径已适配你现在的 data/ 文件夹)
+source("Indel_process.R")
+# ==============================================================================
+
+# --- 关键路径定义 ---
+data_path_prefix <- "data" 
 img_subdir <- "parallel_plots/" 
 
-# --- 读取统计摘要表 ---
-summary_dir <- "data for update shiny/vignette"
+# --- 1.1 读取统计摘要表 ---
+# 之前在 vignette 文件夹，现在既然在 data 里，我们直接找
 stats_filename <- "prot_table_1.csv"
-target_path <- file.path(summary_dir, stats_filename)
+target_path <- file.path(data_path_prefix, stats_filename)
 
 if (file.exists(target_path)) {
   message("正在从目录加载摘要表：", target_path)
   sig_stats_df <- read.csv(target_path, stringsAsFactors = FALSE)
-  # 使用新的列名 signature_id
-  if ("signature_id" %in% colnames(sig_stats_df)) sig_stats_df$signature_id <- as.character(sig_stats_df$signature_id)
+  if ("signature_id" %in% colnames(sig_stats_df)) {
+    sig_stats_df$signature_id <- as.character(sig_stats_df$signature_id)
+  }
 } else {
   sig_stats_df <- NULL
-  warning("严重警告：无法找到统计表。")
+  warning("严重警告：无法找到统计表：", target_path)
 }
 
-# --- 读取关系表 (稳健版) ---
-conn_file_path <- file.path(data_path_prefix, "Mo_CAP9_analysis", "finalized_cap9", "connection_table.tsv")
-raw_data <- data.table::fread(conn_file_path, data.table = FALSE, fill = TRUE)
+# --- 1.2 读取关系表 (稳健版) ---
+# 注意：因为你把文件直接放到了 data/ 下，所以不需要那一长串子目录了
+conn_file_path <- file.path(data_path_prefix, "connection_table.tsv")
 
-# 稳健提取列名
+if (file.exists(conn_file_path)) {
+  raw_data <- data.table::fread(conn_file_path, data.table = FALSE, fill = TRUE)
+} else {
+  stop("关键错误：找不到关系表 ", conn_file_path)
+}
+
+# --- 1.3 逻辑处理 (InDel 列与 Etiology) ---
 id89_df <- raw_data %>%
   dplyr::select(any_of(c("InDel83", "InDel89", "Proposed.Etiology", "Etiology", "Aetiology")))
 
@@ -42,14 +63,12 @@ if (length(existing_eti_col) > 0) {
   names(id89_df)[names(id89_df) == existing_eti_col[1]] <- "Aetiology"
 }
 
-if (!"Aetiology" %in% colnames(id89_df)) {
-  id89_df$Aetiology <- ""
-}
+if (!"Aetiology" %in% colnames(id89_df)) id89_df$Aetiology <- ""
 
 id89_df <- id89_df %>%
-  fill(InDel83, .direction = "down") %>%
+  tidyr::fill(InDel83, .direction = "down") %>%
   dplyr::filter(!is.na(InDel89) & InDel89 != "") %>%
-  mutate(across(c(InDel83, InDel89, Aetiology), as.character))
+  dplyr::mutate(across(c(InDel83, InDel89, Aetiology), as.character))
 
 # 修复希腊字母
 id89_df$InDel89 <- gsub("InsDel_Aα", "InsDel_A_alpha", id89_df$InDel89)
@@ -200,6 +219,350 @@ server <- function(input, output, session) {
   
   current_integrated_sig <- reactiveVal(NULL)
   
+  # ============================================================================
+  # 新增：VCF 分析模块核心逻辑
+  # ============================================================================
+  
+  # 1. 定义结果容器
+  vcf_results <- reactiveValues(
+    annotated = NULL,
+    cat83 = NULL,
+    cat89 = NULL,
+    cat476 = NULL,
+    assignment = NULL #存放SigProfiler结果
+  )
+  
+  # ==============================================================================
+  # 2. 监听“开始分析”按钮 (已修复嵌套结构与括号闭合)
+  # ==============================================================================
+  observeEvent(input$run_analysis_btn, {
+    req(input$vcf_file)
+    
+    withProgress(message = 'Processing VCF...', value = 0, {
+      
+      # 【外部 tryCatch】：负责捕获 VCF 处理和矩阵生成阶段的错误
+      tryCatch({
+        vcf_path <- input$vcf_file$datapath
+        
+        # 基因组版本转换
+        genome <- input$ref_genome 
+        if(genome == "hg19") genome <- "GRCh37"
+        if(genome == "hg38") genome <- "GRCh38"
+        
+        # --- 步骤 1：读取与过滤 VCF ---
+        message("\n[追踪] 1. 提取纯净 Indel 变异...")
+        incProgress(0.1, detail = "正在提取变异核心数据...")
+        
+        raw_vcf <- data.table::fread(vcf_path, skip = "#CHROM", data.table = FALSE, fill = TRUE)
+        colnames(raw_vcf)[1] <- "CHROM"
+        pure_vcf <- raw_vcf[, 1:5]
+        colnames(pure_vcf) <- c("CHROM", "POS", "ID", "REF", "ALT")
+        
+        pure_vcf$QUAL <- "."
+        pure_vcf$FILTER <- "PASS"
+        pure_vcf$INFO <- "."
+        
+        # 统一染色体命名
+        pure_vcf$CHROM <- gsub("^chr", "", pure_vcf$CHROM, ignore.case = TRUE)
+        valid_chroms <- c(as.character(1:22), "X", "Y")
+        pure_vcf <- pure_vcf[pure_vcf$CHROM %in% valid_chroms, ]
+        
+        # 过滤多等位与提取 Indel
+        pure_vcf <- pure_vcf[!grepl(",", pure_vcf$ALT), ]
+        indel_df <- pure_vcf[nchar(pure_vcf$REF) != nchar(pure_vcf$ALT), ]
+        
+        if (nrow(indel_df) == 0) stop("过滤后未发现有效的 Indel 突变！")
+        
+        # --- 步骤 2：注释 ---
+        message("[追踪] 2. 开始比对参考基因组...")
+        incProgress(0.4, detail = "Aligning with reference genome...")
+        id_ann_list <- mSigSpectra::annotate_id_vcf(indel_df, ref_genome = genome)
+        ann_id <- id_ann_list$annotated.vcf
+        vcf_results$annotated <- ann_id
+        
+        # --- 步骤 3：矩阵生成 ---
+        message("[追踪] 3. 正在生成 83/89/476 矩阵...")
+        incProgress(0.7, detail = "Generating signature profile matrices...")
+        
+        fixed_sample_id <- "Analysis_Sample"
+        vcf_results$cat83 <- mSigSpectra::vcf_to_id_catalog(ann_id, type = "ID83", ref_genome = genome, region = "genome", sample_name = fixed_sample_id)
+        vcf_results$cat89 <- mSigSpectra::vcf_to_id_catalog(ann_id, type = "ID89", ref_genome = genome, region = "genome", sample_name = fixed_sample_id)
+        vcf_results$cat476 <- mSigSpectra::vcf_to_id_catalog(ann_id, type = "ID476", ref_genome = genome, region = "genome", sample_name = fixed_sample_id)
+        
+        # ==============================================================================
+        # 【MuSiCal 替换版】步骤 4：运行特征分配 (使用 Python MuSiCal)
+        # ==============================================================================
+        if (input$run_sigprofiler) { # 这里的变量名可以不改，代表用户点击了运行分配算法
+          message("[追踪] 4. 正在准备 MuSiCal 特征分配...")
+          incProgress(0.8, detail = "Executing MuSiCal Assignment...")
+          
+          tryCatch({
+            # 1. 基础目录与文件准备
+            sp_temp_dir <- file.path(tempdir(), "MuSiCal_Run")
+            if(!dir.exists(sp_temp_dir)) dir.create(sp_temp_dir, recursive = TRUE)
+            
+            input_matrix_path <- file.path(sp_temp_dir, "input_id83.txt")
+            output_res_path <- file.path(sp_temp_dir, "musical_exposures.txt")
+            
+            # 【重要参数】: 这里需要替换为你存放 COSMIC ID83 签名矩阵的实际路径
+            # 矩阵格式应为：第一列是 83 种突变类型，其余列是各个特征
+            cosmic_sigs_path <- file.path("data", "COSMIC_v3.3_ID83.txt") 
+            
+            # 2. 提取矩阵并进行 R 端深度清洗 (单样本防御)
+            matrix_df <- as.data.frame(vcf_results$cat83)
+            sample_tmb <- sum(matrix_df[, 1]) 
+            message(">> 检测到样本: ", colnames(matrix_df)[1], " | 总突变数: ", sample_tmb)
+            
+            if (sample_tmb < 1) stop("样本突变数为 0，无法分析。")
+            
+            matrix_df[is.na(matrix_df)] <- 0
+            mat_raw <- as.matrix(matrix_df)
+            mat_int <- apply(mat_raw, 2, function(x) as.integer(round(x)))
+            
+            matrix_final <- data.frame(
+              MutationType = rownames(matrix_df),
+              as.data.frame(mat_int),
+              stringsAsFactors = FALSE,
+              check.names = FALSE
+            )
+            
+            # 3. 导出极度纯净的 TXT 给 Python 使用
+            old_scipen <- options(scipen = 999) 
+            write.table(matrix_final, file = input_matrix_path, sep = "\t", row.names = FALSE, quote = FALSE)
+            options(old_scipen)
+            
+            # 4. 【核心层】：使用原生 Python 字符串调用 MuSiCal
+            # 这样可以彻底避开 reticulate 将 R data.frame 转换为 Python pandas 时的黑盒 Bug
+            message(">> 启动 Python (MuSiCal) 引擎...")
+            
+            reticulate::py_run_string(paste0("
+import pandas as pd
+import numpy as np
+
+# 导入 musical 包 (请确保 conda 环境中已安装)
+try:
+    import musical
+    musical_installed = True
+except ImportError:
+    musical_installed = False
+
+success = False
+error_msg = ''
+
+if musical_installed:
+    try:
+        # 1. 读取我们刚导出的样本矩阵 (第一列作为索引)
+        X = pd.read_csv('", input_matrix_path, "', sep='\\t', index_col=0)
+        X = X.apply(pd.to_numeric, errors='coerce').fillna(0)
+        
+        # 2. 读取 COSMIC 参考特征矩阵
+        W = pd.read_csv('", cosmic_sigs_path, "', sep='\\t', index_col=0)
+        
+        # 3. 运行 MuSiCal 进行特征暴露度拟合 (Assignment)
+        # 注意：这里使用 MuSiCal 的标准拟合函数 (底层通常是 NNLS)
+        # 如果 MuSiCal 的具体 API 有变，请调整此处的调用方法
+        exposures = musical.fit_exposures(X, W)
+        
+        # 4. 格式化输出并保存
+        # 转置以便与 R 端的 UI 要求对齐 (行是样本，列是特征)
+        exposures_T = exposures.T 
+        
+        # 将样本名(索引)变为第一列 'Samples'
+        exposures_T.index.name = 'Samples'
+        exposures_T.reset_input().to_csv('", output_res_path, "', sep='\\t', index=False)
+        
+        success = True
+    except Exception as e:
+        error_msg = str(e)
+else:
+    error_msg = 'MuSiCal package is not installed in the Python environment.'
+            "))
+            
+            # 5. 检查 Python 执行状态并读取结果
+            if (py$success) {
+              if (file.exists(output_res_path)) {
+                vcf_results$assignment_data <- read.delim(output_res_path, sep = "\t", stringsAsFactors = FALSE, check.names = FALSE)
+                message(">> [成功] MuSiCal 特征分配完成。")
+              } else {
+                stop("Python 报告执行成功，但未能找到结果文件。")
+              }
+            } else {
+              stop(paste("Python 执行失败:", py$error_msg))
+            }
+            
+          }, error = function(e) {
+            message("❌ MuSiCal 模块失败: ", e$message)
+            showNotification(paste("MuSiCal Error:", e$message), type = "warning", duration = 10)
+          }) # 内部 tryCatch 闭合
+        } # if 闭合
+        
+        # 主流程成功后的最后反馈
+        message("[Tracking] Success!")
+        incProgress(0.99, detail = "Analysis Complete!")
+        showNotification("VCF Analysis finished successfully!", type = "message")
+        
+      }, error = function(e) {
+        # 【外部 tryCatch 错误捕获】：负责捕获主分析流程中的严重错误
+        message("\n❌ [严重错误] 基础分析流程崩溃！")
+        message("错误信息: ", e$message)
+        showNotification(paste("Critical Analysis Error:", e$message), type = "error", duration = 10)
+      }) # 外部 tryCatch 闭合
+      
+    }) # withProgress 闭合
+  }) # observeEvent 闭合
+  
+  # ============================================================================
+  # 3. 绘图输出 (纯粹调用原生 mSigPlot，防止崩溃)
+  # ============================================================================
+  
+  # --- 1. ID83 绘图 ---
+  output$plot_id83 <- renderPlot({
+    req(vcf_results$cat83)
+    mSigPlot::plot_ID83(vcf_results$cat83) 
+  }, res = 100, height = 500)
+  
+  # --- 2. ID89 绘图 ---
+  output$plot_id89 <- renderPlot({
+    req(vcf_results$cat89)
+    mSigPlot::plot_ID89(vcf_results$cat89) 
+  }, res = 100, height = 500)
+  
+  # --- 3. ID476 绘图 ---
+  output$plot_id476 <- renderPlot({
+    req(vcf_results$cat476)
+    mSigPlot::plot_ID476(vcf_results$cat476)
+  }, res = 100, height = 500)
+  
+  # ============================================================================
+  # 4. 下载逻辑 (紧跟在绘图后面)
+  # ============================================================================
+  
+  # 1. 动态渲染下载按钮
+  output$download_ui <- renderUI({
+    req(vcf_results$cat83, vcf_results$cat89, vcf_results$cat476)
+    
+    downloadButton("download_all", "Download Matrices (ZIP)", 
+                   class = "btn-success", 
+                   style = "font-size: 1.45rem; font-weight: bold; padding: 12px 5px; width: 100%; margin-top: 10px; white-space: normal; line-height: 1.3; border-radius: 8px;")
+  })
+  
+  # 2. 真正的下载处理逻辑
+  output$download_all <- downloadHandler(
+    filename = function() {
+      paste0("Indel_Matrices_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".zip")
+    },
+    content = function(file) {
+      temp_dir <- tempdir()
+      old_wd <- setwd(temp_dir)
+      on.exit(setwd(old_wd)) 
+      
+      # 将三个矩阵写成 CSV 文件
+      write.csv(as.data.frame(vcf_results$cat83), "ID83_matrix.csv", row.names = TRUE)
+      write.csv(as.data.frame(vcf_results$cat89), "ID89_matrix.csv", row.names = TRUE)
+      write.csv(as.data.frame(vcf_results$cat476), "ID476_matrix.csv", row.names = TRUE)
+      
+      # 打包成 ZIP
+      utils::zip(zipfile = file, 
+                 files = c("ID83_matrix.csv", "ID89_matrix.csv", "ID476_matrix.csv"))
+    },
+    contentType = "application/zip"
+  )
+  
+  # 2. 真正的下载处理逻辑
+  output$download_all <- downloadHandler(
+    filename = function() {
+      # 生成一个带时间戳的 zip 文件名，例如: Indel_Matrices_20231025.zip
+      paste0("Indel_Matrices_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".zip")
+    },
+    content = function(file) {
+      # 获取当前的临时目录
+      temp_dir <- tempdir()
+      
+      # 保存当前的运行路径，确保打包完能切换回来
+      old_wd <- setwd(temp_dir)
+      on.exit(setwd(old_wd)) 
+      
+      # 将三个矩阵写成 CSV 文件
+      # 注意：转换为 data.frame 以确保 rownames(突变类型) 被正确保存
+      write.csv(as.data.frame(vcf_results$cat83), "ID83_matrix.csv", row.names = TRUE)
+      write.csv(as.data.frame(vcf_results$cat89), "ID89_matrix.csv", row.names = TRUE)
+      write.csv(as.data.frame(vcf_results$cat476), "ID476_matrix.csv", row.names = TRUE)
+      
+      # 使用 R 自带的 zip 工具将这三个文件打包成传给浏览器的 file 对象
+      utils::zip(zipfile = file, 
+                 files = c("ID83_matrix.csv", "ID89_matrix.csv", "ID476_matrix.csv"))
+    },
+    contentType = "application/zip"
+  )
+  
+  # ============================================================================
+  # 5. SigProfiler 结果渲染
+  # ============================================================================
+  
+  output$assignment_ui <- renderUI({
+    if (!input$run_sigprofiler) {
+      return(div(style = "padding: 50px; text-align: center; color: #7f8c8d;",
+                 icon("info-circle", class = "fa-3x"),
+                 h4("SigProfiler was not selected before running the analysis.")))
+    }
+    
+    if (is.null(vcf_results$assignment_data)) {
+      return(div(style = "padding: 50px; text-align: center; color: #e74c3c;",
+                 icon("exclamation-triangle", class = "fa-3x"),
+                 h4("SigProfiler analysis failed or is still processing.")))
+    }
+    
+    # 成功后渲染图表和数据表
+    tagList(
+      plotOutput("assignment_plot", height = "450px"),
+      hr(),
+      h4(icon("table"), " Assigned Activities", style = "font-weight: bold; color: #2c3e50; margin-bottom: 15px;"),
+      DT::dataTableOutput("assignment_table") # 建议引入 DT 包使其更好看，没有也没关系，可用 dataTableOutput
+    )
+  })
+  
+  # 绘制相对比例堆叠柱状图
+  output$assignment_plot <- renderPlot({
+    req(vcf_results$assignment_data)
+    df <- vcf_results$assignment_data
+    
+    # 宽数据转长数据
+    df_long <- tidyr::pivot_longer(df, cols = -Samples, names_to = "Signature", values_to = "Activity")
+    # 过滤掉为 0 的 Signature，保持图表整洁
+    df_long <- dplyr::filter(df_long, Activity > 0)
+    
+    # 如果没有分配出任何 signature
+    if(nrow(df_long) == 0) {
+      plot.new()
+      title(main = "No Signatures Assigned (Activities = 0)")
+      return()
+    }
+    
+    # 使用 ggplot2 画图
+    ggplot(df_long, aes(x = Samples, y = Activity, fill = Signature)) +
+      geom_bar(stat = "identity", position = "fill", width = 0.6) +
+      scale_y_continuous(labels = scales::percent) +
+      theme_minimal() +
+      labs(title = "COSMIC Signature Attribution (ID83)", x = "Sample", y = "Relative Contribution") +
+      theme(
+        plot.title = element_text(size = 18, face = "bold", hjust = 0.5, margin = margin(b = 20)),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14, face = "bold"),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 12),
+        legend.position = "right"
+      )
+  })
+  
+  # 渲染表格
+  output$assignment_table <- DT::renderDataTable({
+    req(vcf_results$assignment_data)
+    # 只显示活性大于 0 的列（去除全是 0 的冗余列）
+    df <- vcf_results$assignment_data
+    cols_to_keep <- c(TRUE, colSums(df[,-1, drop=FALSE]) > 0)
+    df[, cols_to_keep, drop=FALSE]
+  }, options = list(pageLength = 5, scrollX = TRUE))
+  
   # URL 路由机制
   observe({
     nav <- input$navbar
@@ -239,7 +602,7 @@ server <- function(input, output, session) {
   # ============================================================================
   # 辅助渲染函数
   # ============================================================================
-  img_block <- function(img_path, width="100%", border=TRUE) {
+  img_block <- function(img_path, width="100%", border=FALSE) {
     if (is.null(img_path) || is.na(img_path)) return(NULL)
     if(length(img_path) > 1) img_path <- img_path[1] 
     div(style = "text-align: center; margin-bottom: 10px;",
@@ -250,7 +613,7 @@ server <- function(input, output, session) {
   }
   
   render_styled_pair_block <- function(title_text, std_img, abl_img, caution_text = NULL) {
-    div(class = "id83-section", style = "margin-bottom: 30px; padding: 30px; background: #fff; border: 1px solid #eee; box-shadow: 0 5px 20px rgba(0,0,0,0.03);",
+    div(class = "id83-section", style = "margin-bottom: 30px; padding: 30px; background: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.03);",
         if(!is.null(caution_text)) caution_text,
         h4(title_text, style = "color: #2c3e50; font-weight: 700; margin-top: 0; margin-bottom: 20px; font-size: 1.2rem;"),
         if (!is.null(std_img)) {
@@ -270,7 +633,7 @@ server <- function(input, output, session) {
             div(style = "margin-top: 15px; border-top: 1px dashed #eee; padding-top: 15px;",
                 tags$img(src = abl_img, class = "signature-img",
                          onclick = paste0("Shiny.setInputValue('open_modal_image', '", abl_img, "', {priority: 'event'})"),
-                         style = "width:100%;")
+                         style = "width:100%;border: none !important; box-shadow: none !important")
             )
           )
         }
@@ -416,7 +779,7 @@ server <- function(input, output, session) {
         tagList(
           h3("5. Similarity Summary", style = "color: #2c3e50; font-weight: 700; margin-top: 50px; border-bottom: 2px solid #eee; padding-bottom: 10px;"),
           div(style = "overflow-x: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);",
-              tags$table(class = "table table-hover", style = "width: 100%; margin-top: 10px; font-size: 1.05rem;",
+              tags$table(class = "table table-hover", style = "width: 100%; margin-top: 10px; font-size: 2.1rem;",
                          tags$thead(tags$tr(style="background:#f8f9fa;", tags$th("Metric"), tags$th("Result / Best Match"), tags$th("Cosine Similarity"))),
                          tags$tbody(
                            tags$tr(tags$td(tags$strong("83-type Representation")), tags$td(sig$id83_name), tags$td(format(current_stats$sig83_v_exemplar_cos, digits=4))),
@@ -442,16 +805,23 @@ server <- function(input, output, session) {
         lapply(names(signature_groups), function(group_name) {
           sig <- signature_groups[[group_name]]
           thumb <- sig$thumbnail
-          column(3,
+          column(4,
                  div(class = "thumbnail-card",
                      onclick = paste0("$('#show_", group_name, "').click()"),
-                     style = "cursor: pointer; min-height: 220px; display: flex; flex-direction: column; justify-content: space-between;",
+                     # 【关键】移除 padding，设置 overflow:hidden 让图片圆角贴合边框
+                     style = "cursor: pointer; background: #fff; border-radius: 8px; margin-bottom: 25px; overflow: hidden; padding: 0 !important;", 
                      actionLink(inputId = paste0("show_", group_name), label = NULL, style="display:none;"),
-                     h4(group_name, style = "color:#2c3e50; font-weight:700; margin-top:0; margin-bottom: 15px; text-align: center;"),
-                     div(style = "flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 8px; overflow: hidden; padding: 5px;",
+                     
+                     # 1. 名字区：减少上下 margin，让它更靠近顶部
+                     h4(group_name, style = "color:#2c3e50; font-weight:700; margin: 12px 0 8px 0; font-size: 20px; text-align: center;"),
+                     
+                     # 2. 图片区：取消所有内边距，让图片左右完全撑满
+                     div(style = "padding: 0 10px 10px 10px; margin: 0; line-height: 0;", # line-height:0 消除图片下方微小的间隙
                          if (!is.null(thumb) && file.exists(file.path("www", thumb))) {
-                           tags$img(src = thumb, style = "width:100%; max-height: 150px; object-fit: contain; border-radius: 4px;")
-                         } else { div(style = "color:#bdc3c7;", icon("image", class="fa-3x")) }
+                           tags$img(src = thumb, style = "width: 100%; height: auto; display: block; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;")
+                         } else { 
+                           div(style = "color:#bdc3c7; text-align: center; padding: 30px 0;", icon("image", class="fa-3x")) 
+                         }
                      )
                  )
           )
@@ -472,17 +842,25 @@ server <- function(input, output, session) {
         lapply(sig_names, function(name) {
           thumb_path <- signature_groups[[name]]$id476_thumb
           real_thumb_path <- if(!is.null(thumb_path)) file.path("www", thumb_path) else NULL
-          column(3,
+          column(6,
+                 style = "padding-left: 5px; padding-right: 5px;",
                  div(class = "thumbnail-card",
-                     onclick = sprintf("Shiny.setInputValue('show_476_%s', 1, {priority: 'event'})", name),
-                     style = "cursor: pointer; min-height: 200px; display: flex; flex-direction: column; justify-content: space-between;",
-                     h4(name, style="color:#2c3e50; font-weight:700; margin-top:0; margin-bottom: 15px; text-align: center;"),
-                     div(style = "flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 5px;",
+                     onclick = paste0("$('#show_", name, "').click()"),
+                     # 【关键】移除 padding，设置 overflow:hidden 让图片圆角贴合边框
+                     style = "cursor: pointer; background: #fff; border-radius: 12px; margin-bottom: 15px; overflow: hidden; padding: 0 !important;", 
+                     actionLink(inputId = paste0("show_", name), label = NULL, style="display:none;"),
+                     
+                     # 1. 名字区：减少上下 margin，让它更靠近顶部
+                     h4(name, style = "color:#2c3e50; font-weight:700; margin: 15px 0 10px 0; font-size: 25px; text-align: center;"),
+                     
+                     # 2. 图片区：取消所有内边距，让图片左右完全撑满
+                     div(style = "padding: 0 5px 5px 5px; margin: 0; line-height: 0;", # line-height:0 消除图片下方微小的间隙
                          if (!is.null(real_thumb_path) && file.exists(real_thumb_path)) {
-                           tags$img(src = thumb_path, style = "max-height: 120px; max-width: 100%; border-radius: 4px;")
-                         } else { div(style="font-size: 32px; color: #bdc3c7;", icon("border-all")) }
-                     ),
-                     actionLink(inputId = paste0("btn_show_476_", name), label = NULL, style="display:none;")
+                           tags$img(src = thumb_path, style = "width: 100%; height: auto; display: block; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;")
+                         } else { 
+                           div(style = "color:#bdc3c7; text-align: center; padding: 50px 0;", icon("image", class="fa-4x")) 
+                         }
+                     )
                  )
           )
         })
@@ -499,29 +877,47 @@ server <- function(input, output, session) {
     if (is.null(current_integrated_sig())) {
       all_names <- names(id83_groups)
       if (length(all_names) == 0) return(NULL)
-      chunk_size <- 4
+      
+      # 将 chunk_size 设为 2，确保逻辑上每行只处理两个
+      chunk_size <- 2
       id_chunks <- split(all_names, ceiling(seq_along(all_names) / chunk_size))
       
       tagList(
         lapply(id_chunks, function(chunk_names) {
           fluidRow(
+            style = "margin-left: -5px; margin-right: -5px; margin-bottom: 10px;", 
             lapply(chunk_names, function(id83_name) {
               id83_info <- id83_groups[[id83_name]]
               thumb <- id83_info$thumbnail
-              column(3,
+              
+              # 将 column(4) 改为 column(6)
+              column(6, 
+                     style = "padding-left: 5px; padding-right: 5px;",
                      div(class = "thumbnail-card",
                          onclick = paste0("$('#show_id83_", id83_name, "').click()"),
-                         style = "cursor: pointer; min-height: 280px; display: flex; flex-direction: column; justify-content: space-between;",
+                         # 统一全白背景，无边框，无阴影（或极淡阴影）
+                         style = "cursor: pointer; background: #fff; border-radius: 12px; margin-bottom: 15px; overflow: hidden; padding: 0 !important; border: none !important; box-shadow: 0 4px 12px rgba(0,0,0,0.05);",
                          actionLink(inputId = paste0("show_id83_", id83_name), label = NULL, style="display:none;"),
-                         h4(id83_name, style = "color:#2c3e50; margin-top:0; font-weight:700; text-align: center; margin-bottom: 15px;"),
-                         div(style = "flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; border-radius: 4px; padding: 5px; margin-bottom: 10px;",
+                         
+                         # 1. 名字：采用你 Page 2 的 25px 大字体
+                         h4(id83_name, style = "color:#2c3e50; font-weight:700; margin: 15px 0 10px 0; font-size: 25px; text-align: center;"),
+                         
+                         # 2. 图片区：采用 Page 2 的 5px 留白控制，让图片尽可能大
+                         div(style = "padding: 0 2px 2px 2px; margin: 0; line-height: 0;",
                              if (!is.null(thumb) && file.exists(file.path("www", thumb))) {
-                               tags$img(src = thumb, style = "max-height: 120px; max-width: 100%; border-radius: 4px;")
-                             } else { div(style = "color:#bdc3c7; text-align: center;", icon("image", class="fa-2x"), br(), tags$small("No Image")) }
+                               tags$img(src = thumb, 
+                                        # width: 100% 配合 height: auto 确保不失真地变大
+                                        style = "width: 100%; height: auto; display: block; border-radius: 4px; border: none !important;")
+                             } else { 
+                               div(style = "color:#bdc3c7; text-align: center; padding: 50px 0;", icon("image", class="fa-4x")) 
+                             }
                          ),
-                         div(style = "background:#f8f9fa; padding:8px; border-radius:4px; text-align:left; border: 1px solid #eee;",
-                             div(style = "font-size:11px; color:#95a5a6; margin-bottom:3px; font-weight:bold; text-transform:uppercase;", "Members:"),
-                             div(style = "font-size:12px; color:#34495e; line-height:1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;", 
+                         
+                         # 3. Member 信息：去掉黑线，统一白色，加大字体
+                         div(style = "padding: 15px 20px; background: #fff; text-align: left; border: none;",
+                             div(style = "font-size: 14px; color: #95a5a6; margin-bottom: 3px; font-weight: bold; text-transform: uppercase;", "CONTAINS:"),
+                             # 加大 Member 名字字体
+                             div(style = "font-size: 18px; color: #34495e; line-height: 1.4; font-weight: 500;", 
                                  paste(id83_info$members, collapse = ", "))
                          )
                      )

@@ -11,7 +11,7 @@
 
 dir <- "~/MEGA/important_mut_sig_data/ICGC-Pan-Can-PCAWG7-2016-08-12-rawdata/final_consensus_12aug_passonly/graylist/indel"
 
-library(ICAMS)
+#library(mSigSpectra) library(mSigPlot)
 
 # Find all .consensus.indel.vcf.gz files
 consensus_files <- list.files(pattern = "\\.consensus\\.indel\\.vcf\\.gz$")

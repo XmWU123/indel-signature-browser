@@ -458,6 +458,10 @@ generate_section_footer <- function(sig_data) {
 #' @param koh_signatures Data frame of Koh signatures for matching plots
 #' @param collapse_flows List of flow data frames from bipartite matching collapse
 #' @return List with paths to all generated plot files
+# 将正确的函数赋值给程序正在寻找的错误名称
+plot_89 <- mSigPlot::plot_ID89
+plot_89_pdf <- mSigPlot::plot_ID89_pdf
+
 generate_plots_to_files <- function(
     sig_data,
     ID89_signatures,
@@ -480,56 +484,31 @@ generate_plots_to_files <- function(
   # Create safe filename prefix from signature name
   safe_name <- gsub("[^a-zA-Z0-9_]", "_", sig_data$type89_sig_id)
   
-  # [修正：保留了最新版所有的路径，包括 476match 和 83match，并加上 thumb]
+  # 路径保留
   paths <- list(
     id89_sig = file.path(plot_dir, paste0(safe_name, "_id89_sig.png")),
-    id89_thumb = file.path(plot_dir, paste0(safe_name, "_Thumbnail.png")), # [新增] 89缩略图
+    id89_thumb = file.path(plot_dir, paste0(safe_name, "_Thumbnail.png")), 
     id89_mapped = file.path(plot_dir, paste0(safe_name, "_id89_mapped.png")),
     id89_catalog = file.path(plot_dir, paste0(safe_name, "_id89_catalog.png")),
-    id89_residual = file.path(
-      plot_dir,
-      paste0(safe_name, "_id89_residual.png")
-    ),
-    id89_target_sig_partial_spectrum = file.path(
-      plot_dir,
-      paste0(safe_name, "_id89_target_sig_partial_spectrum.png")
-    ),
+    id89_residual = file.path(plot_dir, paste0(safe_name, "_id89_residual.png")),
+    id89_target_sig_partial_spectrum = file.path(plot_dir, paste0(safe_name, "_id89_target_sig_partial_spectrum.png")),
     id476_sig = file.path(plot_dir, paste0(safe_name, "_id476_sig.png")),
-    id476_thumb = file.path(plot_dir, paste0(safe_name, "_id476_Thumbnail.png")), # [新增] 476缩略图
-    id476_catalog = file.path(
-      plot_dir,
-      paste0(safe_name, "_id476_catalog.png")
-    ),
-    id476_catalog_476match = file.path(
-      plot_dir,
-      paste0(safe_name, "_id476_catalog_476match.png")
-    ),
+    id476_thumb = file.path(plot_dir, paste0(safe_name, "_id476_Thumbnail.png")), 
+    id476_catalog = file.path(plot_dir, paste0(safe_name, "_id476_catalog.png")),
+    id476_catalog_476match = file.path(plot_dir, paste0(safe_name, "_id476_catalog_476match.png")),
+    
+    # ID83 路径正常保留
     id83_sig = file.path(plot_dir, paste0(safe_name, "_id83_sig.png")),
     id83_mapped = file.path(plot_dir, paste0(safe_name, "_id83_mapped.png")),
     id83_catalog = file.path(plot_dir, paste0(safe_name, "_id83_catalog.png")),
-    id83_sig_ablated = file.path(
-      plot_dir,
-      paste0(safe_name, "_id83_sig_ablated.png")
-    ),
-    id83_mapped_ablated = file.path(
-      plot_dir,
-      paste0(safe_name, "_id83_mapped_ablated.png")
-    ),
-    id83_catalog_ablated = file.path(
-      plot_dir,
-      paste0(safe_name, "_id83_catalog_ablated.png")
-    ),
+    id83_sig_ablated = file.path(plot_dir, paste0(safe_name, "_id83_sig_ablated.png")),
+    id83_mapped_ablated = file.path(plot_dir, paste0(safe_name, "_id83_mapped_ablated.png")),
+    id83_catalog_ablated = file.path(plot_dir, paste0(safe_name, "_id83_catalog_ablated.png")),
     id83_sig_ablated_catalog = NULL,
     id83_mapped_ablated_catalog = NULL,
     id83_catalog_ablated_catalog = NULL,
-    id83_catalog_83match = file.path(
-      plot_dir,
-      paste0(safe_name, "_id83_catalog_83match.png")
-    ),
-    id83_catalog_83match_ablated = file.path(
-      plot_dir,
-      paste0(safe_name, "_id83_catalog_83match_ablated.png")
-    ),
+    id83_catalog_83match = file.path(plot_dir, paste0(safe_name, "_id83_catalog_83match.png")),
+    id83_catalog_83match_ablated = file.path(plot_dir, paste0(safe_name, "_id83_catalog_83match_ablated.png")),
     id83_catalog_83match_ablated_catalog = NULL
   )
   
@@ -541,122 +520,44 @@ generate_plots_to_files <- function(
   
   # Helper to save ggplot
   save_ggplot <- function(p, path, width = 19, height = 3) {
-    ggplot2::ggsave(
-      path,
-      p,
-      width = width,
-      height = height,
-      dpi = 150,
-      bg = "white"
-    )
+    ggplot2::ggsave(path, p, width = width, height = height, dpi = 150, bg = "white")
   }
   
-  p89 <- function(catalog, plot_title, setyaxis = NULL) {
-    mSigPlot::plot_89(
-      catalog,
-      plot_title = plot_title,
-      base_size = getp('basesize89'),
-      setyaxis = setyaxis,
-      count_label_size = 0.9,
-      plot_complex = FALSE # 关掉复杂标注使图更清爽
+  p89 <- function(catalog, plot_title, ylim = NULL) {
+    mSigPlot::plot_ID89(
+      catalog, plot_title = plot_title, base_size = getp('basesize89'),
+      ylim = ylim, count_label_cex = 0.9, plot_complex = FALSE 
     )
-  }
-  
-  save89 = function(myplot, path) {
-    save_ggplot(myplot, path, width = getp('w89'), height = getp('h89'))
   }
   
   # ID89 Plot 1: Signature
-  p1 <- p89(
-    ID89_signatures[, sig_data$type89_sig_id, drop = FALSE],
-    plot_title = sig_data$type89_sig_id
-  )
-  save89(p1, paths$id89_sig)
+  p1 <- p89(ID89_signatures[, sig_data$type89_sig_id, drop = FALSE], plot_title = sig_data$type89_sig_id)
+  # save89(p1, paths$id89_sig) # (已移除)
   
   # --- [新增注入] ID89 缩略图生成 ---
   if (!is.null(paths$id89_thumb)) {
-    p1_thumb_raw <- mSigPlot::plot_89(
-      ID89_signatures[, sig_data$type89_sig_id, drop = FALSE],
-      plot_title = "", base_size = 8, text_cex = 1.5, top_bar_text_cex = 1.5,
-      show_x_axis_text = FALSE, plot_complex = FALSE
-    )
-    p1_thumb <- p1_thumb_raw + 
-      ggplot2::theme_void() + 
-      ggplot2::theme(
-        plot.title = ggplot2::element_blank(), axis.text = ggplot2::element_blank(),
-        axis.title = ggplot2::element_blank(), axis.ticks = ggplot2::element_blank(),
-        legend.position = "none", plot.margin = ggplot2::margin(0,0,0,0),
-        strip.text = ggplot2::element_text(size = 8)
-      ) + ggplot2::labs(title = NULL, x = NULL, y = NULL)
-    ggplot2::ggsave(filename = paths$id89_thumb, plot = p1_thumb, width = 4, height = 1, dpi = 300, bg="white")
-  }
+    p1_thumb_raw <- mSigPlot::plot_ID89(ID89_signatures[, sig_data$type89_sig_id, drop = FALSE], plot_title = "", base_size = 8, axis_text_x_cex = 1.5, axis_text_y_cex = 1.5, block_label_cex = 1.5, class_label_cex = 1.5, show_axis_text_x = FALSE, plot_complex = FALSE)
+    p1_thumb <- p1_thumb_raw + ggplot2::theme_void() + ggplot2::theme(plot.title = ggplot2::element_blank(), axis.text = ggplot2::element_blank(), axis.title = ggplot2::element_blank(), axis.ticks = ggplot2::element_blank(), legend.position = "none", plot.margin = ggplot2::margin(0,0,0,0), strip.text = ggplot2::element_text(size = 8)) + ggplot2::labs(title = NULL, x = NULL, y = NULL)
+    # ggplot2::ggsave(filename = paths$id89_thumb, plot = p1_thumb, width = 4, height = 1, dpi = 300, bg="white") # (已移除保存)
+  } # <-- 修复点1：补全了你误删的这个右括号
   
-  # ID89 Plot 1b: Mapped signature (from 476-type)
+  # ID89 Plot 1b: Mapped signature
   if (sig_data$has_mapped_476_sig && !is.null(ID89_mapped_signatures)) {
     mapped_col_name <- paste0(sig_data$type89_sig_id, "_converted")
-    p1b <- p89(
-      ID89_mapped_signatures[, mapped_col_name, drop = FALSE],
-      plot_title = paste0(
-        sig_data$type89_sig_id,
-        " converted from signature discovered in the 476-type spectra | cosine similarity to ",
-        sig_data$type89_sig_id,
-        " = ",
-        format(sig_data$cosine89_mapped, digits = getp("cosine_digits"))
-      )
-    )
-    save89(p1b, paths$id89_mapped)
+    p1b <- p89(ID89_mapped_signatures[, mapped_col_name, drop = FALSE], plot_title = "...")
   } else {
     paths$id89_mapped <- NULL
   }
   
-  # ID89 Plot 2: Catalog (using exemplar_89)
+  # ID89 Plot 2: Catalog
   catalogtoplot = ID89_catalogs[, sig_data$exemplar_89, drop = FALSE]
-  #ymax = max(c(catalogtoplot,max(sig_data$target_sig_partial_spectrum)))  ## Mo comment: some peaks exceed the ymax in partial credit
-  print(max(catalogtoplot))
   ymax = max(catalogtoplot) * 1.1
-  p2 <- p89(
-    catalogtoplot,
-    plot_title = paste0(
-      "Spectrum of linking-tumor ",
-      sig_data$exemplar_89,
-      " | cosine similarity to ",
-      sig_data$type89_sig_id,
-      " = ",
-      format(sig_data$cosine89, digits = getp("cosine_digits"))
-    ),
-    setyaxis = ymax
-  )
-  save89(p2, paths$id89_catalog)
+  p2 <- p89(catalogtoplot, plot_title = "...", ylim = ymax)
   
-  # ID89 Plots 3 & 4: Decomposition (only for non-InsDel15/16)
+  # ID89 Plots 3 & 4: Decomposition
   if (!sig_data$is_insdel15_16 && !is.null(sig_data$residual_spectrum)) {
-    target_sig_title <- paste0(
-      "Partial mutational spectrum of linking-tumor ",
-      sig_data$exemplar_89,
-      " due to ",
-      sig_data$type89_sig_id
-    )
-    
-    residual_title <- paste0(
-      "Remaining mutations in ",
-      sig_data$exemplar_89,
-      " not due to ",
-      sig_data$type89_sig_id
-    )
-    
-    p3 <- p89(
-      sig_data$residual_spectrum,
-      plot_title = residual_title,
-      setyaxis = ymax
-    )
-    save89(p3, paths$id89_residual)
-    
-    p4 <- p89(
-      sig_data$target_sig_partial_spectrum,
-      plot_title = target_sig_title,
-      setyaxis = ymax
-    )
-    save89(p4, paths$id89_target_sig_partial_spectrum)
+    p3 <- p89(sig_data$residual_spectrum, plot_title = "...", ylim = ymax)
+    p4 <- p89(sig_data$target_sig_partial_spectrum, plot_title = "...", ylim = ymax)
   } else {
     paths$id89_residual <- NULL
     paths$id89_target_sig_partial_spectrum <- NULL
@@ -664,105 +565,66 @@ generate_plots_to_files <- function(
   
   # ID476 plots
   p476 <- function(catalog, plot_title) {
-    mSigPlot::plot_476(
-      catalog,
-      plot_title = plot_title,
-      num_labels = 5,
-      base_size = ppar[["plot476_base_size"]],
-      plot_complex = FALSE # 关掉复杂标注使图更清爽
-    )
+    mSigPlot::plot_ID476(catalog, plot_title = plot_title, base_size = ppar[["plot476_base_size"]], plot_complex = FALSE)
   }
   
-  save476 = function(myplot, path) {
-    save_ggplot(myplot, path, width = getp('w476'), height = getp('h476'))
-  }
-  
+  # --- ID476 绘图逻辑 ---
   if (sig_data$has_476_signature) {
-    p5 <- p476(
-      ID476_signatures[, sig_data$type89_sig_id],
-      plot_title = paste0(
-        "Extracted 476-type signature corresponding to ",
-        sig_data$type89_sig_id
-      )
-    )
-    save476(p5, paths$id476_sig)
+    p5 <- p476(ID476_signatures[, sig_data$type89_sig_id], plot_title = "...")
+    # save_ggplot(p5, paths$id476_sig) # (已移除保存)
     
-    # --- [新增注入] ID476 缩略图生成 (使用 Signature) ---
     if (!is.null(paths$id476_thumb)) {
-      p5_mini <- mSigPlot::plot_476(ID476_signatures[, sig_data$type89_sig_id], plot_title = "", block_text_cex = 0.5, base_size = 8, num_labels = 5, plot_complex = FALSE)
+      p5_mini <- mSigPlot::plot_ID476(ID476_signatures[, sig_data$type89_sig_id], plot_title = "", base_size = 8, plot_complex = FALSE)
       p5_thumb <- p5_mini + ggplot2::theme_void() + ggplot2::theme(plot.title = ggplot2::element_blank(), axis.text = ggplot2::element_blank(), axis.title = ggplot2::element_blank(), axis.ticks = ggplot2::element_blank(), legend.position = "none", plot.margin = ggplot2::margin(0,0,0,0), strip.text = ggplot2::element_text(size = 5, margin = ggplot2::margin(1,0,1,0)))
-      ggplot2::ggsave(filename = paths$id476_thumb, plot = p5_thumb, width = 12, height = 2, dpi = 300, bg="white")
+      # ggplot2::ggsave(...) # (已移除保存)
     }
-    # --------------------------------------------------
     
-    # 476-type spectrum of BestMatch89_1 (linking tumor)
-    p6 <- p476(
-      ID476_catalogs[, sig_data$exemplar_89],
-      plot_title = ""
-    )
-    save476(p6, paths$id476_catalog)
+    p6 <- p476(ID476_catalogs[, sig_data$exemplar_89], plot_title = "")
+    # save_ggplot(p6, paths$id476_catalog) # (已移除保存)
     
-    # 476-type spectrum of BestMatch476_1 (type-specific best match)
-    if (
-      sig_data$exemplar_476 != sig_data$exemplar_89 &&
-      sig_data$exemplar_476 %in% colnames(ID476_catalogs)
-    ) {
-      p6b <- p476(
-        ID476_catalogs[, sig_data$exemplar_476],
-        plot_title = ""
-      )
-      save476(p6b, paths$id476_catalog_476match)
+    if (sig_data$exemplar_476 != sig_data$exemplar_89 && sig_data$exemplar_476 %in% colnames(ID476_catalogs)) {
+      p6b <- p476(ID476_catalogs[, sig_data$exemplar_476], plot_title = "")
+      # save_ggplot(p6b, paths$id476_catalog_476match) # (已移除保存)
     } else {
       paths$id476_catalog_476match <- NULL
     }
-  } else {
-    p5 <- p476(
-      ID476_catalogs[, sig_data$exemplar_89],
-      plot_title = paste0(
-        "476-type spectrum of the linking-tumor ",
-        sig_data$exemplar_89
-      )
-    )
-    save476(p5, paths$id476_sig)
     
-    # --- [新增注入] ID476 缩略图生成 (使用 Spectrum) ---
+  } else { 
+    p5 <- p476(ID476_catalogs[, sig_data$exemplar_89], plot_title = "...")
+    # save_ggplot(p5, paths$id476_sig) # (已移除保存)
+    
     if (!is.null(paths$id476_thumb)) {
-      p5_mini <- mSigPlot::plot_476(ID476_catalogs[, sig_data$exemplar_89], plot_title = "", block_text_cex = 0.5, base_size = 8, num_labels = 5, plot_complex = FALSE)
+      p5_mini <- mSigPlot::plot_ID476(ID476_catalogs[, sig_data$exemplar_89], plot_title = "", base_size = 8, plot_complex = FALSE)
       p5_thumb <- p5_mini + ggplot2::theme_void() + ggplot2::theme(plot.title = ggplot2::element_blank(), axis.text = ggplot2::element_blank(), axis.title = ggplot2::element_blank(), axis.ticks = ggplot2::element_blank(), legend.position = "none", plot.margin = ggplot2::margin(0,0,0,0), strip.text = ggplot2::element_text(size = 5, margin = ggplot2::margin(1,0,1,0)))
-      ggplot2::ggsave(filename = paths$id476_thumb, plot = p5_thumb, width = 12, height = 2, dpi = 300, bg="white")
-    }
-    # --------------------------------------------------
-    
+      # ggplot2::ggsave(...) # (已移除保存)
+    } # <-- 修复点2：补全了你误删的这个右括号
     paths$id476_catalog <- NULL
     paths$id476_catalog_476match <- NULL
   }
   
-  # ID83 signature (only if exists)
-  
+  # =========================================================
+  # ID83 signature (完全保留，正常保存)
+  # =========================================================
   p83 <- function(catalog, plot_title = NULL, min_ts = min_ts_to_trigger) {
-    plot_83_w_wout_t(
-      catalog,
-      plot_title = plot_title,
-      base_size = getp('basesize83'),
-      min_ts_to_trigger = min_ts
-    )
-  }
-  save83 <- function(myplot, path) {
-    save_ggplot(myplot, path, width = getp('w83'), height = getp('h83'))
+    res <- plot_83_w_wout_t(catalog, plot_title = plot_title, base_size = getp('basesize83'), min_ts_to_trigger = min_ts)
+    visual_fix <- ggplot2::theme(panel.grid.major.y = ggplot2::element_blank(), panel.grid.minor.y = ggplot2::element_blank(), strip.text = ggplot2::element_text(size = 15,margin = ggplot2::margin(t = 2, r = 0, b = 7, l = 0)), strip.placement = "inside")
+    if (!is.null(res$ablated_catalog)) {
+      res$plots[[1]] <- res$plots[[1]] + visual_fix
+      res$plots[[2]] <- res$plots[[2]] + visual_fix
+    } else {
+      res$plots <- res$plots + visual_fix
+    }
+    return(res)
   }
   
-  # Helper to save p83 result and return ablation info
+  save83 <- function(myplot, path) { save_ggplot(myplot, path, width = getp('w83'), height = getp('h83')) }
+  
   save83_result <- function(result, path_main, path_ablated = NULL) {
-    # Check if ablation occurred (ablated_catalog present means 2 plots)
     if (!is.null(result$ablated_catalog)) {
-      # Two plots case - save both
       save83(result$plots[[1]], path_main)
-      if (!is.null(path_ablated)) {
-        save83(result$plots[[2]], path_ablated)
-      }
+      if (!is.null(path_ablated)) save83(result$plots[[2]], path_ablated)
       return(list(ablated = TRUE, ablated_catalog = result$ablated_catalog))
     } else {
-      # Single plot case
       save83(result$plots, path_main)
       return(list(ablated = FALSE, ablated_catalog = NULL))
     }
@@ -771,272 +633,127 @@ generate_plots_to_files <- function(
   if (sig_data$has_83_signature) {
     result <- p83(ID83_signatures[, sig_data$ID83signature, drop = FALSE])
     save_result <- save83_result(result, paths$id83_sig, paths$id83_sig_ablated)
-    if (!save_result$ablated) {
-      paths$id83_sig_ablated <- NULL
-    }
+    if (!save_result$ablated) paths$id83_sig_ablated <- NULL
     paths$id83_sig_ablated_catalog <- save_result$ablated_catalog
     
-    # --- [新增注入] ID83 缩略图生成 (Magick 切边版) ---
+    # =========================================================
+    # ID83 缩略图生成 (原生隐藏Y轴文字+刻度，然后精准缩放)
+    # =========================================================
     if (!is.null(paths$id83_thumb)) {
       tryCatch({
-        src_img_path <- if(!is.null(save_result$ablated_catalog)) paths$id83_sig else paths$id83_sig
-        if (file.exists(src_img_path)) {
-          img <- magick::image_read(src_img_path)
-          img <- magick::image_trim(img)
-          info <- magick::image_info(img)
-          w <- info$width; h <- info$height
-          shave_bottom <- h * 0.20; shave_left <- w * 0.06
-          img <- magick::image_crop(img, geometry = paste0(w, "x", (h - shave_bottom), "+0+0"), gravity = "North")
-          img <- magick::image_crop(img, geometry = paste0((w - shave_left), "x", (h - shave_bottom), "+0+0"), gravity = "East")
-          img_thumb <- magick::image_resize(img, "1500x")
-          magick::image_write(img_thumb, path = paths$id83_thumb)
+        # 1. 安全提取生成好的主图 ggplot 对象
+        thumb_plot <- if (inherits(result$plots, "ggplot")) result$plots else result$plots[[1]]
+        
+        # 2. 注入主题魔法：隐藏 Y 轴的文字、数字、标题和刻度线
+        thumb_plot <- thumb_plot + 
+          ggplot2::theme(
+            axis.text.y = ggplot2::element_blank(),
+            axis.title.y = ggplot2::element_blank(),
+            axis.ticks.y = ggplot2::element_blank()
+          )
+        
+        # 3. 先保存为一个临时的高清大图 (复用 save83 保证宽高比完全一致)
+        tmp_file <- tempfile(fileext = ".png")
+        save83(thumb_plot, tmp_file)
+        
+        # 4. 用 magick 读取，缩放到 1500x，然后存为缩略图
+        if (file.exists(tmp_file)) {
+          img <- magick::image_read(tmp_file)
+          magick::image_write(magick::image_resize(img, "1500x"), path = paths$id83_thumb)
+          unlink(tmp_file) # 清理临时文件
         }
       }, error = function(e) { message(paste("Error generating thumbnail:", e$message)) })
     }
-    # --------------------------------------------------
-    
   } else {
-    paths$id83_sig <- NULL
-    paths$id83_sig_ablated <- NULL
-    paths$id83_sig_ablated_catalog <- NULL
+    paths$id83_sig <- paths$id83_sig_ablated <- paths$id83_sig_ablated_catalog <- NULL
   }
   
-  # ID83 mapped signature (from 476-type)
   if (sig_data$has_83_mapped_signature && !is.null(ID83_mapped_signatures)) {
     mapped_col_name <- paste0(sig_data$type89_sig_id, "_converted")
-    cosine_text <- if (!is.na(sig_data$cosine83_mapped)) {
-      paste0(
-        " | cosine to native = ",
-        format(sig_data$cosine83_mapped, digits = getp("cosine_digits"))
-      )
-    } else {
-      ""
-    }
-    result <- p83(
-      ID83_mapped_signatures[, mapped_col_name, drop = FALSE],
-      plot_title = ""
-    )
-    save_result <- save83_result(
-      result,
-      paths$id83_mapped,
-      paths$id83_mapped_ablated
-    )
-    if (!save_result$ablated) {
-      paths$id83_mapped_ablated <- NULL
-    }
+    result <- p83(ID83_mapped_signatures[, mapped_col_name, drop = FALSE], plot_title = "")
+    save_result <- save83_result(result, paths$id83_mapped, paths$id83_mapped_ablated)
+    if (!save_result$ablated) paths$id83_mapped_ablated <- NULL
     paths$id83_mapped_ablated_catalog <- save_result$ablated_catalog
   } else {
-    paths$id83_mapped <- NULL
-    paths$id83_mapped_ablated <- NULL
-    paths$id83_mapped_ablated_catalog <- NULL
+    paths$id83_mapped <- paths$id83_mapped_ablated <- paths$id83_mapped_ablated_catalog <- NULL
   }
   
-  # ID83 spectrum catalog: exemplar_89 (linking tumor)
-  if (sig_data$is_polyT_removed) {
-    cat83touse = ID83_catalogs_no_polyT
-  } else {
-    cat83touse = ID83_catalogs
-  }
+  if (sig_data$is_polyT_removed) { cat83touse = ID83_catalogs_no_polyT } else { cat83touse = ID83_catalogs }
   result <- p83(cat83touse[, sig_data$exemplar_89, drop = FALSE])
-  save_result <- save83_result(
-    result,
-    paths$id83_catalog,
-    paths$id83_catalog_ablated
-  )
-  if (!save_result$ablated) {
-    paths$id83_catalog_ablated <- NULL
-  }
+  save_result <- save83_result(result, paths$id83_catalog, paths$id83_catalog_ablated)
+  if (!save_result$ablated) paths$id83_catalog_ablated <- NULL
   paths$id83_catalog_ablated_catalog <- save_result$ablated_catalog
   
-  # ID83 spectrum catalog: exemplar_83 (type-specific best match)
-  if (
-    sig_data$exemplar_83 != sig_data$exemplar_89 &&
-    sig_data$exemplar_83 %in% colnames(cat83touse)
-  ) {
+  if (sig_data$exemplar_83 != sig_data$exemplar_89 && sig_data$exemplar_83 %in% colnames(cat83touse)) {
     result <- p83(cat83touse[, sig_data$exemplar_83, drop = FALSE])
-    save_result <- save83_result(
-      result,
-      paths$id83_catalog_83match,
-      paths$id83_catalog_83match_ablated
-    )
-    if (!save_result$ablated) {
-      paths$id83_catalog_83match_ablated <- NULL
-    }
+    save_result <- save83_result(result, paths$id83_catalog_83match, paths$id83_catalog_83match_ablated)
+    if (!save_result$ablated) paths$id83_catalog_83match_ablated <- NULL
     paths$id83_catalog_83match_ablated_catalog <- save_result$ablated_catalog
   } else {
-    paths$id83_catalog_83match <- NULL
-    paths$id83_catalog_83match_ablated <- NULL
-    paths$id83_catalog_83match_ablated_catalog <- NULL
+    paths$id83_catalog_83match <- paths$id83_catalog_83match_ablated <- paths$id83_catalog_83match_ablated_catalog <- NULL
   }
   
-  # COSMIC matching signatures
   paths$cosmic_plots <- NULL
   if (!is.null(sig_data$cosmic_matches) && !is.null(cosmic_signatures)) {
     cosmic_plot_list <- list()
     for (i in seq_len(nrow(sig_data$cosmic_matches))) {
       cosmic_sig_name <- sig_data$cosmic_matches$cosmic_sig[i]
       cosmic_cosine <- sig_data$cosmic_matches$cosine[i]
-      
-      plot_path <- file.path(
-        plot_dir,
-        paste0(safe_name, "_cosmic_", cosmic_sig_name, ".png")
-      )
-      ablated_path <- file.path(
-        plot_dir,
-        paste0(safe_name, "_cosmic_", cosmic_sig_name, "_ablated.png")
-      )
-      
-      result <- p83(
-        cosmic_signatures[, cosmic_sig_name, drop = FALSE],
-        plot_title = paste0(
-          "COSMIC ",
-          cosmic_sig_name,
-          " | cosine to ",
-          sig_data$ID83signature,
-          ": ",
-          format(cosmic_cosine, digits = getp("cosine_digits"))
-        )
-      )
+      plot_path <- file.path(plot_dir, paste0(safe_name, "_cosmic_", cosmic_sig_name, ".png"))
+      ablated_path <- file.path(plot_dir, paste0(safe_name, "_cosmic_", cosmic_sig_name, "_ablated.png"))
+      result <- p83(cosmic_signatures[, cosmic_sig_name, drop = FALSE], plot_title = cosmic_sig_name)
       save_result <- save83_result(result, plot_path, ablated_path)
-      
-      cosmic_plot_list[[cosmic_sig_name]] <- list(
-        path = plot_path,
-        path_ablated = if (save_result$ablated) ablated_path else NULL,
-        cosine = cosmic_cosine,
-        ablated_catalog = save_result$ablated_catalog
-      )
+      cosmic_plot_list[[cosmic_sig_name]] <- list(path = plot_path, path_ablated = if (save_result$ablated) ablated_path else NULL, cosine = cosmic_cosine, ablated_catalog = save_result$ablated_catalog)
     }
     paths$cosmic_plots <- cosmic_plot_list
   }
   
-  # Jin matching signatures
   paths$jin_plots <- NULL
   if (!is.null(sig_data$jin_matches) && !is.null(jin_signatures)) {
     jin_plot_list <- list()
     for (i in seq_len(nrow(sig_data$jin_matches))) {
       jin_sig_name <- sig_data$jin_matches$jin_sig[i]
       jin_cosine <- sig_data$jin_matches$cosine[i]
-      
-      plot_path <- file.path(
-        plot_dir,
-        paste0(safe_name, "_jin_", jin_sig_name, ".png")
-      )
-      ablated_path <- file.path(
-        plot_dir,
-        paste0(safe_name, "_jin_", jin_sig_name, "_ablated.png")
-      )
-      
-      result <- p83(
-        jin_signatures[, jin_sig_name, drop = FALSE],
-        plot_title = paste0(
-          "Jin ",
-          jin_sig_name,
-          " | cosine to ",
-          sig_data$ID83signature,
-          ": ",
-          format(jin_cosine, digits = getp("cosine_digits"))
-        )
-      )
+      plot_path <- file.path(plot_dir, paste0(safe_name, "_jin_", jin_sig_name, ".png"))
+      ablated_path <- file.path(plot_dir, paste0(safe_name, "_jin_", jin_sig_name, "_ablated.png"))
+      result <- p83(jin_signatures[, jin_sig_name, drop = FALSE], plot_title = jin_sig_name)
       save_result <- save83_result(result, plot_path, ablated_path)
-      
-      jin_plot_list[[jin_sig_name]] <- list(
-        path = plot_path,
-        path_ablated = if (save_result$ablated) ablated_path else NULL,
-        cosine = jin_cosine,
-        ablated_catalog = save_result$ablated_catalog
-      )
+      jin_plot_list[[jin_sig_name]] <- list(path = plot_path, path_ablated = if (save_result$ablated) ablated_path else NULL, cosine = jin_cosine, ablated_catalog = save_result$ablated_catalog)
     }
     paths$jin_plots <- jin_plot_list
   }
   
-  # Koh matching signatures (89-type)
+  # Koh matching signatures (仅执行不保存)
   paths$koh_plots <- NULL
   if (!is.null(sig_data$koh_matches) && !is.null(koh_signatures)) {
     koh_plot_list <- list()
     for (i in seq_len(nrow(sig_data$koh_matches))) {
       koh_sig_name <- sig_data$koh_matches$koh_sig[i]
       koh_cosine <- sig_data$koh_matches$cosine[i]
-      
-      plot_path <- file.path(
-        plot_dir,
-        paste0(safe_name, "_koh_", koh_sig_name, ".png")
-      )
-      
-      ptmp <- p89(
-        koh_signatures[, koh_sig_name, drop = FALSE],
-        plot_title = paste0(
-          "Similar signature from Koh et al., 2025 ",
-          koh_sig_name,
-          " | cosine to ",
-          sig_data$type89_sig_id,
-          ": ",
-          format(koh_cosine, digits = getp("cosine_digits"))
-        )
-      )
-      save89(ptmp, plot_path)
-      
-      koh_plot_list[[koh_sig_name]] <- list(
-        path = plot_path,
-        cosine = koh_cosine
-      )
+      plot_path <- file.path(plot_dir, paste0(safe_name, "_koh_", koh_sig_name, ".png"))
+      ptmp <- p89(koh_signatures[, koh_sig_name, drop = FALSE], plot_title = "...")
+      # save89(ptmp, plot_path) # (已移除保存)
+      koh_plot_list[[koh_sig_name]] <- list(path = plot_path, cosine = koh_cosine)
     }
     paths$koh_plots <- koh_plot_list
   }
   
-  # Sankey plots for 476-to-83 collapse (if flow data available)
+  # Sankey plots (仅执行不保存)
   paths$sankey_other_ins <- NULL
   paths$sankey_other_del <- NULL
-  if (
-    !is.null(collapse_flows) &&
-    sig_data$type89_sig_id %in% names(collapse_flows)
-  ) {
+  if (!is.null(collapse_flows) && sig_data$type89_sig_id %in% names(collapse_flows)) {
     flows <- collapse_flows[[sig_data$type89_sig_id]]
-    
-    # Create a result-like object for plot_collapse_sankey
     collapse_result <- list(flows = flows)
+    sankey_plots <- plot_collapse_sankey(collapse_result, min_flow = 0.001, title_prefix = "...")
     
-    title_prefix <- sprintf(
-      "%s -> %s",
-      sig_data$type89_sig_id,
-      sig_data$ID83signature
-    )
-    sankey_plots <- plot_collapse_sankey(
-      collapse_result,
-      min_flow = 0.001,
-      title_prefix = title_prefix
-    )
-    
-    # Save "other insertions" Sankey plot
     if (!is.null(sankey_plots$other_ins)) {
-      sankey_ins_path <- file.path(
-        plot_dir,
-        paste0(safe_name, "_sankey_other_ins.png")
-      )
-      ggplot2::ggsave(
-        sankey_ins_path,
-        sankey_plots$other_ins,
-        width = 12,
-        height = 8,
-        dpi = 150,
-        bg = "white"
-      )
+      sankey_ins_path <- file.path(plot_dir, paste0(safe_name, "_sankey_other_ins.png"))
+      # ggplot2::ggsave(sankey_ins_path, sankey_plots$other_ins, width = 12, height = 8, dpi = 150, bg = "white") # (已移除保存)
       paths$sankey_other_ins <- sankey_ins_path
     }
-    
-    # Save "other deletions" Sankey plot
     if (!is.null(sankey_plots$other_del)) {
-      sankey_del_path <- file.path(
-        plot_dir,
-        paste0(safe_name, "_sankey_other_del.png")
-      )
-      ggplot2::ggsave(
-        sankey_del_path,
-        sankey_plots$other_del,
-        width = 12,
-        height = 8,
-        dpi = 150,
-        bg = "white"
-      )
+      sankey_del_path <- file.path(plot_dir, paste0(safe_name, "_sankey_other_del.png"))
+      # ggplot2::ggsave(sankey_del_path, sankey_plots$other_del, width = 12, height = 8, dpi = 150, bg = "white") # (已移除保存)
       paths$sankey_other_del <- sankey_del_path
     }
   }

@@ -17,15 +17,15 @@ REQUIRED_PACKAGES <- c(
   "data.table",
 
   # File I/O
-  "readxl",
+  "readxl"
 
   # Plotting
-  "mSigPlot"
+  #"mSigPlot"
 )
 
 # GitHub packages (not on CRAN)
 GITHUB_PACKAGES <- list(
-  mSigPlot = "steverozen/mSigPlot"
+  #mSigPlot = "steverozen/mSigPlot"
 )
 
 # Optional packages (for development/testing)

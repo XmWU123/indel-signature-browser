@@ -6,8 +6,8 @@ ppar <- list(
   h476 = 6,
 
   # For type-89 plots
-  w89 = 24,
-  h89 = 7,
+  w89 = 19,
+  h89 = 6,
   hw89 = "80%",
   basesize89 = 30,
   textsize89 = 8,
@@ -15,8 +15,8 @@ ppar <- list(
   extra89y = 1.1,
 
   # For type-83 plots
-  w83 = 19,
-  h83 = 6,
+  w83 = 38,
+  h83 = 10,
   basesize83 = 25,
   textsize83 = 5,
 

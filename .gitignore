@@ -1,3 +1,4 @@
+# --- 保留原有的标准 R 忽略项 ---
 .Rproj.user
 .Rhistory
 .RData
@@ -6,3 +7,13 @@
 # Logs
 logs/
 *.log
+
+# --- 新增的白名单逻辑 ---
+# 1. 默认忽略根目录下的所有内容
+/*
+
+# 2. 排除掉（即保留）你想要的文件和文件夹
+!/.gitignore
+!/README.md
+!/indel-signature-browser.Rproj
+!/indel_shiny_clean/

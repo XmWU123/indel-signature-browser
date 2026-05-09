@@ -12,6 +12,8 @@ source("ui_components/cosmic_tab.R")
 source("ui_components/search_tab.R")
 source("ui_components/about_tab.R")
 source("ui_components/476_tab.R")
+source("ui_components/analysis_tab.R") 
+
 # Main UI
 ui <- navbarPage(
     title = "Indel Signature Explorer",
@@ -28,6 +30,7 @@ ui <- navbarPage(
 
   # Tab panels
   create_home_tab(),
+  create_analysis_tab(), 
   create_koh_tab(),
   create_476_tab(),
   create_cosmic_tab(),

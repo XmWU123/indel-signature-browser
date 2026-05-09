@@ -43,10 +43,10 @@ create_home_tab <- function() {
             hr(style = "border-top: 1px solid #eee; margin: 50px 0;")
          ), 
          
-         # (已删除原有的 "Explore Classification Schemes" 标题)
          
          # --- Cards Grid ---
          fluidRow(
+           class = "flex-container", 
             # Card 1: 83-type
             column(4,
                    div(

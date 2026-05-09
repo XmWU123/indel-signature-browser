@@ -15,7 +15,7 @@ if (length(args) < 1) {
 }
 n <- as.integer(args[1])
 
-library(ICAMS)
+#library(mSigSpectra) library(mSigPlot)
 
 # Find all .consensus.indel.vcf.gz files
 consensus_files <- list.files(pattern = "\\.consensus\\.indel\\.vcf\\.gz$")

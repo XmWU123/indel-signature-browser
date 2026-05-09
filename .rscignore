@@ -1,3 +1,12 @@
-code/
-mSigPlot-main.zip
+renv/
+renv.lock
+.Rprofile
+app_ML.R
+update_signatures.R
+claude_code_interaction.txt
+architecture.txt
 archiecture2.txt
+logs/
+o/
+indel_shiny_final/
+shiny_deploy/

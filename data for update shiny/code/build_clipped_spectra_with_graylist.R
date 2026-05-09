@@ -18,9 +18,9 @@
 #  "sample_ids" , "catalog_89", "catalog_83", "catalog_476", rownames_83, rownames_89, and rownames_476
 
 library(data.table)
-library(ICAMS)
+#library(mSigSpectra) library(mSigPlot)
 library(stringr)
-library(hdf5r)
+#library(hdf5r)
 
 vcf_files <- sort(c(
   Sys.glob(path.expand(

@@ -64,27 +64,13 @@ body {
 
 /* --- 3.1 Hero 区域 (顶部大图) --- */
 .hero-section {
-  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%) !important;
-  box-shadow: 0 15px 30px rgba(44, 62, 80, 0.35);
-  color: white; 
-  padding: 90px 40px;
-  border-radius: 0 0 20px 20px;
-  margin-bottom: 60px;
+  background: transparent!important;
+  box-shadow: none !important;
+  padding:0;
+  margin-bottom:40px;
   text-align: center;
   position: relative;
   overflow: hidden;
-}
-
-/* 背景网格纹理 */
-.hero-section::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events: none;
 }
 
 .hero-title {
@@ -108,13 +94,7 @@ body {
 
 /* DNA 动效图标 */
 .logo-icon {
-  font-size: 3.8rem;
-  color: rgba(255, 255, 255, 0.95);
-  margin-right: 25px;
-  vertical-align: middle;
-  display: inline-block;
-  animation: float-pulse 6s ease-in-out infinite;
-  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+display:none !important
 }
 
 @keyframes float-pulse {
@@ -191,11 +171,28 @@ body {
 }
 
 /* --- 3.4 功能入口卡片 (Feature Cards) --- */
+
+/* 1. 确保 Row 容器开启 Flex 布局*/
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* 2. 确保列 (Column) 也是 Flex 布局，使内部的 Card 能撑满高度 */
+.flex-container > .col-sm-4 {
+  display: flex;
+}
+
 .feature-card {
   background: white;
   border-radius: 20px;
   padding: 45px 30px;
+  /*开启卡片内部 Flex 布局 --- */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
   height: 100%;
+  /* ------------------------------------ */
   text-align: center;
   transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
   box-shadow: 0 5px 15px rgba(0,0,0,0.05);
@@ -215,10 +212,7 @@ body {
 .card-476 { border-top-color: #9b59b6; }
 
 .card-icon-large {
-  font-size: 64px;
-  margin-bottom: 25px;
-  opacity: 1;
-  transition: transform 0.3s ease;
+  display: none !important;
 }
 
 .feature-card:hover .card-icon-large {
@@ -226,7 +220,9 @@ body {
 }
 
 .card-btn-fake {
-  margin-top: 30px;
+  /*将按钮推向底部 --- */
+  margin-top: auto;
+  /* ------------------------------ */
   display: inline-block;
   padding: 12px 35px;
   background: #f8f9fa;
@@ -237,7 +233,10 @@ body {
   transition: all 0.3s;
   text-transform: uppercase;
   letter-spacing: 1.5px;
+  /* 这里的 self-center 确保按钮在 flex 容器中水平居中 */
+  align-self: center; 
 }
+
 
 .feature-card:hover .card-btn-fake {
   background: #3498db;
@@ -283,7 +282,6 @@ body {
   margin-bottom: 20px;
   transition: all 0.3s ease;
   text-align: center;
-  border: 2px solid rgba(52, 152, 219, 0.1);
 }
 .thumbnail-card:hover {
   transform: translateY(-8px);
@@ -292,7 +290,6 @@ body {
 }
 .thumbnail-card img {
   border-radius: 12px;
-  border: 3px solid #ecf0f1;
   margin-bottom: 15px;
   transition: all 0.3s ease;
 }
@@ -396,15 +393,6 @@ body {
    5. 关于页面 (About Page)
    ========================================================================== */
 
-/* 顶部迷你 Hero */
-.about-hero {
-  background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%); 
-  padding: 80px 20px 120px 20px;
-  text-align: center;
-  color: white;
-  margin-bottom: 0;
-}
-
 .about-title {
   font-family: 'Segoe UI', sans-serif;
   font-weight: 800;
@@ -425,7 +413,7 @@ body {
 .about-paper-card {
   background: white;
   max-width: 1000px;
-  margin: -60px auto 50px auto;
+  margin: 30px auto 50px auto;
   padding: 50px;
   border-radius: 15px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.08);
@@ -644,4 +632,93 @@ body {
 }
 .modal {
   z-index: 1050 !important;
+}
+
+
+/* ==========================================================================
+   8. 上传与分析页面 (Upload & Analyze)
+   ========================================================================== */
+
+/* 左侧上传面板卡片 */
+.upload-card {
+  background-color: #ffffff;
+  border-radius: 12px; /* 增加一点圆角，和你的风格统一 */
+  padding: 30px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05); /* 匹配你全局的轻微阴影风格 */
+  border: 1px solid rgba(52, 152, 219, 0.1); /* 呼应你全局的边框色 */
+}
+
+.upload-card h4 {
+  color: #2c3e50;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+
+.upload-card .text-muted {
+  color: #7f8c8d;
+  font-size: 0.95rem;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+/* 运行按钮的现代样式 */
+.upload-card .btn-primary {
+  width: 100%;
+  border-radius: 8px;
+  padding: 12px 15px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  border: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.upload-card .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+}
+
+/* 右侧结果区卡片 */
+.result-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  border: 1px solid rgba(52, 152, 219, 0.1);
+  min-height: 500px; 
+}
+
+/* 美化 Shiny 默认的 Tabs */
+.result-card .nav-tabs {
+  display: flex; /* 开启 Flex 布局 */
+  border-bottom: 2px solid #f1f2f6;
+  margin-bottom: 20px;
+  padding: 0;
+}
+
+.result-card .nav-tabs > li > a {
+  border: none !important;
+  color: #95a5a6;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 12px 10px;
+  background-color: transparent !important;
+  transition: all 0.3s ease;
+  display: block; /* 确保整个区块都可以点击 */
+  border-radius: 0; /* 去除 Shiny 默认的圆角 */
+}
+
+.result-card .nav-tabs > li > a:hover {
+  color: #3498db;
+  background-color: rgba(52, 152, 219, 0.05) !important; /* 悬停时加一点极淡的底色 */
+}
+.result-card .nav-tabs > li.active > a, 
+.result-card .nav-tabs > li.active > a:focus, 
+.result-card .nav-tabs > li.active > a:hover {
+  color: #2c3e50;
+  border-bottom: 3px solid #3498db !important;
+  background-color: transparent !important;
 }

@@ -3,20 +3,14 @@ create_about_tab <- function() {
     title = "About",
     icon = icon("circle-info"),
     
-    # 1. 顶部 Hero 区域 (蓝色背景)
-    div(
-      class = "about-hero",
-      h1("About the Project", class = "about-title"),
-      p("Elucidating the landscape of somatic indel mutations in human cancer through advanced signature extraction.", class = "about-subtitle")
-    ),
-    
     # 2. 悬浮的白色大卡片
     div(
       class = "about-paper-card",
+      style = "margin-top: 20px !important; padding-top: 20px !important;",
       
       # --- Section: Introduction ---
       h3("Project Overview", class = "about-section-title",
-         style = "color: #2980b9; border-bottom-color: #2980b9;"),
+         style = "color: #2980b9; border-bottom-color: #2980b9; margin-top: 0 !important; padding-top: 0 !important;"),
       
       p(class = "about-text",
         "Indel mutational signatures provide crucial insights into the mutational processes operative in human cancer. ",
@@ -52,7 +46,7 @@ create_about_tab <- function() {
         div(class = "about-feature-item",
             icon("database", class = "about-icon"),
             h4("Comprehensive Data", style="font-weight:700; margin-top:0;"),
-            p("Based on a robust dataset of somatic mutations processed with non-negative matrix factorization.")
+            p("Based on a robust dataset of somatic mutations processed with non-negative matrix factorization and Hierarchical Dirichlet Processes.")
         )
       ),
       

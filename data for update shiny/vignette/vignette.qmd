@@ -87,6 +87,8 @@ library(magrittr)
 library(gridExtra)
 library(data.table)
 library(mSigPlot)
+# 建立别名以兼容可能存在的逻辑漏洞
+if (!exists("plot_89")) plot_89 <- mSigPlot::plot_ID89
 library(ggplot2)
 library(scales)
 library(future)
@@ -517,9 +519,10 @@ create_overview_table(sig_table2)
 #| label: generate-plots-parallel
 #| include: false
 
+# 如果你在用并行计算（future/furrr），确保这个变量被分发到了子进程
 # Plot caching: only regenerate if source data has changed
 # To force regeneration: delete figure/parallel_plots/ or set REGENERATE_PLOTS <- TRtUE
-plot_dir <- "figure/parallel_plots"
+plot_dir <- "figure/parallel_plots1"
 
 cache_valid <- check_plot_cache(data_dir, plot_dir) &&
   !REGENERATE_PLOTS

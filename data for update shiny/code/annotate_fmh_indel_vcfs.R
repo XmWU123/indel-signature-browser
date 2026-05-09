@@ -17,7 +17,7 @@ if (length(args) < 1) {
 }
 n <- as.integer(args[1])
 
-library(ICAMS)
+#library(mSigSpectra) library(mSigPlot)
 library(foreach)
 library(doFuture)
 library(progressr)
