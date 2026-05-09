@@ -1,0 +1,724 @@
+/* ==========================================================================
+   1. 全局基础样式 (Global Base Styles)
+      设定页面背景、字体、容器等通用属性
+   ========================================================================== */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  font-size: 16px; 
+}
+
+/* 通用内容容器 */
+.container-fluid {
+  padding: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+   2. 导航栏样式 (Navigation)
+   ========================================================================== */
+.navbar {
+  background: #2c3e50 !important; /* 深蓝色沉稳背景 */
+  border: none !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+  margin-bottom: 0;
+  min-height: 60px;
+}
+
+/* 导航链接文字 */
+.navbar-default .navbar-nav > li > a {
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 15px 20px;
+  transition: all 0.3s ease;
+}
+
+/* 鼠标悬停 */
+.navbar-default .navbar-nav > li > a:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+}
+
+/* 选中状态 */
+.navbar-default .navbar-nav > .active > a {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border-bottom: 3px solid #fff;
+}
+
+/* 品牌标题 */
+.navbar-brand {
+  color: white !important;
+  font-weight: 800 !important;
+  font-size: 20px !important;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.1);
+}
+
+/* ==========================================================================
+   3. 首页样式 (Home Page)
+   ========================================================================== */
+
+/* --- 3.1 Hero 区域 (顶部大图) --- */
+.hero-section {
+  background: transparent!important;
+  box-shadow: none !important;
+  padding:0;
+  margin-bottom:40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-title {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 800;
+  font-size: 4.2rem;
+  margin-bottom: 25px;
+  letter-spacing: -1.5px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  line-height: 1.1;
+}
+
+.hero-subtitle {
+  font-size: 1.5rem;
+  font-weight: 300;
+  opacity: 0.95;
+  max-width: 1000px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* DNA 动效图标 */
+.logo-icon {
+display:none !important
+}
+
+@keyframes float-pulse {
+  0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.9; }
+  50% { transform: translateY(-8px) rotate(5deg) scale(1.05); opacity: 1; }
+  100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.9; }
+}
+
+/* --- 3.2 文字介绍区域 --- */
+.intro-text-section {
+  text-align: center;
+  max-width: 1100px;
+  margin: 0 auto 60px auto;
+  color: #34495e;
+}
+
+.intro-lead {
+  font-size: 2.0rem;
+  line-height: 1.8;
+  color: #2c3e50;
+  margin-bottom: 35px;
+  font-weight: 400;
+}
+
+.data-badge {
+  display: inline-block;
+  background: rgba(52, 152, 219, 0.1);
+  color: #2980b9;
+  padding: 2px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  border-bottom: 2px solid rgba(52, 152, 219, 0.25);
+  margin: 0 3px;
+}
+
+/* --- 3.3 Note Box (蓝色边框提示框) --- */
+.note-box {
+  background: #ffffff;
+  border-left: 5px solid #3498db;
+  padding: 35px 40px;
+  border-radius: 8px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+  margin: 50px auto;
+  max-width: 1000px;
+}
+
+.note-title {
+  color: #2c3e50;
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.note-title i {
+  color: #3498db;
+  margin-right: 10px;
+  font-size: 1.8rem;
+}
+
+.note-content {
+  font-size: 1.6rem;
+  line-height: 1.7;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.note-content strong {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+/* --- 3.4 功能入口卡片 (Feature Cards) --- */
+
+/* 1. 确保 Row 容器开启 Flex 布局*/
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* 2. 确保列 (Column) 也是 Flex 布局，使内部的 Card 能撑满高度 */
+.flex-container > .col-sm-4 {
+  display: flex;
+}
+
+.feature-card {
+  background: white;
+  border-radius: 20px;
+  padding: 45px 30px;
+  /*开启卡片内部 Flex 布局 --- */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  /* ------------------------------------ */
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.02);
+  border-top: 8px solid transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.feature-card:hover {
+  transform: translateY(-15px);
+  box-shadow: 0 25px 50px rgba(52, 152, 219, 0.2);
+}
+
+.card-83 { border-top-color: #27ae60; }
+.card-89 { border-top-color: #e67e22; }
+.card-476 { border-top-color: #9b59b6; }
+
+.card-icon-large {
+  display: none !important;
+}
+
+.feature-card:hover .card-icon-large {
+  transform: scale(1.15);
+}
+
+.card-btn-fake {
+  /*将按钮推向底部 --- */
+  margin-top: auto;
+  /* ------------------------------ */
+  display: inline-block;
+  padding: 12px 35px;
+  background: #f8f9fa;
+  color: #2c3e50;
+  border-radius: 35px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  /* 这里的 self-center 确保按钮在 flex 容器中水平居中 */
+  align-self: center; 
+}
+
+
+.feature-card:hover .card-btn-fake {
+  background: #3498db;
+  color: white;
+  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+
+/* --- 3.5 首页底部引用 (Citation) --- */
+.citation-box {
+  background: #f8f9fa;
+  border-left: 8px solid #95a5a6;
+  padding: 40px 50px;
+  margin-top: 80px;
+  border-radius: 8px;
+  font-size: 1.55rem;
+  line-height: 1.8;
+  color: #34495e;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  position: relative;
+}
+.citation-box span {
+  font-size: 1.75rem !important;
+  color: #2c3e50 !important;
+  margin-bottom: 10px;
+  display: inline-block;
+}
+.citation-box i {
+  font-size: 1.5rem;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+
+/* ==========================================================================
+   4. 列表页与详情页 (List & Details)
+   ========================================================================== */
+
+/* --- 4.1 列表页缩略图卡片 --- */
+.thumbnail-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  padding: 25px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+.thumbnail-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 30px rgba(52, 152, 219, 0.3);
+  border-color: #3498db;
+}
+.thumbnail-card img {
+  border-radius: 12px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+.thumbnail-card:hover img {
+  border-color: #3498db;
+  transform: scale(1.05);
+}
+
+/* --- 4.2 详情页布局 --- */
+/* 图片容器 */
+.img-container {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 16px;
+  padding: 30px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  border: 2px solid rgba(52, 152, 219, 0.1);
+  z-index: 1;
+}
+
+/* 图片本体（带交互） */
+.signature-img {
+  border-radius: 12px;
+  border: 3px solid #ecf0f1;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: block;
+  margin: 0 auto;
+  background: white;
+  padding: 5px;
+  position: relative;
+  z-index: 100; /* 提升层级，确保可点 */
+  pointer-events: auto !important;
+}
+
+.signature-img:hover {
+  border-color: #3498db; 
+  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+  transform: scale(1.03);
+}
+
+/* --- 4.3 ID83 专用区域 --- */
+.id83-section {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 16px;
+  padding: 35px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  border: 2px solid rgba(52, 152, 219, 0.1);
+  z-index: 1;
+}
+
+.id83-label {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 25px;
+  padding-left: 20px;
+  border-left: 5px solid #3498db;
+}
+
+/* 成员名牌列表 */
+.member-section {
+  background: linear-gradient(135deg, #ecf0f1 0%, #d5d8dc 100%);
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 20px;
+  border: 2px solid rgba(52, 152, 219, 0.2);
+}
+
+.member-name {
+  font-weight: 700;
+  font-size: 16px;
+  color: white;
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
+  border-radius: 8px;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+/* --- 4.4 返回按钮 --- */
+.btn-back {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+}
+.btn-back:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
+  background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+}
+
+/* ==========================================================================
+   5. 关于页面 (About Page)
+   ========================================================================== */
+
+.about-title {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 800;
+  font-size: 3.8rem;
+  margin-bottom: 15px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.about-subtitle {
+  font-size: 1.7rem;
+  opacity: 0.95;
+  font-weight: 300;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* 悬浮白纸卡片 */
+.about-paper-card {
+  background: white;
+  max-width: 1000px;
+  margin: 30px auto 50px auto;
+  padding: 50px;
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+  position: relative;
+  z-index: 10;
+}
+
+/* About 内容排版 */
+.about-lead {
+  font-size: 1.7rem;
+  font-weight: 500;
+  color: #2c3e50;
+  line-height: 1.6;
+  margin-bottom: 35px;
+}
+
+.about-text {
+  font-size: 1.5rem;
+  line-height: 1.8;
+  color: #57606f;
+  margin-bottom: 25px;
+}
+
+.about-section-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-top: 40px;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f1f2f6;
+}
+
+/* 特性网格 */
+.about-feature-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 25px;
+  margin-bottom: 50px;
+}
+
+.about-feature-item {
+  flex: 1;
+  min-width: 260px;
+  background: #f8f9fa;
+  padding: 30px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  transition: all 0.3s;
+}
+.about-feature-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  border-color: #3498db;
+}
+
+.about-icon {
+  font-size: 2.5rem;
+  color: #3498db;
+  margin-bottom: 20px;
+}
+
+/* About 页引用块 */
+.citation-block {
+  background: #2c3e50;
+  color: #ecf0f1;
+  padding: 30px;
+  border-radius: 8px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  border-left: 6px solid #e74c3c;
+  margin-top: 20px;
+}
+
+/* ==========================================================================
+   6. 搜索页面 (Search Page)
+   包含布局与 Selectize 修复
+   ========================================================================== */
+
+/* 页面容器 */
+.search-page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  padding: 50px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 白色大卡片 */
+.search-box-large {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 30px;
+  padding: 60px 50px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  max-width: 750px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+.search-box-large:hover {
+  box-shadow: 0 25px 80px rgba(52, 152, 219, 0.2);
+  transform: translateY(-5px);
+}
+
+/* 搜索标题 */
+.search-title {
+  font-size: 42px;
+  font-weight: 800;
+  color: #2c3e50;
+  margin-bottom: 15px;
+  background: linear-gradient(135deg, #3498db 0%, #2ecc71 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.search-subtitle {
+  font-size: 1.1rem;
+  color: #7f8c8d;
+  margin-bottom: 30px;
+}
+
+/* 搜索框外层容器 (Flex 布局核心) */
+.search-input-container {
+  display: flex !important;
+  align-items: center !important;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+  border-radius: 60px !important;
+  padding: 5px 15px !important; 
+  margin-bottom: 30px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08) !important;
+  border: 1px solid rgba(0,0,0,0.05) !important;
+}
+
+/* 搜索按钮 */
+.search-btn-large {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
+  border: none !important;
+  color: white !important;
+  padding: 15px 40px !important;
+  border-radius: 50px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  margin-left: 10px;
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.35);
+  white-space: nowrap;
+}
+
+/* --- SelectizeInput 深度修复 (解决输入问题) --- */
+/* 控件容器 */
+.search-input-container .selectize-control.single .selectize-input {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 10px 5px !important;
+  min-height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+/* 输入框本体 - 强制撑开 */
+.search-input-container .selectize-input input {
+  font-size: 18px !important;
+  color: #2c3e50 !important;
+  line-height: 1.5 !important;
+  position: static !important; 
+  width: 100% !important;
+  min-width: 250px !important; 
+  max-width: none !important;
+  display: block !important;
+  opacity: 1 !important;
+}
+
+/* 下拉菜单与占位符 */
+.search-input-container .selectize-input .item {
+  font-size: 18px !important;
+  color: #2c3e50 !important;
+}
+.search-input-container .selectize-input input::placeholder {
+  color: #95a5a6 !important;
+  opacity: 0.8;
+}
+
+/* 下拉框弹窗 */
+.search-input-container .selectize-dropdown {
+  margin-top: 15px !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+  font-size: 16px !important;
+  z-index: 9999 !important;
+}
+.search-input-container .selectize-dropdown .option {
+  padding: 12px 20px !important;
+  color: #2c3e50;
+}
+.search-input-container .selectize-dropdown .option.active {
+  background-color: #3498db !important;
+  color: white !important;
+}
+
+/* ==========================================================================
+   7. 全局工具类与修复 (Global Utilities & Fixes)
+   ========================================================================== */
+
+/* 模态框层级修复 (防止被背景遮挡) */
+.modal-backdrop {
+  z-index: 1040 !important;
+}
+.modal {
+  z-index: 1050 !important;
+}
+
+
+/* ==========================================================================
+   8. 上传与分析页面 (Upload & Analyze)
+   ========================================================================== */
+
+/* 左侧上传面板卡片 */
+.upload-card {
+  background-color: #ffffff;
+  border-radius: 12px; /* 增加一点圆角，和你的风格统一 */
+  padding: 30px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05); /* 匹配你全局的轻微阴影风格 */
+  border: 1px solid rgba(52, 152, 219, 0.1); /* 呼应你全局的边框色 */
+}
+
+.upload-card h4 {
+  color: #2c3e50;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+
+.upload-card .text-muted {
+  color: #7f8c8d;
+  font-size: 0.95rem;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+/* 运行按钮的现代样式 */
+.upload-card .btn-primary {
+  width: 100%;
+  border-radius: 8px;
+  padding: 12px 15px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  border: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.upload-card .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+}
+
+/* 右侧结果区卡片 */
+.result-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  border: 1px solid rgba(52, 152, 219, 0.1);
+  min-height: 500px; 
+}
+
+/* 美化 Shiny 默认的 Tabs */
+.result-card .nav-tabs {
+  display: flex; /* 开启 Flex 布局 */
+  border-bottom: 2px solid #f1f2f6;
+  margin-bottom: 20px;
+  padding: 0;
+}
+
+.result-card .nav-tabs > li > a {
+  border: none !important;
+  color: #95a5a6;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 12px 10px;
+  background-color: transparent !important;
+  transition: all 0.3s ease;
+  display: block; /* 确保整个区块都可以点击 */
+  border-radius: 0; /* 去除 Shiny 默认的圆角 */
+}
+
+.result-card .nav-tabs > li > a:hover {
+  color: #3498db;
+  background-color: rgba(52, 152, 219, 0.05) !important; /* 悬停时加一点极淡的底色 */
+}
+.result-card .nav-tabs > li.active > a, 
+.result-card .nav-tabs > li.active > a:focus, 
+.result-card .nav-tabs > li.active > a:hover {
+  color: #2c3e50;
+  border-bottom: 3px solid #3498db !important;
+  background-color: transparent !important;
+}
