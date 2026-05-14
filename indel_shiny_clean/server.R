@@ -223,110 +223,182 @@ server <- function(input, output, session) {
     cat476 = NULL
   )
   
+  # ============================================================================
+  # 示例样本与文件上传逻辑管理
+  # ============================================================================
+  
+  # 1. 创建一个响应式变量，用于统一存放当前要分析的 VCF 路径
+  current_vcf_path <- reactiveVal(NULL)
+  
+  # 2. 监听 示例样本 (hg38) 的点击
+  observeEvent(input$load_example_hg38, {
+    # 存入预设路径
+    current_vcf_path("example_data/test_file_1_hg38.vcf")
+    
+    # 自动切换下拉菜单到 hg38
+    updateSelectInput(session, "ref_genome", selected = "hg38")
+    
+    # 在 UI 上反馈成功信息 (绿色打勾)
+    output$current_file_status <- renderUI({
+      div(style = "color: #27ae60; font-weight: bold; margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 5px; border-left: 4px solid #27ae60;",
+          icon("check-circle"), " Example sample (hg38) loaded successfully! Ready.")
+    })
+  })
+  
+  # 3. 监听 示例样本 (hg19) 的点击
+  observeEvent(input$load_example_hg37, {
+    # 存入预设路径
+    current_vcf_path("example_data/test_file_2_hg19.vcf")
+    
+    # 自动切换下拉菜单到 hg19
+    updateSelectInput(session, "ref_genome", selected = "hg19")
+    
+    # 在 UI 上反馈成功信息
+    output$current_file_status <- renderUI({
+      div(style = "color: #27ae60; font-weight: bold; margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 5px; border-left: 4px solid #27ae60;",
+          icon("check-circle"), " Example sample (hg19) loaded successfully! Ready.")
+    })
+  })
+  
+  # 4. 兼容用户自行上传文件的情况
+  observeEvent(input$vcf_file, {
+    req(input$vcf_file)
+    # 将用户上传的临时路径存入变量
+    current_vcf_path(input$vcf_file$datapath)
+    
+    # 在 UI 上反馈成功信息 (蓝色提示)
+    output$current_file_status <- renderUI({
+      div(style = "color: #2980b9; font-weight: bold; margin-top: 10px; padding: 10px; background: #ebf5fb; border-radius: 5px; border-left: 4px solid #2980b9;",
+          icon("file-upload"), paste(" Custom file loaded:", input$vcf_file$name))
+    })
+  })
+  
   # 2. 监听“开始分析”按钮
   observeEvent(input$run_analysis_btn, {
-    req(input$vcf_file)
+    # 更改 req：要求 current_vcf_path 必须有内容，不论是示例还是上传的
+    req(current_vcf_path()) 
+    
     withProgress(message = 'Processing VCF...', value = 0, {
-      
       tryCatch({
-        vcf_path <- input$vcf_file$datapath
-        # UI 里的选项必须与官方文档一致：比如 "GRCh37" 或 "GRCh38" 
-        # (如果你的 UI 是 "hg19"，请在这里做一个转换：genome <- "GRCh37")
+        # 从响应式变量中提取正确的路径
+        vcf_path <- current_vcf_path() 
+        
+        # ... 保持不变：UI 里的选项必须与官方文档一致 ...
         genome <- input$ref_genome 
         if(genome == "hg19") genome <- "GRCh37"
         if(genome == "hg38") genome <- "GRCh38"
         
         # ==========================================
-        # 步骤 1：启动纯净模式读取 VCF (防御底层 Bug)
+        # 步骤 1：读取与初步清洗 (结合你的规则)
         # ==========================================
-        message("\n[追踪] 1. 提取纯净 Indel 变异...")
-        incProgress(0.1, detail = "正在提取变异核心数据...")
+        message("\n[追踪] 1. 读取并清洗 VCF...")
+        incProgress(0.1, detail = "Performing Indel annotation...")
         
-        raw_vcf <- data.table::fread(vcf_path, skip = "#CHROM", data.table = FALSE, fill = TRUE)
-        colnames(raw_vcf)[1] <- "CHROM"
-        pure_vcf <- raw_vcf[, 1:5]
-        colnames(pure_vcf) <- c("CHROM", "POS", "ID", "REF", "ALT")
+        # 1. 使用官方的 read_vcf 读取，它可以自动处理很多 VCF 头文件的边界情况
+        # 默认 filter = TRUE 会保留 "PASS", ".", ""
+        raw_vcf <- mSigSpectra::read_vcf(vcf_path, filter = TRUE)
         
-        pure_vcf$QUAL <- "."
-        pure_vcf$FILTER <- "PASS"
-        pure_vcf$INFO <- "."
-        
-        # 💡 新增核心过滤：统一染色体命名并剔除杂牌军
-        # 1. 强行删掉所有的 "chr" 前缀 (忽略大小写)，把 chr1 变成 1，chrX 变成 X
-        pure_vcf$CHROM <- gsub("^chr", "", pure_vcf$CHROM, ignore.case = TRUE)
-        
-        # 2. 仅保留最标准的核基因组染色体 (1~22, X, Y)
-        # 这一步直接把线粒体(M/MT)、以及 chrUn_gl000238 等所有碎片全秒杀了！
+        # 2. 你的专属清洗逻辑：统一染色体命名并剔除杂牌军
+        raw_vcf$CHROM <- gsub("^chr", "", raw_vcf$CHROM, ignore.case = TRUE)
         valid_chroms <- c(as.character(1:22), "X", "Y")
-        pure_vcf <- pure_vcf[pure_vcf$CHROM %in% valid_chroms, ]
+        raw_vcf <- raw_vcf[raw_vcf$CHROM %in% valid_chroms, ]
         
-        # 3. 剔除多等位基因复杂突变 (比如 ALT 是 "A,C")
-        pure_vcf <- pure_vcf[!grepl(",", pure_vcf$ALT), ]
-        
-        # 4. 提取 Indel：只要 REF 和 ALT 长度不相等，就是 Indel！
-        indel_df <- pure_vcf[nchar(pure_vcf$REF) != nchar(pure_vcf$ALT), ]
-        
-        if (nrow(indel_df) == 0) stop("过滤后未发现有效的 Indel 突变！")
+        # 3. 解决多等位基因问题 (对应 Gotcha 2)
+        raw_vcf <- raw_vcf %>%
+          tidyr::separate_rows(ALT, sep = ",") %>%
+          as.data.frame()
         
         # ==========================================
-        # 步骤 2：官方原生注释 (annotate_id_vcf)
+        # 步骤 2：官方防御性管道 (核心纠错，防止崩溃)
         # ==========================================
-        message("[追踪] 2. 开始比对参考基因组...")
-        incProgress(0.4, detail = "Aligning with reference genome...")
+        message("\n[追踪] 2. 官方质控与提取 Indel...")
+        incProgress(0.3, detail = "执行官方安全质控...")
         
-        # 按照官方文档，调用 annotate_id_vcf，并提取 $annotated.vcf
-        id_ann_list <- mSigSpectra::annotate_id_vcf(indel_df, ref_genome = genome)
+        # 1. 过滤掉不符合生物学聚合酶足迹规律的伪 Indels、复杂突变和含 N 的行
+        clean_data <- mSigSpectra::check_and_remove_discarded_variants(raw_vcf)
+        
+        # 2. 智能分类，提取出真正安全的 Indel 数据
+        parts <- mSigSpectra::split_vcf(clean_data$df)
+        indel_df <- parts$ID
+        
+        if (is.null(indel_df) || nrow(indel_df) == 0) {
+          stop("经过严格质控后，未发现符合 COSMIC 标准的有效 Indel 突变！")
+        }
+        
+        # ==========================================
+        # 步骤 3：根据 GitHub 源码确认的稳定版函数
+        # ==========================================
+        message("[追踪] 3. 开始比对参考基因组并生成矩阵...")
+        incProgress(0.6, detail = "正在执行 Indel 注释...")
+        
+        # 1. 调用截图 image_cb79a2.png 确认的 annotate_id_vcf 函数
+        # 作用：计算 Indel 突变在基因组中的侧翼上下文和重复序列长度
+        id_ann_list <- mSigSpectra::annotate_id_vcf(
+          vcf = indel_df, 
+          ref_genome = genome
+        )
+        
+        # 提取注释后的 VCF 数据框，用于后续矩阵计算
         ann_id <- id_ann_list$annotated.vcf
         vcf_results$annotated <- ann_id
         
-        # ==========================================
-        # 步骤 3：官方原生矩阵生成 (vcf_to_id_catalog)
-        # ==========================================
-        message("[追踪] 3. 正在生成 83/89/476 矩阵...")
-        incProgress(0.7, detail = "Generating signature profile matrices...")
+        # 2. 生成 ID83/89/476 矩阵 (使用 vcf_to_id_catalog)
+        # 注意：这里的 type 参数决定了生成的矩阵分类框架
+        incProgress(0.2, detail = "正在构建分类矩阵...")
         
-        # 按照官方文档，连续调用 3 次 vcf_to_id_catalog
         vcf_results$cat83 <- mSigSpectra::vcf_to_id_catalog(
-          ann_id, type = "ID83", ref_genome = genome, region = "genome", sample_name = " "
+          ann_id, type = "ID83", ref_genome = genome, region = "genome", sample_name = "Sample_Analysis"
         )
+        
         vcf_results$cat89 <- mSigSpectra::vcf_to_id_catalog(
-          ann_id, type = "ID89", ref_genome = genome, region = "genome", sample_name = " "
+          ann_id, type = "ID89", ref_genome = genome, region = "genome", sample_name = "Sample_Analysis"
         )
+        
         vcf_results$cat476 <- mSigSpectra::vcf_to_id_catalog(
-          ann_id, type = "ID476", ref_genome = genome, region = "genome", sample_name = " "
+          ann_id, type = "ID476", ref_genome = genome, region = "genome", sample_name = "Sample_Analysis"
         )
         
-        message("[Tracking] Success!")
-        incProgress(0.99, detail = "Processing complete!")
-        showNotification("Analysis successful! ID83/89/476 matrices generated.", type = "message")
-        
-      }, error = function(e) {
-        message("\n❌ [崩溃追踪] 程序在中途爆炸了！\n错误信息: ", e$message)
-        showNotification(paste("Processing failed:", e$message), type = "error", duration = 10)
+        message("[Tracking] 全部矩阵生成成功！")
+        incProgress(0.19, detail = "分析完成！")
+        showNotification("Success: ID83/89/476 matrices are ready.", type = "message")
       })
     })
   })
   
   # ============================================================================
-  # 3. 绘图输出 (纯粹调用原生 mSigPlot，防止崩溃)
+  # 3. 绘图输出 (采用数据与视图分离策略，解决文字重叠)
   # ============================================================================
   
   # --- 1. ID83 绘图 ---
   output$plot_id83 <- renderPlot({
     req(vcf_results$cat83)
-    mSigPlot::plot_ID83(vcf_results$cat83) 
+    
+    # 创建一个临时绘图数据，不污染原数据
+    plot_data_83 <- vcf_results$cat83 
+    # 将临时数据的列名设为空格，强制 mSigPlot 隐藏图表内部的标题
+    colnames(plot_data_83) <- " " 
+    
+    mSigPlot::plot_ID83(plot_data_83) 
   }, res = 100, height = 500)
   
   # --- 2. ID89 绘图 ---
   output$plot_id89 <- renderPlot({
     req(vcf_results$cat89)
-    mSigPlot::plot_ID89(vcf_results$cat89) 
+    
+    plot_data_89 <- vcf_results$cat89
+    colnames(plot_data_89) <- " " 
+    
+    mSigPlot::plot_ID89(plot_data_89) 
   }, res = 100, height = 500)
   
   # --- 3. ID476 绘图 ---
   output$plot_id476 <- renderPlot({
     req(vcf_results$cat476)
-    mSigPlot::plot_ID476(vcf_results$cat476)
+    
+    plot_data_476 <- vcf_results$cat476
+    colnames(plot_data_476) <- " " 
+    
+    mSigPlot::plot_ID476(plot_data_476)
   }, res = 100, height = 500)
   
   # ============================================================================

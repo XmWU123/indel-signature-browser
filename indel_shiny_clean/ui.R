@@ -16,9 +16,13 @@ source("ui_components/analysis_tab.R")
 
 # Main UI
 ui <- navbarPage(
-    title = "Indel Signature Explorer",
-    theme = NULL,
-    id = "navbar", # 这个 id="navbar" 必须保留，后端书签依赖它
+  title = tags$img(
+      src = "parallel_plots/indelmut_logo (2).png",  
+  ),
+  windowTitle = "Indel Signature Browser",
+  # ------------------------------------------------
+  theme = NULL,
+  id = "navbar",
     
     # Header: CSS and shinyjs
     header = tagList(

@@ -1,0 +1,10 @@
+name: main
+title:
+username: indelsigbrowser
+account: indelsigbrowser
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 17327310
+bundleId: 11993445
+url: https://indelsigbrowser.shinyapps.io/main/
+version: 1

@@ -17,25 +17,63 @@ body {
   margin: 0 auto;
 }
 
-/* ==========================================================================
-   2. 导航栏样式 (Navigation)
-   ========================================================================== */
+/* === 2. 导航栏 (navbar: 70px) === */
 .navbar {
-  background: #2c3e50 !important; /* 深蓝色沉稳背景 */
-  border: none !important;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-  margin-bottom: 0;
-  min-height: 60px;
+  background: #2c3e50 !important; border: none !important;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+  margin-bottom: 0; min-height: 60px !important; 
 }
 
-/* 导航链接文字 */
+/* 导航链接 (居中对齐) */
 .navbar-default .navbar-nav > li > a {
-  color: rgba(255, 255, 255, 0.95) !important;
-  font-weight: 600;
-  font-size: 15px;
-  padding: 15px 20px;
-  transition: all 0.3s ease;
+  color: rgba(255,255,255,0.95) !important; font-weight: 600; font-size: 15px;
+  padding: 15px 20px !important; transition: all 0.3s ease;
 }
+
+/* ==========================================================================
+   🚨 终极 Logo 响应式修复补丁
+   ========================================================================== */
+
+/* 1. 修复 Bootstrap 在小屏幕下的默认负边距陷阱 */
+.navbar-header {
+    margin-left: 0 !important;
+}
+
+/* 2. 品牌容器：弹性布局 + 左侧锚定 + 限制最大宽度 */
+.navbar-brand {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important; /* 确保靠左排列 */
+    
+    padding-left: 15px !important;
+    margin-left: 0 !important;
+    height: 60px !important;
+    max-width: 70vw !important; /* 最多占据屏幕宽度的 70% */
+    
+    overflow: hidden !important;
+    transform: none !important;
+}
+
+/* 3. Logo本体：允许无限缩小 + 靠左对齐 */
+.navbar-brand img {
+    max-height: 50px !important;
+    max-width: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    
+    /* 🚨 核心魔法 1：打破图片原始尺寸限制，允许在容器内被极限挤压缩小 */
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+    
+    /* 🚨 核心魔法 2：图片内容等比缩放，且永远锚定在左边 */
+    object-fit: contain !important;
+    object-position: left center !important;
+    
+    transform: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 
 /* 鼠标悬停 */
 .navbar-default .navbar-nav > li > a:hover {
@@ -92,16 +130,6 @@ body {
   line-height: 1.6;
 }
 
-/* DNA 动效图标 */
-.logo-icon {
-display:none !important
-}
-
-@keyframes float-pulse {
-  0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.9; }
-  50% { transform: translateY(-8px) rotate(5deg) scale(1.05); opacity: 1; }
-  100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.9; }
-}
 
 /* --- 3.2 文字介绍区域 --- */
 .intro-text-section {

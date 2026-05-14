@@ -26,10 +26,27 @@ create_analysis_tab <- function() {
               class = "text-muted", 
               style = "font-size: 1.35rem; line-height: 1.6; margin-bottom: 30px;"),
             
-            div(style = "font-size: 1.6rem; margin-bottom: 25px;",
+            div(style = "font-size: 1.6rem; margin-bottom: 0;", # 把这里的 margin-bottom 改小，让示例链接贴紧上传框
                 fileInput("vcf_file", "Select File", accept = c(".vcf", ".txt"), width = "100%")
             ),
             
+            # 加载示例样本的链接和状态反馈位置 (已更新为双版本选项)
+            div(
+              style = "margin-top: -15px; margin-bottom: 25px; font-size: 1.35rem; text-align: left;",
+              tags$b("Or try our examples:"),
+              tags$ul(
+                style = "list-style: none; padding-left: 0; margin-top: 5px;",
+                tags$li(
+                  style = "margin-bottom: 5px;",
+                  actionLink("load_example_hg38", label = "Example(hg38)", icon = icon("lightbulb"))
+                ),
+                tags$li(
+                  actionLink("load_example_hg37", label = "Example(hg19)", icon = icon("lightbulb"))
+                )
+              ),
+              uiOutput("current_file_status") # 预留显示绿色打勾提示的位置
+            ),
+    
             div(style = "font-size: 1.6rem; margin-bottom: 15px;",
                 selectInput("ref_genome", "Reference Genome", 
                             choices = c("hg19", "hg38"), 
