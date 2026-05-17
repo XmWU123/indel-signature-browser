@@ -283,6 +283,18 @@ server <- function(input, output, session) {
         # 从响应式变量中提取正确的路径
         vcf_path <- current_vcf_path() 
         
+        # ==========================================
+        # 🌟 动态获取真实的文件名
+        # ==========================================
+        # 因为你的 UI 里写的是 fileInput("vcf_file", ...)，所以这里必须用 input$vcf_file
+        if (!is.null(input$vcf_file) && vcf_path == input$vcf_file$datapath) {
+          # 如果是用户自己上传的，从 name 属性里抓取原始文件名（比如 patient1.vcf 变成 patient1）
+          sample_id <- tools::file_path_sans_ext(input$vcf_file$name)
+        } else {
+          # 如果是点击的示例文件，直接从路径里截取文件名
+          sample_id <- tools::file_path_sans_ext(basename(vcf_path))
+        }
+        
         # ... 保持不变：UI 里的选项必须与官方文档一致 ...
         genome <- input$ref_genome 
         if(genome == "hg19") genome <- "GRCh37"
@@ -292,7 +304,7 @@ server <- function(input, output, session) {
         # 步骤 1：读取与初步清洗 (结合你的规则)
         # ==========================================
         message("\n[追踪] 1. 读取并清洗 VCF...")
-        incProgress(0.1, detail = "Performing Indel annotation...")
+        incProgress(0.1, detail ="Reading VCF data...")
         
         # 1. 使用官方的 read_vcf 读取，它可以自动处理很多 VCF 头文件的边界情况
         # 默认 filter = TRUE 会保留 "PASS", ".", ""
@@ -311,8 +323,8 @@ server <- function(input, output, session) {
         # ==========================================
         # 步骤 2：官方防御性管道 (核心纠错，防止崩溃)
         # ==========================================
-        message("\n[追踪] 2. 官方质控与提取 Indel...")
-        incProgress(0.3, detail = "执行官方安全质控...")
+        message("\n[Trace] 2. Official QC and Indel extraction...")
+        incProgress(0.3, detail = "Executing official safety QC...")
         
         # 1. 过滤掉不符合生物学聚合酶足迹规律的伪 Indels、复杂突变和含 N 的行
         clean_data <- mSigSpectra::check_and_remove_discarded_variants(raw_vcf)
@@ -322,14 +334,14 @@ server <- function(input, output, session) {
         indel_df <- parts$ID
         
         if (is.null(indel_df) || nrow(indel_df) == 0) {
-          stop("经过严格质控后，未发现符合 COSMIC 标准的有效 Indel 突变！")
+          stop("No valid Indel mutations meeting COSMIC standards were found after strict quality control!")
         }
         
         # ==========================================
         # 步骤 3：根据 GitHub 源码确认的稳定版函数
         # ==========================================
-        message("[追踪] 3. 开始比对参考基因组并生成矩阵...")
-        incProgress(0.6, detail = "正在执行 Indel 注释...")
+        message("[Trace] 3. Comparing reference genome and generating matrices...")
+        incProgress(0.6, detail = "Performing Indel annotation...")
         
         # 1. 调用截图 image_cb79a2.png 确认的 annotate_id_vcf 函数
         # 作用：计算 Indel 突变在基因组中的侧翼上下文和重复序列长度
@@ -344,23 +356,61 @@ server <- function(input, output, session) {
         
         # 2. 生成 ID83/89/476 矩阵 (使用 vcf_to_id_catalog)
         # 注意：这里的 type 参数决定了生成的矩阵分类框架
-        incProgress(0.2, detail = "正在构建分类矩阵...")
+        incProgress(0.2, detail = "Building classification matrix...")
         
         vcf_results$cat83 <- mSigSpectra::vcf_to_id_catalog(
-          ann_id, type = "ID83", ref_genome = genome, region = "genome", sample_name = "Sample_Analysis"
+          ann_id, type = "ID83", ref_genome = genome, region = "genome", sample_name = sample_id
         )
         
         vcf_results$cat89 <- mSigSpectra::vcf_to_id_catalog(
-          ann_id, type = "ID89", ref_genome = genome, region = "genome", sample_name = "Sample_Analysis"
+          ann_id, type = "ID89", ref_genome = genome, region = "genome", sample_name = sample_id
         )
         
         vcf_results$cat476 <- mSigSpectra::vcf_to_id_catalog(
-          ann_id, type = "ID476", ref_genome = genome, region = "genome", sample_name = "Sample_Analysis"
+          ann_id, type = "ID476", ref_genome = genome, region = "genome", sample_name = sample_id
         )
         
-        message("[Tracking] 全部矩阵生成成功！")
-        incProgress(0.19, detail = "分析完成！")
+        message("[Tracking] All matrices generated successfully!")
+        incProgress(0.19, detail = "Analysis complete!")
         showNotification("Success: ID83/89/476 matrices are ready.", type = "message")
+        
+      }, error = function(e) {
+        # ==========================================
+        # 🛡️ 错误拦截护盾：防止程序崩溃并友好提示用户
+        # ==========================================
+        error_msg <- conditionMessage(e)
+        
+        # 拦截 1：精准捕捉“基因组越界”错误
+        if (grepl("beyond the boundaries", error_msg, ignore.case = TRUE) || 
+            grepl("out of bounds", error_msg, ignore.case = TRUE)) {
+          
+          # 弹出强烈的红色错误提示，持续 10 秒
+          showNotification(
+            shiny::HTML("<b>⚠️ Reference Genome Mismatch!</b><br>The program attempted to read mutation coordinates that exceed the chromosome length. Please verify that your VCF file matches the selected reference genome (e.g., hg19/hg38)!"),
+            type = "error",
+            duration = 10
+          )
+          
+        } 
+        # 拦截 2：捕获由于没有任何符合标准的突变导致的提前退出 (之前的 stop 报错)
+        else if (grepl("未发现符合", error_msg)) {
+          showNotification(
+            shiny::HTML("<b>⚠️ Data Filtering Notice:</b><br>After strict quality control, no valid Indel mutations meeting the criteria for matrix construction were found."),
+            type = "warning",
+            duration = 8
+          )
+        }
+        # 拦截 3：捕获其他未知系统崩溃
+        else {
+          showNotification(
+            paste("❌ 分析意外中断:", error_msg),
+            type = "error",
+            duration = 15
+          )
+        }
+        
+        # 打印错误到后台日志，方便你作为开发者排查
+        message("\n[Fatal Error Intercepted] ", error_msg)
       })
     })
   })
@@ -369,37 +419,34 @@ server <- function(input, output, session) {
   # 3. 绘图输出 (采用数据与视图分离策略，解决文字重叠)
   # ============================================================================
   
-  # --- 1. ID83 绘图 ---
+  # 渲染 83 Type 图表
   output$plot_id83 <- renderPlot({
-    req(vcf_results$cat83)
+    req(vcf_results$cat83) # 确保矩阵已生成
     
-    # 创建一个临时绘图数据，不污染原数据
-    plot_data_83 <- vcf_results$cat83 
-    # 将临时数据的列名设为空格，强制 mSigPlot 隐藏图表内部的标题
-    colnames(plot_data_83) <- " " 
-    
-    mSigPlot::plot_ID83(plot_data_83) 
-  }, res = 100, height = 500)
+    # 强制将矩阵的列名（即文件名）传给 plot_title 参数
+    mSigPlot::plot_ID83(
+      vcf_results$cat83, 
+      plot_title = colnames(vcf_results$cat83)[1]  # 👈 这一行是显示文件名的终极秘诀
+    )
+  })
   
-  # --- 2. ID89 绘图 ---
+  # 同理，渲染 89 Type 图表
   output$plot_id89 <- renderPlot({
     req(vcf_results$cat89)
-    
-    plot_data_89 <- vcf_results$cat89
-    colnames(plot_data_89) <- " " 
-    
-    mSigPlot::plot_ID89(plot_data_89) 
-  }, res = 100, height = 500)
+    mSigPlot::plot_ID89(
+      vcf_results$cat89, 
+      plot_title = colnames(vcf_results$cat89)[1] 
+    )
+  })
   
-  # --- 3. ID476 绘图 ---
+  # 同理，渲染 476 Type 图表
   output$plot_id476 <- renderPlot({
     req(vcf_results$cat476)
-    
-    plot_data_476 <- vcf_results$cat476
-    colnames(plot_data_476) <- " " 
-    
-    mSigPlot::plot_ID476(plot_data_476)
-  }, res = 100, height = 500)
+    mSigPlot::plot_ID476(
+      vcf_results$cat476, 
+      plot_title = colnames(vcf_results$cat476)[1] 
+    )
+  })
   
   # ============================================================================
   # 4. 下载逻辑 (紧跟在绘图后面)
@@ -754,9 +801,9 @@ server <- function(input, output, session) {
                      h4(name, style = "color:#2c3e50; font-weight:700; margin: 15px 0 10px 0; font-size: 25px; text-align: center;"),
                      
                      # 2. 图片区：取消所有内边距，让图片左右完全撑满
-                     div(style = "padding: 0 5px 5px 5px; margin: 0; line-height: 0;", # line-height:0 消除图片下方微小的间隙
+                     div(style = "padding: 0 ; margin: 0; line-height: 0;", # line-height:0 消除图片下方微小的间隙
                          if (!is.null(real_thumb_path) && file.exists(real_thumb_path)) {
-                           tags$img(src = thumb_path, style = "width: 100%; height: auto; display: block; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;")
+                           tags$img(src = thumb_path, style = "width: 103%;max-width: none; margin-left: -2%;height: auto; display: block; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;margin-bottom: -2%; clip-path: inset(0 0 2% 0);")
                          } else { 
                            div(style = "color:#bdc3c7; text-align: center; padding: 50px 0;", icon("image", class="fa-4x")) 
                          }
