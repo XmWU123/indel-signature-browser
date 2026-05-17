@@ -1,1 +1,0 @@
-The spectrum of the tumor WES::TCGA-EW-A2FV-01A-11D-A17D-09 is taken as signature InsDel15.  

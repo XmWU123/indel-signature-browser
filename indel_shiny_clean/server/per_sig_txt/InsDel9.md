@@ -1,1 +1,0 @@
-The XCT -> XT deletions may be related to APOBEC activity.
