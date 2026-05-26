@@ -5,7 +5,10 @@ create_search_tab <- function(all_sig_names = NULL) {
     div(class = "search-page-container",
         div(class = "search-box-large",
             h1(class = "search-title", "Search Signatures"),
-            p(class = "search-subtitle", "Enter a signature name (e.g., 'InsDel') to find matches"),
+            # 👇 在这里直接用内联 CSS 把字号放大 (比如 1.8rem)，可以自己微调数字
+            p(class = "search-subtitle", 
+              style = "font-size: 2.1rem; font-weight: 500; color: #7f8c8d; margin-top: 15px;", 
+              "Enter a signature name (e.g., 'InsDel') to find matches"),
             
             div(class = "search-input-container",
                 div(style = "flex-grow: 1;", 

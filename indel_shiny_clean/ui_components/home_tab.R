@@ -56,7 +56,7 @@ create_home_tab <- function() {
                     # 更改 Scheme 为 Classification
                     h3("476-Type Classification", style = "font-weight: 700; color: #2c3e50; margin-top: 0;"),
                     # 重写描述并加超链接
-                    p(HTML("This new indel classification <a href='LINK_TO_KOH_2025' target='_blank'><b>Koh et al., 2025</b></a>offers a classification that distinguishes 476 types of indel. It provides the highest resolution for analyzing similarities and differences  between signatures."), 
+                    p(HTML("This new classification (<a href='LINK_TO_KOH_2025' target='_blank'><b>Koh et al., 2025</b></a>) recognizes 476 types of indels. It provides the highest resolution for analyzing similarities and differences  between signatures."), 
                       style = "color: #7f8c8d; min-height: 60px; margin-bottom: 15px;"),
                     div("Explore", class = "card-btn-fake"),
                     actionLink("home_goto_476", "", style = "display: none;")
@@ -71,7 +71,7 @@ create_home_tab <- function() {
                       # 更改 Scheme 为 Classification
                       h3("89-Type Classification", style = "font-weight: 700; color: #2c3e50; margin-top: 0;"),
                       # 将 Koh et al., 2025 转为超链接 (请替换 LINK_TO_KOH_2025)
-                      p(HTML("This new indel classification (<a href='LINK_TO_KOH_2025' target='_blank'><b>Koh et al., 2025</b></a>) recognizes 89 types of indel. Often provides more informative granularity for indels in homopolymers."), 
+                      p(HTML("This new classification (<a href='LINK_TO_KOH_2025' target='_blank'><b>Koh et al., 2025</b></a>) recognizes 89 types of indels. Often provides more informative granularity for indels in homopolymers."), 
                         style = "color: #7f8c8d; min-height: 60px; margin-bottom: 15px;"),
                       div("Explore", class = "card-btn-fake"),
                       actionLink("home_goto_89", "", style = "display: none;")
@@ -86,7 +86,7 @@ create_home_tab <- function() {
                     # 更改 Scheme 为 Classification
                     h3("83-Type Classification", style = "font-weight: 700; color: #2c3e50; margin-top: 0;"),
                     # 将 Alexandrov et al., 2020 转为超链接
-                    p(HTML("This widely used classification recognizes 83 types of indel. Described in <a href='https://doi.org/10.1038/s41586-020-1943-3' target='_blank'><b>Alexandrov et al., 2020</b></a> and used on the COSMIC mutational signatures web site."), 
+                    p(HTML("This widely used classification recognizes 83 types of indels. Described in <a href='https://doi.org/10.1038/s41586-020-1943-3' target='_blank'><b>Alexandrov et al., 2020</b></a> and used on the COSMIC mutational signatures web site."), 
                       style = "color: #7f8c8d; min-height: 60px; margin-bottom: 15px;"), 
                     div("Explore", class = "card-btn-fake"),
                     actionLink("home_goto_83", "", style = "display: none;") 

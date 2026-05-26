@@ -10,6 +10,7 @@ library(BSgenome.Hsapiens.1000genomes.hs37d5)
 library(BSgenome.Hsapiens.UCSC.hg38)
 library(mSigSpectra) # 负责计算和生成矩阵
 library(mSigPlot)    # 负责画图
+library(R.utils)
 
 # ==============================================================================
 # 1. 数据加载与预处理 (路径已适配你现在的 data/ 文件夹)
@@ -62,11 +63,14 @@ id89_df <- id89_df %>%
   dplyr::filter(!is.na(InDel89) & InDel89 != "") %>%
   dplyr::mutate(across(c(InDel83, InDel89, Aetiology), as.character))
 
-# 修复希腊字母
-id89_df$InDel89 <- gsub("InsDel_Aα", "InsDel_A_alpha", id89_df$InDel89)
-id89_df$InDel89 <- gsub("InsDel_Aβ", "InsDel_A_beta", id89_df$InDel89)
-id89_df$InDel89 <- gsub("InsDel_Kα", "InsDel_K_alpha", id89_df$InDel89)
-id89_df$InDel89 <- gsub("InsDel_Kβ", "InsDel_K_beta", id89_df$InDel89)
+# ==============================================================================
+# 数据表里名字变成希腊字母
+# ==============================================================================
+id89_df$InDel89 <- gsub("_alpha", "\u03b1", id89_df$InDel89)
+id89_df$InDel89 <- gsub("_beta", "\u03b2", id89_df$InDel89)
+# ==============================================================================
+
+# ==============================================================================
 
 # ==============================================================================
 # [构建 signature_groups]
@@ -82,14 +86,20 @@ if (!dir.exists(img_dir_full_path)) {
 }
 
 for (i in seq_len(nrow(id89_df))) {
+  # 1. 网页显示专用的名字（保留完美的希腊字母 α, β）
   ID89 <- id89_df$InDel89[i]
+  
+  # 2. 🌟 新增：系统找文件专用的名字（把希腊字母转回安全的纯英文）
+  ID89_file <- gsub("\u03b1", "_alpha", ID89)
+  ID89_file <- gsub("\u03b2", "_beta", ID89_file)
+  
   ID83 <- id89_df$InDel83[i]
   if (is.na(ID83)) ID83 <- "Unknown"
   aetiology <- id89_df$Aetiology[i]
   if (is.na(aetiology)) aetiology <- ""
   
-  # --- 读取 Note ---
-  md_file_path <- file.path(data_path_prefix, "per_sig_txt", paste0(ID89, ".md"))
+  # --- 读取 Note (注意：这里必须用 ID89_file 找硬盘里的文件！) ---
+  md_file_path <- file.path(data_path_prefix, "per_sig_txt", paste0(ID89_file, ".md"))
   note_content <- NULL
   if (file.exists(md_file_path)) {
     note_lines <- readLines(md_file_path, warn = FALSE)
@@ -106,7 +116,8 @@ for (i in seq_len(nrow(id89_df))) {
     }
   }
   
-  safe_name <- gsub("[^a-zA-Z0-9_]", "_", ID89)
+  # --- 生成寻找图片的 safe_name (注意：也必须用 ID89_file，防止希腊字母被正则吃掉！) ---
+  safe_name <- gsub("[^a-zA-Z0-9_]", "_", ID89_file)
   
   # --- 寻找图片 (全量雷达模式) ---
   img_89_top_path <- NULL
@@ -211,6 +222,9 @@ server <- function(input, output, session) {
   
   current_integrated_sig <- reactiveVal(NULL)
   
+  # 🌟 新增：指挥官变量，默认展示总览表 overview_table.html
+  current_repertoire_url <- reactiveVal("separate_pages/overview_table.html")
+  
   # ============================================================================
   # 新增：VCF 分析模块核心逻辑
   # ============================================================================
@@ -269,7 +283,7 @@ server <- function(input, output, session) {
     # 在 UI 上反馈成功信息 (蓝色提示)
     output$current_file_status <- renderUI({
       div(style = "color: #2980b9; font-weight: bold; margin-top: 10px; padding: 10px; background: #ebf5fb; border-radius: 5px; border-left: 4px solid #2980b9;",
-          icon("file-upload"), paste(" Custom file loaded:", input$vcf_file$name))
+          icon("file-upload"), paste(" Custom file loaded"))
     })
   })
   
@@ -423,10 +437,13 @@ server <- function(input, output, session) {
   output$plot_id83 <- renderPlot({
     req(vcf_results$cat83) # 确保矩阵已生成
     
-    # 强制将矩阵的列名（即文件名）传给 plot_title 参数
     mSigPlot::plot_ID83(
       vcf_results$cat83, 
-      plot_title = colnames(vcf_results$cat83)[1]  # 👈 这一行是显示文件名的终极秘诀
+      plot_title = colnames(vcf_results$cat83)[1],
+      # 👇 放大参数：
+      base_size = 12,             # 放大基础字号（坐标轴、标题、刻度）
+      class_label_cex = 0.75,      # 放大顶部彩条里的文字
+      count_label_cex = 0.9      # 放大柱子上悬浮的统计数字
     )
   })
   
@@ -435,34 +452,74 @@ server <- function(input, output, session) {
     req(vcf_results$cat89)
     mSigPlot::plot_ID89(
       vcf_results$cat89, 
-      plot_title = colnames(vcf_results$cat89)[1] 
+      plot_title = colnames(vcf_results$cat89)[1],
+      # 👇 放大参数：
+      base_size = 14.5,
+      class_label_cex = 0.9,
+      count_label_cex = 1.0
     )
   })
   
   # 同理，渲染 476 Type 图表
   output$plot_id476 <- renderPlot({
     req(vcf_results$cat476)
-    mSigPlot::plot_ID476(
+    sample_name <- colnames(vcf_results$cat476)[1]
+    
+    p <- mSigPlot::plot_ID476(
       vcf_results$cat476, 
-      plot_title = colnames(vcf_results$cat476)[1] 
+      plot_title = "",
+      # 👇 放大参数：
+      base_size = 14.5,
+      class_label_cex = 0.9,
+      count_label_cex = 1.0,
+      num_peak_labels = 5         # 标注最高的5个突变柱子
+    )
+    
+    # 细节微调：476的统计数字容易和底下的柱子重叠，我们稍微把它往上提一点
+    if (!is.null(p)) {
+      for (i in seq_along(p$layers)) {
+        if (inherits(p$layers[[i]]$geom, "GeomText")) {
+          layer_data <- p$layers[[i]]$data
+          if (!is.null(layer_data) && nrow(layer_data) > 0 && 
+              "y" %in% colnames(layer_data) && length(unique(layer_data$y)) == 1) {
+            p$layers[[i]]$data$y <- layer_data$y[1] * 1.02
+          }
+        }
+      }
+    }
+    # 加上拥有完美上下呼吸感的自定义标题
+    p + ggplot2::ggtitle(sample_name) +
+      ggplot2::theme(
+        # t = 10 (离彩条空出10px), b = 15 (离数字空出15px)
+        plot.title = ggplot2::element_text(size = 16, face = "bold", hjust = 0.5, 
+                                           margin = ggplot2::margin(t = 10, b = 15)),
+        plot.margin = ggplot2::margin(t = 15, r = 10, b = 10, l = 10)
+      )
+  })
+  
+  # ============================================================================
+  # 4. 下载逻辑 (矩阵与 VCF 分开下载)
+  # ============================================================================
+  
+  # 1. 动态渲染两个下载按钮
+  output$download_ui <- renderUI({
+    req(vcf_results$cat83, vcf_results$cat89, vcf_results$cat476, vcf_results$annotated)
+    
+    tagList(
+      # 按钮 1：下载矩阵 (绿色)
+      downloadButton("download_matrices", "Download Matrices (ZIP)", 
+                     class = "btn-success", 
+                     style = "font-size: 1.45rem; font-weight: bold; padding: 12px 5px; width: 100%; margin-top: 10px; white-space: normal; line-height: 1.3; border-radius: 8px;"),
+      
+      # 按钮 2：下载 Annotated VCF (蓝色)
+      downloadButton("download_vcf", "Download Annotated VCF (CSV)", 
+                     class = "btn-info", 
+                     style = "font-size: 1.45rem; font-weight: bold; padding: 12px 5px; width: 100%; margin-top: 15px; white-space: normal; line-height: 1.3; border-radius: 8px; color: white;")
     )
   })
   
-  # ============================================================================
-  # 4. 下载逻辑 (紧跟在绘图后面)
-  # ============================================================================
-  
-  # 1. 动态渲染下载按钮
-  output$download_ui <- renderUI({
-    req(vcf_results$cat83, vcf_results$cat89, vcf_results$cat476)
-    
-    downloadButton("download_all", "Download Matrices (ZIP)", 
-                   class = "btn-success", 
-                   style = "font-size: 1.45rem; font-weight: bold; padding: 12px 5px; width: 100%; margin-top: 10px; white-space: normal; line-height: 1.3; border-radius: 8px;")
-  })
-  
-  # 2. 真正的下载处理逻辑
-  output$download_all <- downloadHandler(
+  # 2. 矩阵下载处理逻辑 (只打包三个矩阵)
+  output$download_matrices <- downloadHandler(
     filename = function() {
       paste0("Indel_Matrices_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".zip")
     },
@@ -471,43 +528,26 @@ server <- function(input, output, session) {
       old_wd <- setwd(temp_dir)
       on.exit(setwd(old_wd)) 
       
-      # 将三个矩阵写成 CSV 文件
       write.csv(as.data.frame(vcf_results$cat83), "ID83_matrix.csv", row.names = TRUE)
       write.csv(as.data.frame(vcf_results$cat89), "ID89_matrix.csv", row.names = TRUE)
       write.csv(as.data.frame(vcf_results$cat476), "ID476_matrix.csv", row.names = TRUE)
       
-      # 打包成 ZIP
       utils::zip(zipfile = file, 
                  files = c("ID83_matrix.csv", "ID89_matrix.csv", "ID476_matrix.csv"))
     },
     contentType = "application/zip"
   )
   
-  # 2. 真正的下载处理逻辑
-  output$download_all <- downloadHandler(
+  # 3. Annotated VCF 下载处理逻辑 (直接输出单个 CSV，无需打包)
+  output$download_vcf <- downloadHandler(
     filename = function() {
-      # 生成一个带时间戳的 zip 文件名，例如: Indel_Matrices_20231025.zip
-      paste0("Indel_Matrices_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".zip")
+      paste0("Annotated_VCF_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".csv")
     },
     content = function(file) {
-      # 获取当前的临时目录
-      temp_dir <- tempdir()
-      
-      # 保存当前的运行路径，确保打包完能切换回来
-      old_wd <- setwd(temp_dir)
-      on.exit(setwd(old_wd)) 
-      
-      # 将三个矩阵写成 CSV 文件
-      # 注意：转换为 data.frame 以确保 rownames(突变类型) 被正确保存
-      write.csv(as.data.frame(vcf_results$cat83), "ID83_matrix.csv", row.names = TRUE)
-      write.csv(as.data.frame(vcf_results$cat89), "ID89_matrix.csv", row.names = TRUE)
-      write.csv(as.data.frame(vcf_results$cat476), "ID476_matrix.csv", row.names = TRUE)
-      
-      # 使用 R 自带的 zip 工具将这三个文件打包成传给浏览器的 file 对象
-      utils::zip(zipfile = file, 
-                 files = c("ID83_matrix.csv", "ID89_matrix.csv", "ID476_matrix.csv"))
+      # VCF 自己有完善的列名（CHROM, POS, REF, ALT等），不需要 row.names
+      write.csv(as.data.frame(vcf_results$annotated), file, row.names = FALSE)
     },
-    contentType = "application/zip"
+    contentType = "text/csv"
   )
   
   # URL 路由机制
@@ -610,7 +650,12 @@ server <- function(input, output, session) {
   build_integrated_page <- function(sig_name, back_btn_id) {
     sig <- signature_groups[[sig_name]]
     
-    current_stats <- if (!is.null(sig_stats_df)) sig_stats_df[sig_stats_df$signature_id == sig_name, ] else NULL
+    # 🌟 修复关键：去查表之前，先把希腊字母转回表格里存在的纯英文！
+    search_name <- gsub("\u03b1", "_alpha", sig_name)
+    search_name <- gsub("\u03b2", "_beta", search_name)
+    
+    # 然后用转好的 search_name 去查表，就能完美匹配了，绝不会再产生 NA！
+    current_stats <- if (!is.null(sig_stats_df)) sig_stats_df[sig_stats_df$signature_id == search_name, ] else NULL
     
     # 提取 Linking Tumor 编号 (用于 3.2)
     exemplar_89_name <- if(!is.null(current_stats)) current_stats$exemplar_89 else "Exemplar Sample"
@@ -633,16 +678,26 @@ server <- function(input, output, session) {
     } else { NULL }
     
     tagList(
-      # 顶部导航
+      # 1. 🌟 把不小心覆盖掉的“返回按钮”重新加回来！
       div(style = "display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;", 
           actionButton(back_btn_id, "← Back to Thumbnails", class = "btn-back"), div()),
       
-      h2(paste("Integrated Signature Profile:", sig_name), style = "color:#2c3e50; font-weight:700; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;"),
+      # 2. 🌟 按照 Steve 的要求，去掉冗余，直接改成最简洁的 Signature 标题
+      h2(paste("Signature", sig_name), style = "color:#2c3e50; font-weight:700; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;"),
       
+      # 3. 极简版的信息框（只保留 83-type 和 HTML 内嵌跳转链接）
       div(style="margin-bottom: 25px; font-size: 15px; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 5px solid #34495e; box-shadow: 0 4px 15px rgba(0,0,0,0.05);",
-          div(style="margin-bottom: 8px;", tags$span("Base 89-type Unit: ", style="font-weight:bold; color:#7f8c8d; margin-right: 10px;"), tags$span(sig_name, style="color:#e67e22; font-weight:bold;")),
-          div(style="margin-bottom: 8px;", tags$span("Associated 476-type: ", style="font-weight:bold; color:#7f8c8d; margin-right: 10px;"), tags$span(sig_name, style="color:#9b59b6; font-weight:bold;")),
-          div(tags$span("Associated 83-type Group: ", style="font-weight:bold; color:#7f8c8d; margin-right: 10px;"), tags$span(sig$id83_name, style="color:#27ae60; font-weight:bold;"))
+          
+          div(tags$span("Associated 83-type signature: ", style="font-weight:bold; color:#7f8c8d; margin-right: 10px;"), tags$span(sig$id83_name, style="color:#27ae60; font-weight:bold;")),
+          
+          div(style="margin-top: 12px;", 
+              # 🌟【核心修改】：把普通的 tags$a 改成了 actionLink，并加上唯一的 ID
+              actionLink(
+                inputId = paste0("goto_repertoire_sig_", search_name),
+                label = tagList(icon("book-open"), " View vignette page "),
+                style = "color: #3498db; font-weight: bold; text-decoration: none; border-bottom: 1px dashed #3498db; padding-bottom: 2px;"
+              )
+          )
       ),
       
       if (!is.null(sig$note)) shiny::markdown(sig$note),
@@ -762,10 +817,12 @@ server <- function(input, output, session) {
                      # 1. 名字区：减少上下 margin，让它更靠近顶部
                      h4(group_name, style = "color:#2c3e50; font-weight:700; margin: 12px 0 8px 0; font-size: 20px; text-align: center;"),
                      
-                     # 2. 图片区：取消所有内边距，让图片左右完全撑满
-                     div(style = "padding: 0 10px 10px 10px; margin: 0; line-height: 0;", # line-height:0 消除图片下方微小的间隙
+                     # 2. 图片区：彻底消除 padding，微调 width 和 margin 让图片极限撑满卡片！
+                     div(style = "padding: 0 !important; margin: 0 !important; line-height: 0; overflow: hidden;", 
                          if (!is.null(thumb) && file.exists(file.path("www", thumb))) {
-                           tags$img(src = thumb, style = "width: 100%; height: auto; display: block; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;")
+                           # 🌟【核心微调】：将 width 设为 102%，配合 -1% 的左边距，把边沿的默认白线强行压在卡片下面！
+                           tags$img(src = paste0(thumb, "?t=", as.numeric(Sys.time())), 
+                                    style = "width: 102%; max-width: none !important; margin-left: -1%; height: auto; display: block; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;")
                          } else { 
                            div(style = "color:#bdc3c7; text-align: center; padding: 30px 0;", icon("image", class="fa-3x")) 
                          }
@@ -803,7 +860,8 @@ server <- function(input, output, session) {
                      # 2. 图片区：取消所有内边距，让图片左右完全撑满
                      div(style = "padding: 0 ; margin: 0; line-height: 0;", # line-height:0 消除图片下方微小的间隙
                          if (!is.null(real_thumb_path) && file.exists(real_thumb_path)) {
-                           tags$img(src = thumb_path, style = "width: 103%;max-width: none; margin-left: -2%;height: auto; display: block; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;margin-bottom: -2%; clip-path: inset(0 0 2% 0);")
+                           # 🌟 核心修改：在 src 后面加上了 "?t=" 和当前时间戳，强迫浏览器每次都拿新图！
+                           tags$img(src = paste0(thumb_path, "?t=", as.numeric(Sys.time())), style = "width: 103%;max-width: none; margin-left: -2%;height: auto; display: block; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;margin-bottom: -2%; clip-path: inset(0 0 2% 0);")
                          } else { 
                            div(style = "color:#bdc3c7; text-align: center; padding: 50px 0;", icon("image", class="fa-4x")) 
                          }
@@ -862,7 +920,7 @@ server <- function(input, output, session) {
                          
                          # 3. Member 信息：去掉黑线，统一白色，加大字体
                          div(style = "padding: 15px 20px; background: #fff; text-align: left; border: none;",
-                             div(style = "font-size: 14px; color: #95a5a6; margin-bottom: 3px; font-weight: bold; text-transform: uppercase;", "CONTAINS:"),
+                             div(style = "font-size: 14px; color: #95a5a6; margin-bottom: 3px; font-weight: bold; text-transform: uppercase;", "CORRESPONDS:"),
                              # 加大 Member 名字字体
                              div(style = "font-size: 18px; color: #34495e; line-height: 1.4; font-weight: 500;", 
                                  paste(id83_info$members, collapse = ", "))
@@ -957,6 +1015,54 @@ server <- function(input, output, session) {
   lapply(names(signature_groups), function(m) { 
     observeEvent(input[[paste0("go_to_integrated_", m)]], { removeModal(); current_integrated_sig(m) }) 
   })
+  
+  # ==============================================================================
+  # 🌟 6. 新增：动态总览表 (Repertoire) 站内跳转与渲染逻辑 🌟
+  # ==============================================================================
+  # 批量监听所有详情页里，那个蓝色的 "View detailed vignette page..." 按钮被点击
+  lapply(names(signature_groups), function(sig_name) {
+    
+    # 🌟 核心修复：必须用 local() 把变量“锁死”在当前的循环里！
+    local({
+      current_sig <- sig_name
+      search_name <- gsub("\u03b1", "_alpha", current_sig)
+      search_name <- gsub("\u03b2", "_beta", search_name)
+      
+      btn_id <- paste0("goto_repertoire_sig_", search_name)
+      
+      observeEvent(input[[btn_id]], {
+        # 调试信息：点击时会在 RStudio 控制台打印，证明监听生效了
+        message("\n[跳转成功] 正在加载独立报告: ", search_name, ".html")
+        
+        # 动作 A: 把 iframe 的路径更新为当前点击的这个 signature 对应的 HTML
+        current_repertoire_url(paste0("separate_pages/", search_name, ".html"))
+        
+        # 动作 B: 控制网页大导航栏，瞬间切到 "Signature Repertoire" 这一页
+        # 👇 这里的 selected 必须和你 ui_components/repertoire_tab.R 里的 value 严格一致！
+        updateNavbarPage(session, "navbar", selected = "Vignette") 
+      }, ignoreInit = TRUE)
+    })
+    
+  })
+  
+  # 🌟 修改后：监听“返回总览表”按钮的点击 (终极防偷懒版)
+  observeEvent(input$btn_back_to_overview, {
+    # 在网址后面贴上一个精确到毫秒的时间戳
+    # 这样每次生成的字符串都绝对不一样，Shiny 就必须老老实实地重新渲染 iframe！
+    force_refresh_url <- paste0("separate_pages/overview_table.html?refresh=", as.numeric(Sys.time()))
+    current_repertoire_url(force_refresh_url)
+  })
+  
+  # 动态渲染那个 iframe (这部分不变)
+  output$dynamic_repertoire_iframe <- renderUI({
+    tags$iframe(
+      src = current_repertoire_url(), 
+      width = "100%",
+      height = "900px", 
+      style = "border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"
+    )
+  })
+  # ==============================================================================
   
   # ==============================================================================
   # 图片查看器 (支持全量图片)

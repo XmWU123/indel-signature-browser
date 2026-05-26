@@ -1,10 +1,11 @@
 name: main
 title:
-username: indelsigbrowser
+username:
 account: indelsigbrowser
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 17327310
-bundleId: 12000664
+bundleId: 12041514
 url: https://indelsigbrowser.shinyapps.io/main/
-version: 1
+when: 1779796369.28604
+lastSyncTime: 1779796369.28607
