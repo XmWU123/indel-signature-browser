@@ -1,8 +1,8 @@
 # ui_components/repertoire_tab.R
 create_repertoire_tab <- function() {
   tabPanel(
-    title = "Vignette", 
-    value = "Vignette", 
+    title = "Overview Table", 
+    value = "Overview Table", 
     icon  = icon("book-open"),      
     
     fluidPage(

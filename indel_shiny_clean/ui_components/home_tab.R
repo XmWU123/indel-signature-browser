@@ -35,7 +35,7 @@ create_home_tab <- function() {
                  "<br><br>",
                  "This web site presents corresponding signatures extracted from somatic indel mutations in ",
                  "<span class='data-badge'>6,975 tumors</span> from ",
-                 "<span class='data-badge'>32 cancer types</span> using methods based on ",
+                 "<span class='data-badge'>36 cancer types</span> using methods based on ",
                  "<a href='https://doi.org/10.1016/j.xgen.2022.100179' target='_blank'><strong>Non-negative Matrix Factorization</strong></a> and <a href='https://doi.org/10.1093/nargab/lqad094' target='_blank'><strong>Hierarchical Dirichlet Processes</strong></a>."
               ))
             ),

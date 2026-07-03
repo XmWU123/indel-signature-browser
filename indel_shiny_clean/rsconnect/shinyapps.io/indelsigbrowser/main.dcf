@@ -5,7 +5,7 @@ account: indelsigbrowser
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 17327310
-bundleId: 12041514
+bundleId: 12070810
 url: https://indelsigbrowser.shinyapps.io/main/
-when: 1779796369.28604
-lastSyncTime: 1779796369.28607
+when: 1780382057.55165
+lastSyncTime: 1780382057.55168

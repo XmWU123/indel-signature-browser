@@ -18,7 +18,7 @@ create_about_tab <- function() {
       ),
       p(class = "about-text",
         "This web application serves as a comprehensive interactive browser for exploring indel signatures derived from ",
-        tags$strong("6,975 tumors across 32 cancer types"), ". It integrates multiple classification schemes (83-type, 89-type, and 476-type) to provide multi-granular perspectives."
+        tags$strong("6,975 tumors across 36 cancer types"), ". It integrates multiple classification schemes (83-type, 89-type, and 476-type) to provide multi-granular perspectives."
       ),
       
       # --- Section: Key Features (Icon Grid) ---
@@ -28,11 +28,11 @@ create_about_tab <- function() {
       div(
         class = "about-feature-grid",
         
-        # Feature 1
+        # Feature 1 (删除了 Seamlessly)
         div(class = "about-feature-item",
             icon("layer-group", class = "about-icon"),
             h4("Multi-Granularity", style="font-weight:700; margin-top:0;"),
-            p("Seamlessly switch between 83, 89, and 476 classification systems to view data at different resolutions.")
+            p("Switch between 83, 89, and 476 classification systems to view data at different resolutions.")
         ),
         
         # Feature 2
@@ -50,16 +50,25 @@ create_about_tab <- function() {
         )
       ),
       
-      # --- Section: Methodology ---
+      # --- Section: Methodology (已修正 DOI) ---
       h3("Methodology", class = "about-section-title",
          style = "color: #8e44ad; border-bottom-color: #8e44ad;"),
       
       p(class = "about-text",
-        "Signatures were extracted using a Hierarchical Dirichlet Process (HDP) framework, ensuring robust discovery of mutational patterns. ",
-        "The classification schemes were developed to capture specific biological phenomena, such as repeat-mediated mutagenesis and microhomology-mediated deletions."
+        "Mutational signatures were extracted using the Hierarchical Dirichlet Process (HDP) framework via the R package ",
+        tags$a(href = "https://github.com/steverozen/mSigHdp", target = "_blank", style = "color: #8e44ad; font-weight: bold;", "mSigHdp"),
+        " (Liu et al., 2023, ", 
+        # 👇 修改点 1：更新了 HDP 的正确 DOI 和跳转链接
+        tags$a(href = "https://doi.org/10.1093/nargab/lqad005", target = "_blank", style = "color: #8e44ad;", "DOI: 10.1093/nargab/lqad005"),
+        ") and ",
+        tags$a(href = "https://github.com/AlexandrovLab/SigProfilerExtractor", target = "_blank", style = "color: #8e44ad; font-weight: bold;", "SigProfilerExtractor"),
+        " (Islam et al., 2022, ",
+        # 👇 修改点 2：确认保留正确的 SigProfilerExtractor DOI
+        tags$a(href = "https://doi.org/10.1016/j.xgen.2022.100179", target = "_blank", style = "color: #8e44ad;", "DOI: 10.1016/j.xgen.2022.100179"),
+        "). The classification schemes were developed to capture specific biological phenomena, such as repeat-mediated mutagenesis and microhomology-mediated deletions."
       ),
       
-      # --- Section: Contact (支持多个邮箱) ---
+      # --- Section: Contact ---
       h3("Contact Us", class = "about-section-title",
          style = "color: #16a085; border-bottom-color: #16a085;"),
       
@@ -70,7 +79,6 @@ create_about_tab <- function() {
       div(style = "background: #f8f9fa; padding: 25px; border-radius: 12px; border-left: 5px solid #3498db; margin-top: 20px;",
           tags$ul(style = "list-style: none; padding-left: 10px; margin-bottom: 0; font-size: 1.75rem; line-height: 2.2; color: #2c3e50;",
                   
-                  # [请在这里填入你之前的邮箱]
                   tags$li(icon("envelope", style="margin-right:12px; color:#16a085;"), 
                           strong("Xueming Wu: "), "wuxm8523@gmail.com"),
                   
