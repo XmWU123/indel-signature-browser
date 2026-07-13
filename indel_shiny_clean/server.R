@@ -480,6 +480,432 @@ server <- function(input, output, session) {
     "83-type classification"
   )
   
+  # ==============================================================================
+  # 点击 Logo 返回 Home
+  # ==============================================================================
+  
+  observeEvent(
+    input$logo_home_click,
+    {
+      # 清除当前 signature 详情
+      current_integrated_sig(NULL)
+      
+      # 重置详情页默认分区
+      current_detail_section("89")
+      
+      # 防止残留 Overview Table 的跳转标记
+      skip_next_overview_reset(FALSE)
+      
+      # 切换到首页
+      updateNavbarPage(
+        session = session,
+        inputId = "navbar",
+        selected = "Home"
+      )
+      
+      # 返回页面顶部
+      shinyjs::runjs(
+        "window.scrollTo(0, 0);"
+      )
+    },
+    ignoreInit = TRUE
+  )
+  
+  # ==============================================================================
+  # About page user feedback collection
+  #
+  # 用户在 About 页提交反馈后，保存到服务器本地 CSV。
+  # 注意：
+  # 1. 不要保存到 www/ 目录，避免被网页公开访问。
+  # 2. 保存到 user_feedback/feedback.csv。
+  # ==============================================================================
+  
+  feedback_status <- reactiveVal(NULL)
+  
+  output$feedback_status <- renderUI({
+    feedback_status()
+  })
+  
+  observeEvent(
+    input$feedback_submit,
+    {
+      # -----------------------------
+      # 1. 读取并清洗输入
+      # -----------------------------
+      feedback_name <- trimws(
+        ifelse(
+          is.null(input$feedback_name),
+          "",
+          input$feedback_name
+        )
+      )
+      
+      feedback_email <- trimws(
+        ifelse(
+          is.null(input$feedback_email),
+          "",
+          input$feedback_email
+        )
+      )
+      
+      feedback_type <- trimws(
+        ifelse(
+          is.null(input$feedback_type),
+          "Other",
+          input$feedback_type
+        )
+      )
+      
+      feedback_message <- trimws(
+        ifelse(
+          is.null(input$feedback_message),
+          "",
+          input$feedback_message
+        )
+      )
+      
+      # -----------------------------
+      # 2. 基础校验
+      # -----------------------------
+      if (!nzchar(feedback_message)) {
+        
+        showNotification(
+          "Please enter your feedback message before submitting.",
+          type = "warning",
+          duration = 5
+        )
+        
+        feedback_status(
+          div(
+            style = paste0(
+              "margin-top:15px;",
+              "padding:12px 15px;",
+              "background:#fff3cd;",
+              "border-left:4px solid #f39c12;",
+              "border-radius:8px;",
+              "color:#856404;",
+              "font-weight:600;"
+            ),
+            icon("triangle-exclamation"),
+            " Please enter your feedback message."
+          )
+        )
+        
+        return(invisible(NULL))
+      }
+      
+      if (nchar(feedback_message) < 5) {
+        
+        showNotification(
+          "The feedback message is too short.",
+          type = "warning",
+          duration = 5
+        )
+        
+        return(invisible(NULL))
+      }
+      
+      # 邮箱是可选项；如果填写了，就做一个简单格式检查
+      if (
+        nzchar(feedback_email) &&
+        !grepl(
+          "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+          feedback_email
+        )
+      ) {
+        
+        showNotification(
+          "Please enter a valid email address, or leave it blank.",
+          type = "warning",
+          duration = 5
+        )
+        
+        return(invisible(NULL))
+      }
+      
+      # -----------------------------
+      # 3. 反馈保存路径
+      # -----------------------------
+      feedback_dir <- file.path(
+        getwd(),
+        "user_feedback"
+      )
+      
+      if (!dir.exists(feedback_dir)) {
+        dir.create(
+          feedback_dir,
+          recursive = TRUE,
+          showWarnings = FALSE
+        )
+      }
+      
+      feedback_file <- file.path(
+        feedback_dir,
+        "feedback.csv"
+      )
+      
+      # -----------------------------
+      # 4. 组装反馈记录
+      # -----------------------------
+      feedback_record <- data.frame(
+        time = format(
+          Sys.time(),
+          "%Y-%m-%d %H:%M:%S %Z"
+        ),
+        
+        name = feedback_name,
+        email = feedback_email,
+        feedback_type = feedback_type,
+        message = feedback_message,
+        
+        current_nav = ifelse(
+          is.null(input$navbar),
+          "",
+          input$navbar
+        ),
+        
+        url_search = ifelse(
+          is.null(session$clientData$url_search),
+          "",
+          session$clientData$url_search
+        ),
+        
+        user_agent = ifelse(
+          is.null(session$clientData$http_user_agent),
+          "",
+          session$clientData$http_user_agent
+        ),
+        
+        stringsAsFactors = FALSE
+      )
+      
+      # -----------------------------
+      # 5. 写入 CSV
+      # -----------------------------
+      tryCatch(
+        {
+          write.table(
+            feedback_record,
+            file = feedback_file,
+            sep = ",",
+            row.names = FALSE,
+            col.names = !file.exists(feedback_file),
+            append = file.exists(feedback_file),
+            quote = TRUE,
+            fileEncoding = "UTF-8"
+          )
+          
+          showNotification(
+            "Thank you. Your feedback has been submitted successfully.",
+            type = "message",
+            duration = 5
+          )
+          
+          feedback_status(
+            div(
+              style = paste0(
+                "margin-top:15px;",
+                "padding:12px 15px;",
+                "background:#e8f5e9;",
+                "border-left:4px solid #27ae60;",
+                "border-radius:8px;",
+                "color:#1e8449;",
+                "font-weight:600;"
+              ),
+              icon("check-circle"),
+              " Thank you. Your feedback has been submitted successfully."
+            )
+          )
+          
+          # 清空表单
+          updateTextInput(
+            session,
+            "feedback_name",
+            value = ""
+          )
+          
+          updateTextInput(
+            session,
+            "feedback_email",
+            value = ""
+          )
+          
+          updateSelectInput(
+            session,
+            "feedback_type",
+            selected = "Bug report"
+          )
+          
+          updateTextAreaInput(
+            session,
+            "feedback_message",
+            value = ""
+          )
+        },
+        
+        error = function(e) {
+          
+          showNotification(
+            paste(
+              "Failed to save feedback:",
+              conditionMessage(e)
+            ),
+            type = "error",
+            duration = 10
+          )
+          
+          feedback_status(
+            div(
+              style = paste0(
+                "margin-top:15px;",
+                "padding:12px 15px;",
+                "background:#fdecea;",
+                "border-left:4px solid #c0392b;",
+                "border-radius:8px;",
+                "color:#922b21;",
+                "font-weight:600;"
+              ),
+              icon("circle-exclamation"),
+              " Failed to save feedback. Please contact us by email."
+            )
+          )
+        }
+      )
+      
+      invisible(NULL)
+    },
+    
+    ignoreInit = TRUE
+  )
+  
+  # ==============================================================================
+  # 点击顶部导航栏当前tab时，强制回到该tab的根页面
+  #
+  # 目的：
+  # 1. 点击 Overview Table：恢复 overview_table.html 总表
+  # 2. 点击 89-type classification：恢复89缩略图列表
+  # 3. 点击 476-type classification：恢复476缩略图列表
+  # 4. 点击 83-type classification：恢复83缩略图列表
+  #
+  # 原因：
+  # 当用户已经停留在某个tab内时，
+  # 再次点击同一个navbar tab，不会触发 input$navbar 改变。
+  # 所以需要额外监听导航栏点击事件。
+  # ==============================================================================
+  
+  session$onFlushed(
+    function() {
+      
+      shinyjs::runjs(
+        "
+        $(document)
+          .off('click.navbarRootReset', 'a[data-toggle=\"tab\"]')
+          .on('click.navbarRootReset', 'a[data-toggle=\"tab\"]', function() {
+            
+            var value = $(this).attr('data-value') || '';
+            var text = $(this).text().replace(/\\s+/g, ' ').trim();
+            var tabName = value || text;
+            
+            if (
+              tabName === 'Overview Table' ||
+              tabName === '89-type classification' ||
+              tabName === '476-type classification' ||
+              tabName === '83-type classification'
+            ) {
+              
+              Shiny.setInputValue(
+                'navbar_root_clicked',
+                {
+                  tab: tabName,
+                  nonce: Date.now()
+                },
+                {priority: 'event'}
+              );
+            }
+          });
+        "
+      )
+    },
+    once = TRUE
+  )
+  
+  
+  observeEvent(
+    input$navbar_root_clicked,
+    {
+      
+      click_data <- input$navbar_root_clicked
+      
+      req(
+        is.list(click_data),
+        !is.null(click_data$tab)
+      )
+      
+      tab_name <- as.character(
+        click_data$tab
+      )[1]
+      
+      # --------------------------------------------------------------------------
+      # Overview Table：强制恢复总表
+      # --------------------------------------------------------------------------
+      
+      if (identical(
+        tab_name,
+        "Overview Table"
+      )) {
+        
+        skip_next_overview_reset(FALSE)
+        
+        reset_repertoire_to_overview()
+        
+        shinyjs::runjs(
+          "window.scrollTo(0, 0);"
+        )
+        
+        return(invisible(NULL))
+      }
+      
+      # --------------------------------------------------------------------------
+      # 89 / 476 / 83：强制恢复各自缩略图列表
+      # --------------------------------------------------------------------------
+      
+      if (tab_name %in% classification_tabs) {
+        
+        current_integrated_sig(NULL)
+        
+        # 顺便把详情分区状态调回对应分类，保持URL和内部状态更干净
+        if (identical(
+          tab_name,
+          "89-type classification"
+        )) {
+          
+          current_detail_section("89")
+          
+        } else if (identical(
+          tab_name,
+          "476-type classification"
+        )) {
+          
+          current_detail_section("476")
+          
+        } else if (identical(
+          tab_name,
+          "83-type classification"
+        )) {
+          
+          current_detail_section("83")
+        }
+        
+        shinyjs::runjs(
+          "window.scrollTo(0, 0);"
+        )
+      }
+      
+      invisible(NULL)
+    },
+    ignoreInit = TRUE
+  )
+  
   # 记录切换前所在的页面
   previous_nav <- reactiveVal(NULL)
   
@@ -1744,7 +2170,7 @@ server <- function(input, output, session) {
           ),
           
           icon("book-open"),
-          " See about this signature "
+          " More details about this signature "
         )
       ),
       
@@ -3928,21 +4354,6 @@ server <- function(input, output, session) {
         # 因此不能留下未使用的跳过标记。
         skip_next_overview_reset(FALSE)
       }
-      
-    },
-    ignoreInit = TRUE
-  )
-  
-  observeEvent(
-    input$btn_back_to_overview,
-    {
-      
-      # 强制重新创建 iframe 并恢复 Overview Table
-      reset_repertoire_to_overview()
-      
-      shinyjs::runjs(
-        "window.scrollTo(0, 0);"
-      )
       
     },
     ignoreInit = TRUE
