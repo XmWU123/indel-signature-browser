@@ -1,5 +1,4 @@
 # indelsig
-# indelsig
 
 **indelsig** is an interactive Shiny web browser for exploring small insertion and deletion (indel) mutational signatures in human cancer.
 
